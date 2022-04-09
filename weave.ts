@@ -79,6 +79,13 @@ enum Instr {
   call = 'call',
   call_indirect = 'call_indirect',
 
+  // variable
+  local_get = 'local.get',
+  local_set = 'local.set',
+  local_tee = 'local.tee',
+  global_get = 'global.get',
+  global_set = 'global.set',
+
   // numeric
   // const
   i32_const = 'i32.const',
@@ -180,6 +187,27 @@ class Parser {
       case 0x11:
         instr = Instr.call_indirect;
         extra = [this.r.readUint(), this.r.readUint()];
+        break;
+
+      case 0x20:
+        instr = Instr.local_get;
+        extra = this.r.readUint();
+        break;
+      case 0x21:
+        instr = Instr.local_set;
+        extra = this.r.readUint();
+        break;
+      case 0x22:
+        instr = Instr.local_tee;
+        extra = this.r.readUint();
+        break;
+      case 0x23:
+        instr = Instr.global_get;
+        extra = this.r.readUint();
+        break;
+      case 0x24:
+        instr = Instr.global_set;
+        extra = this.r.readUint();
         break;
 
       case 0x41:
