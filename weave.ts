@@ -255,9 +255,6 @@ enum Instr {
   i64_extend32_s = 'i64.extend32_s',
 }
 
-interface InstructionBase {
-  op: Instr;
-}
 interface InstrBlock {
   op: Instr.block | Instr.loop;
   body: Instruction[];
@@ -328,8 +325,7 @@ interface InstrConstFloat {
   op: Instr.f32_const | Instr.f64_const;
   z: number;
 }
-type Instruction =
-  | InstructionBase
+type InstructionWithFields =
   | InstrBlock
   | InstrIf
   | InstrBranch
@@ -341,6 +337,32 @@ type Instruction =
   | InstrMem
   | InstrConstInt
   | InstrConstFloat;
+
+// All other instructions that weren't specially typed above hold just an op.
+// Use a little TypeScript magic so we get a fully discriminated union.
+interface InstructionWithoutFields {
+  op: Exclude<Instr, InstructionWithFields['op']>;
+}
+type Instruction = InstructionWithoutFields | InstructionWithFields;
+
+function print(instrs: Instruction[], indent = 0) {
+  for (const instr of instrs) {
+    const toPrint = ['  '.repeat(indent), instr.op];
+    for (const [key, val] of Object.entries(instr)) {
+      if (key === 'op') continue;
+      if (val instanceof Array) continue;
+      toPrint.push(` ${key}=${val}`);
+    }
+    console.log(toPrint.join(''));
+    if (instr.op === Instr.if || instr.op === Instr.block || instr.op === Instr.loop) {
+      print(instr.body, indent + 1);
+      if (instr.op === Instr.if && instr.else) {
+        console.log('  '.repeat(indent) + 'else');
+        print(instr.else, indent + 1);
+      }
+    }
+  }
+}
 
 class Parser {
   constructor(private r: Reader) {}
@@ -787,7 +809,6 @@ class Parser {
     const instrs: Array<Instruction> = [];
     while (true) {
       const instr = this.readInstruction();
-      console.log(instr);
       if (instr.op === Instr.end || instr.op === Instr.else) {
         return [instrs, instr.op];
       }
@@ -809,8 +830,12 @@ class Parser {
         locals.push(type);
       }
     }
-    console.log('locals', locals);
-    this.readExpr();
+    console.log('func');
+    if (locals.length > 0) {
+      console.log('  locals', locals);
+    }
+    const body = this.readExpr();
+    print(body, 1);
   }
 
   readCode() {
