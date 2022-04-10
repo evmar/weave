@@ -1,9 +1,9 @@
-import * as fs from 'fs';
-import * as code from './code';
 import { Reader } from './reader';
-import { FuncType, funcTypeToString, readFuncType } from './type';
+import { FuncType, readFuncType } from './type';
 
-enum SectionType {
+export { funcTypeToString } from './type';
+
+export enum SectionType {
   custom = 'custom',
   type = 'type',
   import = 'import',
@@ -19,13 +19,13 @@ enum SectionType {
   data_count = 'data count',
 }
 
-interface SectionHeader {
+export interface SectionHeader {
   type: SectionType;
   ofs: number;
   len: number;
 }
 
-class Module {
+export class Module {
   constructor(private buffer: ArrayBuffer, public sections: SectionHeader[]) {}
 
   getReader(section: SectionHeader) {
@@ -89,35 +89,35 @@ export function readTypeSection(r: Reader): FuncType[] {
   return r.vec(() => readFuncType(r));
 }
 
-enum IndexType {
+export enum IndexType {
   type = 'type',
   func = 'func',
   table = 'table',
   mem = 'mem',
   global = 'global',
 }
-interface TypeIndex {
+export interface TypeIndex {
   type: IndexType.type;
   index: number;
 }
-interface FuncIndex {
+export interface FuncIndex {
   type: IndexType.func;
   index: number;
 }
-interface TableIndex {
+export interface TableIndex {
   type: IndexType.table;
   index: number;
 }
-interface MemIndex {
+export interface MemIndex {
   type: IndexType.mem;
   index: number;
 }
-interface GlobalIndex {
+export interface GlobalIndex {
   type: IndexType.global;
   index: number;
 }
 
-function indexToString(
+export function indexToString(
   index: TypeIndex | FuncIndex | TableIndex | MemIndex | GlobalIndex
 ): string {
   switch (index.type) {
@@ -134,7 +134,7 @@ function indexToString(
   }
 }
 
-interface Import {
+export interface Import {
   module: string;
   name: string;
   desc: TypeIndex | TableIndex | MemIndex | GlobalIndex;
@@ -164,11 +164,11 @@ export function readImportSection(r: Reader): Import[] {
   });
 }
 
-interface Export {
+export interface Export {
   name: string;
   desc: FuncIndex | TableIndex | MemIndex | GlobalIndex;
 }
-function exportToString(exp: Export): string {
+export function exportToString(exp: Export): string {
   return `${exp.name} (${indexToString(exp.desc)})`;
 }
 export function readExportSection(r: Reader): Export[] {
@@ -190,52 +190,3 @@ export function readExportSection(r: Reader): Export[] {
     return { name, desc };
   });
 }
-
-function main() {
-  const file = fs.readFileSync('t.wasm');
-  const buf = file.buffer.slice(
-    file.byteOffset,
-    file.byteOffset + file.byteLength
-  );
-
-  const module = read(new DataView(buf));
-  let funcIndex = 0;
-  for (const sec of module.sections) {
-    console.log(`# section: ${sec.type} (${sec.len} bytes)`);
-    switch (sec.type) {
-      case SectionType.type: {
-        const types = readTypeSection(module.getReader(sec));
-        for (let i = 0; i < types.length; i++) {
-          console.log(`  ${i}: ${funcTypeToString(types[i])}`);
-        }
-        break;
-      }
-      case SectionType.import:
-        for (const imp of readImportSection(module.getReader(sec))) {
-          switch (imp.desc.type) {
-            case IndexType.type:
-              console.log(`  func ${funcIndex++}: ${importToString(imp)}`);
-              break;
-            default:
-              console.log(`  ${importToString(imp)}`);
-          }
-        }
-        break;
-      case SectionType.export:
-        for (const exp of readExportSection(module.getReader(sec))) {
-          console.log(`  ${exportToString(exp)}`);
-        }
-        break;
-      case SectionType.code:
-        for (const func of code.read(module.getReader(sec))) {
-          console.log(`  func ${funcIndex++}`);
-          if (func.locals.length > 0) {
-            console.log('    locals', func.locals);
-          }
-          code.print(func.body, 2);
-        }
-        break;
-    }
-  }
-}
-main();
