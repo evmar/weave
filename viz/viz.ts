@@ -32,10 +32,43 @@ function render(module: wasm.Module) {
   return svg.node()!;
 }
 
+function table(module: wasm.Module) {
+  const table = d3.create('table');
+  const totalSize = d3.sum(module.sections.map((sec) => sec.len));
+  table // table headers
+    .append('thead')
+    .append('tr')
+    .selectAll('th')
+    .data([{ text: 'section' }, { text: 'size', align: 'right' }])
+    .join('th')
+    .attr('align', (d) => d.align ?? null)
+    .text((d) => d.text);
+  table // table data
+    .append('tbody')
+    .selectAll('tr')
+    .data(module.sections)
+    .join('tr')
+    .selectAll('td')
+    .data((sec) => [
+      { text: sec.type },
+      {
+        text: `${sec.len} (${d3.format('.1%')(sec.len / totalSize)})`,
+        align: 'right',
+      },
+    ])
+    .join('td')
+    .attr('align', (d) => d.align ?? null)
+    .text((d) => d.text);
+  return table.node()!;
+}
+
 async function main() {
   const wasmBytes = await (await fetch('t.wasm')).arrayBuffer();
   const module = wasm.read(new DataView(wasmBytes));
   document.body.append(render(module));
+  document.body.append(table(module));
 }
 
-main().catch(err => { console.error(err); });
+main().catch((err) => {
+  console.error(err);
+});
