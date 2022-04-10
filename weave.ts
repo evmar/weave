@@ -248,6 +248,15 @@ enum Instr {
   i64_extend32_s = 'i64.extend32_s',
 }
 
+interface Instruction {
+  op: Instr;
+}
+interface InstrIf {
+  op: Instr.if;
+  body: Instruction[];
+  else?: Instruction[];
+}
+
 class Parser {
   constructor(private r: Reader) {}
 
@@ -297,597 +306,410 @@ class Parser {
     return { align: this.r.readUint(), offset: this.r.readUint() };
   }
 
-  readInstr(): [Instr, unknown?] {
+  readInstruction(): Instruction {
     const op = this.r.read8();
-    let instr: Instr;
-    let extra: unknown;
     switch (op) {
       case 0x00:
-        instr = Instr.unreachable;
-        break;
+        return { op: Instr.unreachable };
       case 0x01:
-        instr = Instr.nop;
-        break;
+        return { op: Instr.nop };
       case 0x02:
-        instr = Instr.block;
         this.readBlockType();
-        extra = this.readExpr();
-        break;
+        return { op: Instr.block, body: this.readExpr() } as Instruction;
       case 0x03:
-        instr = Instr.loop;
         this.readBlockType();
-        extra = this.readExpr();
-        break;
+        return { op: Instr.loop, body: this.readExpr() } as Instruction;
       case 0x04:
-        instr = Instr.if;
         this.readBlockType();
         {
-          let [instrs, end] = this.readInstrs();
-          let elses = undefined;
+          let [body, end] = this.readInstrs();
+          let instr: InstrIf = { op: Instr.if, body };
           if (end === Instr.else) {
-            elses = this.readExpr();
+            instr.else = this.readExpr();
           }
-          extra = [instrs, elses];
+          return instr;
         }
-        break;
       case 0x0b:
-        instr = Instr.end;
-        break;
+        return { op: Instr.end };
       case 0x0c:
-        instr = Instr.br;
-        extra = this.r.readUint();
-        break;
+        return { op: Instr.br, label: this.r.readUint() } as Instruction;
       case 0x0d:
-        instr = Instr.br_if;
-        extra = this.r.readUint();
-        break;
+        return { op: Instr.br_if, label: this.r.readUint() } as Instruction;
       case 0x0e:
-        instr = Instr.br_table;
+        //return {op: Instr.br_table};
         throw new Error('unimplemented');
-        break;
       case 0x0f:
-        instr = Instr.return;
-        break;
+        return { op: Instr.return };
       case 0x10:
-        instr = Instr.call;
-        extra = this.r.readUint();
-        break;
+        return { op: Instr.call, func: this.r.readUint() } as Instruction;
       case 0x11:
-        instr = Instr.call_indirect;
-        extra = [this.r.readUint(), this.r.readUint()];
-        break;
-
+        return {
+          op: Instr.call_indirect,
+          type: this.r.readUint(),
+          table: this.r.readUint(),
+        } as Instruction;
       case 0x20:
-        instr = Instr.local_get;
-        extra = this.r.readUint();
-        break;
+        return { op: Instr.local_get, local: this.r.readUint() } as Instruction;
       case 0x21:
-        instr = Instr.local_set;
-        extra = this.r.readUint();
-        break;
+        return { op: Instr.local_set, local: this.r.readUint() } as Instruction;
       case 0x22:
-        instr = Instr.local_tee;
-        extra = this.r.readUint();
-        break;
+        return { op: Instr.local_tee, local: this.r.readUint() } as Instruction;
       case 0x23:
-        instr = Instr.global_get;
-        extra = this.r.readUint();
-        break;
+        return {
+          op: Instr.global_get,
+          global: this.r.readUint(),
+        } as Instruction;
       case 0x24:
-        instr = Instr.global_set;
-        extra = this.r.readUint();
-        break;
+        return {
+          op: Instr.global_set,
+          global: this.r.readUint(),
+        } as Instruction;
 
       case 0x28:
-        instr = Instr.i32_load;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i32_load, mem: this.readMemArg() } as Instruction;
       case 0x29:
-        instr = Instr.i64_load;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i64_load, mem: this.readMemArg() } as Instruction;
       case 0x2a:
-        instr = Instr.f32_load;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.f32_load, mem: this.readMemArg() } as Instruction;
       case 0x2b:
-        instr = Instr.f64_load;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.f64_load, mem: this.readMemArg() } as Instruction;
       case 0x2c:
-        instr = Instr.i32_load8_s;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i32_load8_s, mem: this.readMemArg() } as Instruction;
       case 0x2d:
-        instr = Instr.i32_load8_u;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i32_load8_u, mem: this.readMemArg() } as Instruction;
       case 0x2e:
-        instr = Instr.i32_load16_s;
-        extra = this.readMemArg();
-        break;
+        return {
+          op: Instr.i32_load16_s,
+          mem: this.readMemArg(),
+        } as Instruction;
       case 0x2f:
-        instr = Instr.i32_load16_u;
-        extra = this.readMemArg();
-        break;
+        return {
+          op: Instr.i32_load16_u,
+          mem: this.readMemArg(),
+        } as Instruction;
       case 0x30:
-        instr = Instr.i64_load8_s;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i64_load8_s, mem: this.readMemArg() } as Instruction;
       case 0x31:
-        instr = Instr.i64_load8_u;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i64_load8_u, mem: this.readMemArg() } as Instruction;
       case 0x32:
-        instr = Instr.i64_load16_s;
-        extra = this.readMemArg();
-        break;
+        return {
+          op: Instr.i64_load16_s,
+          mem: this.readMemArg(),
+        } as Instruction;
       case 0x33:
-        instr = Instr.i64_load16_u;
-        extra = this.readMemArg();
-        break;
+        return {
+          op: Instr.i64_load16_u,
+          mem: this.readMemArg(),
+        } as Instruction;
       case 0x34:
-        instr = Instr.i64_load32_s;
-        extra = this.readMemArg();
-        break;
+        return {
+          op: Instr.i64_load32_s,
+          mem: this.readMemArg(),
+        } as Instruction;
       case 0x35:
-        instr = Instr.i64_load32_u;
-        extra = this.readMemArg();
-        break;
+        return {
+          op: Instr.i64_load32_u,
+          mem: this.readMemArg(),
+        } as Instruction;
       case 0x36:
-        instr = Instr.i32_store;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i32_store, mem: this.readMemArg() } as Instruction;
       case 0x37:
-        instr = Instr.i64_store;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i64_store, mem: this.readMemArg() } as Instruction;
       case 0x38:
-        instr = Instr.f32_store;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.f32_store, mem: this.readMemArg() } as Instruction;
       case 0x39:
-        instr = Instr.f64_store;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.f64_store, mem: this.readMemArg() } as Instruction;
       case 0x3a:
-        instr = Instr.i32_store8;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i32_store8, mem: this.readMemArg() } as Instruction;
       case 0x3b:
-        instr = Instr.i32_store16;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i32_store16, mem: this.readMemArg() } as Instruction;
       case 0x3c:
-        instr = Instr.i64_store8;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i64_store8, mem: this.readMemArg() } as Instruction;
       case 0x3d:
-        instr = Instr.i64_store16;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i64_store16, mem: this.readMemArg() } as Instruction;
       case 0x3e:
-        instr = Instr.i64_store32;
-        extra = this.readMemArg();
-        break;
+        return { op: Instr.i64_store32, mem: this.readMemArg() } as Instruction;
 
       case 0x41:
-        instr = Instr.i32_const;
-        extra = this.r.readUint();
-        break;
+        return { op: Instr.i32_const, n: this.r.readUint() } as Instruction;
       case 0x42:
-        instr = Instr.i64_const;
-        extra = this.r.readUint();
-        break;
+        return { op: Instr.i64_const, n: this.r.readUint() } as Instruction;
       case 0x43:
-        instr = Instr.f32_const;
-        extra = this.r.readF32();
-        break;
+        return { op: Instr.f32_const, z: this.r.readF32() } as Instruction;
       case 0x44:
-        instr = Instr.f64_const;
-        extra = this.r.readF64();
-        break;
+        return { op: Instr.f64_const, z: this.r.readF64() } as Instruction;
 
       case 0x45:
-        instr = Instr.i32_eqz;
-        break;
+        return { op: Instr.i32_eqz };
       case 0x46:
-        instr = Instr.i32_eq;
-        break;
+        return { op: Instr.i32_eq };
       case 0x47:
-        instr = Instr.i32_ne;
-        break;
+        return { op: Instr.i32_ne };
       case 0x48:
-        instr = Instr.i32_lt_s;
-        break;
+        return { op: Instr.i32_lt_s };
       case 0x49:
-        instr = Instr.i32_lt_u;
-        break;
+        return { op: Instr.i32_lt_u };
       case 0x4a:
-        instr = Instr.i32_gt_s;
-        break;
+        return { op: Instr.i32_gt_s };
       case 0x4b:
-        instr = Instr.i32_gt_u;
-        break;
+        return { op: Instr.i32_gt_u };
       case 0x4c:
-        instr = Instr.i32_le_s;
-        break;
+        return { op: Instr.i32_le_s };
       case 0x4d:
-        instr = Instr.i32_le_u;
-        break;
+        return { op: Instr.i32_le_u };
       case 0x4e:
-        instr = Instr.i32_ge_s;
-        break;
+        return { op: Instr.i32_ge_s };
       case 0x4f:
-        instr = Instr.i32_ge_u;
-        break;
+        return { op: Instr.i32_ge_u };
       case 0x50:
-        instr = Instr.i64_eqz;
-        break;
+        return { op: Instr.i64_eqz };
       case 0x51:
-        instr = Instr.i64_eq;
-        break;
+        return { op: Instr.i64_eq };
       case 0x52:
-        instr = Instr.i64_ne;
-        break;
+        return { op: Instr.i64_ne };
       case 0x53:
-        instr = Instr.i64_lt_s;
-        break;
+        return { op: Instr.i64_lt_s };
       case 0x54:
-        instr = Instr.i64_lt_u;
-        break;
+        return { op: Instr.i64_lt_u };
       case 0x55:
-        instr = Instr.i64_gt_s;
-        break;
+        return { op: Instr.i64_gt_s };
       case 0x56:
-        instr = Instr.i64_gt_u;
-        break;
+        return { op: Instr.i64_gt_u };
       case 0x57:
-        instr = Instr.i64_le_s;
-        break;
+        return { op: Instr.i64_le_s };
       case 0x58:
-        instr = Instr.i64_le_u;
-        break;
+        return { op: Instr.i64_le_u };
       case 0x59:
-        instr = Instr.i64_ge_s;
-        break;
+        return { op: Instr.i64_ge_s };
       case 0x5a:
-        instr = Instr.i64_ge_u;
-        break;
+        return { op: Instr.i64_ge_u };
       case 0x5b:
-        instr = Instr.f32_eq;
-        break;
+        return { op: Instr.f32_eq };
       case 0x5c:
-        instr = Instr.f32_ne;
-        break;
+        return { op: Instr.f32_ne };
       case 0x5d:
-        instr = Instr.f32_lt;
-        break;
+        return { op: Instr.f32_lt };
       case 0x5e:
-        instr = Instr.f32_gt;
-        break;
+        return { op: Instr.f32_gt };
       case 0x5f:
-        instr = Instr.f32_le;
-        break;
+        return { op: Instr.f32_le };
       case 0x60:
-        instr = Instr.f32_ge;
-        break;
+        return { op: Instr.f32_ge };
       case 0x61:
-        instr = Instr.f64_eq;
-        break;
+        return { op: Instr.f64_eq };
       case 0x62:
-        instr = Instr.f64_ne;
-        break;
+        return { op: Instr.f64_ne };
       case 0x63:
-        instr = Instr.f64_lt;
-        break;
+        return { op: Instr.f64_lt };
       case 0x64:
-        instr = Instr.f64_gt;
-        break;
+        return { op: Instr.f64_gt };
       case 0x65:
-        instr = Instr.f64_le;
-        break;
+        return { op: Instr.f64_le };
       case 0x66:
-        instr = Instr.f64_ge;
-        break;
+        return { op: Instr.f64_ge };
       case 0x67:
-        instr = Instr.i32_clz;
-        break;
+        return { op: Instr.i32_clz };
       case 0x68:
-        instr = Instr.i32_ctz;
-        break;
+        return { op: Instr.i32_ctz };
       case 0x69:
-        instr = Instr.i32_popcnt;
-        break;
+        return { op: Instr.i32_popcnt };
       case 0x6a:
-        instr = Instr.i32_add;
-        break;
+        return { op: Instr.i32_add };
       case 0x6b:
-        instr = Instr.i32_sub;
-        break;
+        return { op: Instr.i32_sub };
       case 0x6c:
-        instr = Instr.i32_mul;
-        break;
+        return { op: Instr.i32_mul };
       case 0x6d:
-        instr = Instr.i32_div_s;
-        break;
+        return { op: Instr.i32_div_s };
       case 0x6e:
-        instr = Instr.i32_div_u;
-        break;
+        return { op: Instr.i32_div_u };
       case 0x6f:
-        instr = Instr.i32_rem_s;
-        break;
+        return { op: Instr.i32_rem_s };
       case 0x70:
-        instr = Instr.i32_rem_u;
-        break;
+        return { op: Instr.i32_rem_u };
       case 0x71:
-        instr = Instr.i32_and;
-        break;
+        return { op: Instr.i32_and };
       case 0x72:
-        instr = Instr.i32_or;
-        break;
+        return { op: Instr.i32_or };
       case 0x73:
-        instr = Instr.i32_xor;
-        break;
+        return { op: Instr.i32_xor };
       case 0x74:
-        instr = Instr.i32_shl;
-        break;
+        return { op: Instr.i32_shl };
       case 0x75:
-        instr = Instr.i32_shr_s;
-        break;
+        return { op: Instr.i32_shr_s };
       case 0x76:
-        instr = Instr.i32_shr_u;
-        break;
+        return { op: Instr.i32_shr_u };
       case 0x77:
-        instr = Instr.i32_rotl;
-        break;
+        return { op: Instr.i32_rotl };
       case 0x78:
-        instr = Instr.i32_rotr;
-        break;
+        return { op: Instr.i32_rotr };
       case 0x79:
-        instr = Instr.i64_clz;
-        break;
+        return { op: Instr.i64_clz };
       case 0x7a:
-        instr = Instr.i64_ctz;
-        break;
+        return { op: Instr.i64_ctz };
       case 0x7b:
-        instr = Instr.i64_popcnt;
-        break;
+        return { op: Instr.i64_popcnt };
       case 0x7c:
-        instr = Instr.i64_add;
-        break;
+        return { op: Instr.i64_add };
       case 0x7d:
-        instr = Instr.i64_sub;
-        break;
+        return { op: Instr.i64_sub };
       case 0x7e:
-        instr = Instr.i64_mul;
-        break;
+        return { op: Instr.i64_mul };
       case 0x7f:
-        instr = Instr.i64_div_s;
-        break;
+        return { op: Instr.i64_div_s };
       case 0x80:
-        instr = Instr.i64_div_u;
-        break;
+        return { op: Instr.i64_div_u };
       case 0x81:
-        instr = Instr.i64_rem_s;
-        break;
+        return { op: Instr.i64_rem_s };
       case 0x82:
-        instr = Instr.i64_rem_u;
-        break;
+        return { op: Instr.i64_rem_u };
       case 0x83:
-        instr = Instr.i64_and;
-        break;
+        return { op: Instr.i64_and };
       case 0x84:
-        instr = Instr.i64_or;
-        break;
+        return { op: Instr.i64_or };
       case 0x85:
-        instr = Instr.i64_xor;
-        break;
+        return { op: Instr.i64_xor };
       case 0x86:
-        instr = Instr.i64_shl;
-        break;
+        return { op: Instr.i64_shl };
       case 0x87:
-        instr = Instr.i64_shr_s;
-        break;
+        return { op: Instr.i64_shr_s };
       case 0x88:
-        instr = Instr.i64_shr_u;
-        break;
+        return { op: Instr.i64_shr_u };
       case 0x89:
-        instr = Instr.i64_rotl;
-        break;
+        return { op: Instr.i64_rotl };
       case 0x8a:
-        instr = Instr.i64_rotr;
-        break;
+        return { op: Instr.i64_rotr };
       case 0x8b:
-        instr = Instr.f32_abs;
-        break;
+        return { op: Instr.f32_abs };
       case 0x8c:
-        instr = Instr.f32_neg;
-        break;
+        return { op: Instr.f32_neg };
       case 0x8d:
-        instr = Instr.f32_ceil;
-        break;
+        return { op: Instr.f32_ceil };
       case 0x8e:
-        instr = Instr.f32_floor;
-        break;
+        return { op: Instr.f32_floor };
       case 0x8f:
-        instr = Instr.f32_trunc;
-        break;
+        return { op: Instr.f32_trunc };
       case 0x90:
-        instr = Instr.f32_nearest;
-        break;
+        return { op: Instr.f32_nearest };
       case 0x91:
-        instr = Instr.f32_sqrt;
-        break;
+        return { op: Instr.f32_sqrt };
       case 0x92:
-        instr = Instr.f32_add;
-        break;
+        return { op: Instr.f32_add };
       case 0x93:
-        instr = Instr.f32_sub;
-        break;
+        return { op: Instr.f32_sub };
       case 0x94:
-        instr = Instr.f32_mul;
-        break;
+        return { op: Instr.f32_mul };
       case 0x95:
-        instr = Instr.f32_div;
-        break;
+        return { op: Instr.f32_div };
       case 0x96:
-        instr = Instr.f32_min;
-        break;
+        return { op: Instr.f32_min };
       case 0x97:
-        instr = Instr.f32_max;
-        break;
+        return { op: Instr.f32_max };
       case 0x98:
-        instr = Instr.f32_copysign;
-        break;
+        return { op: Instr.f32_copysign };
       case 0x99:
-        instr = Instr.f64_abs;
-        break;
+        return { op: Instr.f64_abs };
       case 0x9a:
-        instr = Instr.f64_neg;
-        break;
+        return { op: Instr.f64_neg };
       case 0x9b:
-        instr = Instr.f64_ceil;
-        break;
+        return { op: Instr.f64_ceil };
       case 0x9c:
-        instr = Instr.f64_floor;
-        break;
+        return { op: Instr.f64_floor };
       case 0x9d:
-        instr = Instr.f64_trunc;
-        break;
+        return { op: Instr.f64_trunc };
       case 0x9e:
-        instr = Instr.f64_nearest;
-        break;
+        return { op: Instr.f64_nearest };
       case 0x9f:
-        instr = Instr.f64_sqrt;
-        break;
+        return { op: Instr.f64_sqrt };
       case 0xa0:
-        instr = Instr.f64_add;
-        break;
+        return { op: Instr.f64_add };
       case 0xa1:
-        instr = Instr.f64_sub;
-        break;
+        return { op: Instr.f64_sub };
       case 0xa2:
-        instr = Instr.f64_mul;
-        break;
+        return { op: Instr.f64_mul };
       case 0xa3:
-        instr = Instr.f64_div;
-        break;
+        return { op: Instr.f64_div };
       case 0xa4:
-        instr = Instr.f64_min;
-        break;
+        return { op: Instr.f64_min };
       case 0xa5:
-        instr = Instr.f64_max;
-        break;
+        return { op: Instr.f64_max };
       case 0xa6:
-        instr = Instr.f64_copysign;
-        break;
+        return { op: Instr.f64_copysign };
       case 0xa7:
-        instr = Instr.i32_wrap_i64;
-        break;
+        return { op: Instr.i32_wrap_i64 };
       case 0xa8:
-        instr = Instr.i32_trunc_f32_s;
-        break;
+        return { op: Instr.i32_trunc_f32_s };
       case 0xa9:
-        instr = Instr.i32_trunc_f32_u;
-        break;
+        return { op: Instr.i32_trunc_f32_u };
       case 0xaa:
-        instr = Instr.i32_trunc_f64_s;
-        break;
+        return { op: Instr.i32_trunc_f64_s };
       case 0xab:
-        instr = Instr.i32_trunc_f64_u;
-        break;
+        return { op: Instr.i32_trunc_f64_u };
       case 0xac:
-        instr = Instr.i64_extend_i32_s;
-        break;
+        return { op: Instr.i64_extend_i32_s };
       case 0xad:
-        instr = Instr.i64_extend_i32_u;
-        break;
+        return { op: Instr.i64_extend_i32_u };
       case 0xae:
-        instr = Instr.i64_trunc_f32_s;
-        break;
+        return { op: Instr.i64_trunc_f32_s };
       case 0xaf:
-        instr = Instr.i64_trunc_f32_u;
-        break;
+        return { op: Instr.i64_trunc_f32_u };
       case 0xb0:
-        instr = Instr.i64_trunc_f64_s;
-        break;
+        return { op: Instr.i64_trunc_f64_s };
       case 0xb1:
-        instr = Instr.i64_trunc_f64_u;
-        break;
+        return { op: Instr.i64_trunc_f64_u };
       case 0xb2:
-        instr = Instr.f32_convert_i32_s;
-        break;
+        return { op: Instr.f32_convert_i32_s };
       case 0xb3:
-        instr = Instr.f32_convert_i32_u;
-        break;
+        return { op: Instr.f32_convert_i32_u };
       case 0xb4:
-        instr = Instr.f32_convert_i64_s;
-        break;
+        return { op: Instr.f32_convert_i64_s };
       case 0xb5:
-        instr = Instr.f32_convert_i64_u;
-        break;
+        return { op: Instr.f32_convert_i64_u };
       case 0xb6:
-        instr = Instr.f32_demote_f64;
-        break;
+        return { op: Instr.f32_demote_f64 };
       case 0xb7:
-        instr = Instr.f64_convert_i32_s;
-        break;
+        return { op: Instr.f64_convert_i32_s };
       case 0xb8:
-        instr = Instr.f64_convert_i32_u;
-        break;
+        return { op: Instr.f64_convert_i32_u };
       case 0xb9:
-        instr = Instr.f64_convert_i64_s;
-        break;
+        return { op: Instr.f64_convert_i64_s };
       case 0xba:
-        instr = Instr.f64_convert_i64_u;
-        break;
+        return { op: Instr.f64_convert_i64_u };
       case 0xbb:
-        instr = Instr.f64_promote_f32;
-        break;
+        return { op: Instr.f64_promote_f32 };
       case 0xbc:
-        instr = Instr.i32_reinterpret_f32;
-        break;
+        return { op: Instr.i32_reinterpret_f32 };
       case 0xbd:
-        instr = Instr.i64_reinterpret_f64;
-        break;
+        return { op: Instr.i64_reinterpret_f64 };
       case 0xbe:
-        instr = Instr.f32_reinterpret_i32;
-        break;
+        return { op: Instr.f32_reinterpret_i32 };
       case 0xbf:
-        instr = Instr.f64_reinterpret_i64;
-        break;
+        return { op: Instr.f64_reinterpret_i64 };
       case 0xc0:
-        instr = Instr.i32_extend8_s;
-        break;
+        return { op: Instr.i32_extend8_s };
       case 0xc1:
-        instr = Instr.i32_extend16_s;
-        break;
+        return { op: Instr.i32_extend16_s };
       case 0xc2:
-        instr = Instr.i64_extend8_s;
-        break;
+        return { op: Instr.i64_extend8_s };
       case 0xc3:
-        instr = Instr.i64_extend16_s;
-        break;
+        return { op: Instr.i64_extend16_s };
       case 0xc4:
-        instr = Instr.i64_extend32_s;
-        break;
+        return { op: Instr.i64_extend32_s };
 
       default:
         throw new Error(`unhandled op ${op.toString(16)}`);
     }
-    return [instr, extra];
   }
 
-  readInstrs(): [Array<[Instr, unknown]>, Instr] {
-    const instrs: Array<[Instr, unknown]> = [];
+  readInstrs(): [Array<Instruction>, Instr] {
+    const instrs: Array<Instruction> = [];
     while (true) {
-      const [instr, extra] = this.readInstr();
-      console.log(instr, extra);
-      if (instr === Instr.end || instr === Instr.else) {
-        return [instrs, instr];
+      const instr = this.readInstruction();
+      console.log(instr);
+      if (instr.op === Instr.end || instr.op === Instr.else) {
+        return [instrs, instr.op];
       }
-      instrs.push([instr, extra]);
+      instrs.push(instr);
     }
   }
 
