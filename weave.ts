@@ -86,6 +86,31 @@ enum Instr {
   global_get = 'global.get',
   global_set = 'global.set',
 
+  // memory
+  i32_load = 'i32.load',
+  i64_load = 'i64.load',
+  f32_load = 'f32.load',
+  f64_load = 'f64.load',
+  i32_load8_s = 'i32.load8_s',
+  i32_load8_u = 'i32.load8_u',
+  i32_load16_s = 'i32.load16_s',
+  i32_load16_u = 'i32.load16_u',
+  i64_load8_s = 'i64.load8_s',
+  i64_load8_u = 'i64.load8_u',
+  i64_load16_s = 'i64.load16_s',
+  i64_load16_u = 'i64.load16_u',
+  i64_load32_s = 'i64.load32_s',
+  i64_load32_u = 'i64.load32_u',
+  i32_store = 'i32.store',
+  i64_store = 'i64.store',
+  f32_store = 'f32.store',
+  f64_store = 'f64.store',
+  i32_store8 = 'i32.store8',
+  i32_store16 = 'i32.store16',
+  i64_store8 = 'i64.store8',
+  i64_store16 = 'i64.store16',
+  i64_store32 = 'i64.store32',
+
   // numeric
   // const
   i32_const = 'i32.const',
@@ -137,6 +162,10 @@ class Parser {
         'todo https://webassembly.github.io/spec/core/binary/instructions.html#binary-blocktype'
       );
     }
+  }
+
+  readMemArg(): { align: number; offset: number } {
+    return { align: this.r.readUint(), offset: this.r.readUint() };
   }
 
   readInstr(): [Instr, unknown?] {
@@ -208,6 +237,99 @@ class Parser {
       case 0x24:
         instr = Instr.global_set;
         extra = this.r.readUint();
+        break;
+
+      case 0x28:
+        instr = Instr.i32_load;
+        extra = this.readMemArg();
+        break;
+      case 0x29:
+        instr = Instr.i64_load;
+        extra = this.readMemArg();
+        break;
+      case 0x2a:
+        instr = Instr.f32_load;
+        extra = this.readMemArg();
+        break;
+      case 0x2b:
+        instr = Instr.f64_load;
+        extra = this.readMemArg();
+        break;
+      case 0x2c:
+        instr = Instr.i32_load8_s;
+        extra = this.readMemArg();
+        break;
+      case 0x2d:
+        instr = Instr.i32_load8_u;
+        extra = this.readMemArg();
+        break;
+      case 0x2e:
+        instr = Instr.i32_load16_s;
+        extra = this.readMemArg();
+        break;
+      case 0x2f:
+        instr = Instr.i32_load16_u;
+        extra = this.readMemArg();
+        break;
+      case 0x30:
+        instr = Instr.i64_load8_s;
+        extra = this.readMemArg();
+        break;
+      case 0x31:
+        instr = Instr.i64_load8_u;
+        extra = this.readMemArg();
+        break;
+      case 0x32:
+        instr = Instr.i64_load16_s;
+        extra = this.readMemArg();
+        break;
+      case 0x33:
+        instr = Instr.i64_load16_u;
+        extra = this.readMemArg();
+        break;
+      case 0x34:
+        instr = Instr.i64_load32_s;
+        extra = this.readMemArg();
+        break;
+      case 0x35:
+        instr = Instr.i64_load32_u;
+        extra = this.readMemArg();
+        break;
+      case 0x36:
+        instr = Instr.i32_store;
+        extra = this.readMemArg();
+        break;
+      case 0x37:
+        instr = Instr.i64_store;
+        extra = this.readMemArg();
+        break;
+      case 0x38:
+        instr = Instr.f32_store;
+        extra = this.readMemArg();
+        break;
+      case 0x39:
+        instr = Instr.f64_store;
+        extra = this.readMemArg();
+        break;
+      case 0x3a:
+        instr = Instr.i32_store8;
+        extra = this.readMemArg();
+        break;
+      case 0x3b:
+        instr = Instr.i32_store16;
+        extra = this.readMemArg();
+        break;
+      case 0x3c:
+        instr = Instr.i64_store8;
+        extra = this.readMemArg();
+        break;
+      case 0x3d:
+        instr = Instr.i64_store16;
+        extra = this.readMemArg();
+        break;
+      case 0x3e:
+        instr = Instr.i64_store32;
+        extra = this.readMemArg();
         break;
 
       case 0x41:
