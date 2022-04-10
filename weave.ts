@@ -17,6 +17,9 @@ class Reader {
     this.ofs += 1;
     return val;
   }
+  back(): void {
+    this.ofs -= 1;
+  }
 
   read32(): number {
     const val = this.view.getUint32(this.ofs, true);
@@ -269,7 +272,7 @@ class Parser {
       throw new Error(`bad version, expected 1, got ${version}`);
   }
 
-  readType() {
+  readValType() {
     const n = this.r.read8();
     switch (n) {
       case 0x7f:
@@ -295,11 +298,10 @@ class Parser {
     const b = this.r.read8();
     if (b === 0x40) {
       return undefined;
-    } else {
-      throw new Error(
-        'todo https://webassembly.github.io/spec/core/binary/instructions.html#binary-blocktype'
-      );
     }
+    this.r.back();
+    return this.readValType();
+    // todo https://webassembly.github.io/spec/core/binary/instructions.html#binary-blocktype
   }
 
   readMemArg(): { align: number; offset: number } {
@@ -329,6 +331,8 @@ class Parser {
           }
           return instr;
         }
+      case 0x05:
+        return { op: Instr.else };
       case 0x0b:
         return { op: Instr.end };
       case 0x0c:
@@ -722,7 +726,7 @@ class Parser {
     const len = this.r.readUint();
     for (let i = 0; i < len; i++) {
       const count = this.r.readUint();
-      const type = this.readType();
+      const type = this.readValType();
       for (let j = 0; j < count; j++) {
         locals.push(type);
       }
