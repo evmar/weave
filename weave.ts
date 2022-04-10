@@ -1,64 +1,34 @@
 import * as fs from 'fs';
 import * as code from './code';
+import { Reader } from './reader';
 
-export class Reader {
-  view: DataView;
-  ofs: number = 0;
+enum SectionType {
+  custom = 'custom',
+  type = 'type',
+  import = 'import',
+  function = 'function',
+  table = 'table',
+  memory = 'memory',
+  global = 'global',
+  export = 'export',
+  start = 'start',
+  element = 'element',
+  code = 'code',
+  data = 'data',
+  data_count = 'data count',
+}
 
-  constructor(buf: ArrayBuffer) {
-    this.view = new DataView(buf);
-  }
-
-  done(): boolean {
-    return this.ofs == this.view.byteLength;
-  }
-
-  read8(): number {
-    const val = this.view.getUint8(this.ofs);
-    this.ofs += 1;
-    return val;
-  }
-  back(): void {
-    this.ofs -= 1;
-  }
-
-  read32(): number {
-    const val = this.view.getUint32(this.ofs, true);
-    this.ofs += 4;
-    return val;
-  }
-
-  readUint(): number {
-    let n = 0;
-    let shift = 0;
-    while (true) {
-      const b = this.read8();
-      n |= (b & 0x7f) << shift;
-      if ((b & 0x80) === 0) break;
-      shift += 7;
-    }
-    return n;
-  }
-
-  readF32(): number {
-    const val = this.view.getFloat32(this.ofs, true);
-    this.ofs += 4;
-    return val;
-  }
-
-  readF64(): number {
-    const val = this.view.getFloat64(this.ofs, true);
-    this.ofs += 8;
-    return val;
-  }
-
-  skip(len: number) {
-    this.ofs += len;
-  }
+interface Section {
+  type: SectionType;
+  ofs: number;
+  len: number;
 }
 
 class Parser {
-  constructor(private r: Reader) {}
+  private r: Reader;
+  constructor(view: DataView) {
+    this.r = new Reader(view);
+  }
 
   readHeader(): void {
     const magic = this.r.read32();
@@ -69,31 +39,41 @@ class Parser {
       throw new Error(`bad version, expected 1, got ${version}`);
   }
 
-  readSection() {
+  readSection(): Section {
     const id = this.r.read8();
     const len = this.r.readUint();
-    switch (id) {
-      case 10:
-        for (const func of code.parse(this.r)) {
-          console.log('func');
-          if (func.locals.length > 0) {
-            console.log('  locals', func.locals);
-          }
-          code.print(func.body, 1);
-        }
-        break;
-      default:
-        this.r.skip(len);
-    }
-    console.log(id, len);
+    const ofs = this.r.ofs;
+    this.r.skip(len);
+    const type = [
+      SectionType.custom,
+      SectionType.type,
+      SectionType.import,
+      SectionType.function,
+      SectionType.table,
+      SectionType.memory,
+      SectionType.global,
+      SectionType.export,
+      SectionType.start,
+      SectionType.element,
+      SectionType.code,
+      SectionType.data,
+      SectionType.data_count,
+    ][id];
+    return { type, ofs, len };
   }
 
-  read() {
+  parse(): Section[] {
     this.readHeader();
+    const sections = [];
     while (!this.r.done()) {
-      this.readSection();
+      sections.push(this.readSection());
     }
+    return sections;
   }
+}
+
+export function parse(view: DataView): Section[] {
+  return new Parser(view).parse();
 }
 
 const file = fs.readFileSync('t.wasm');
@@ -101,5 +81,19 @@ const buf = file.buffer.slice(
   file.byteOffset,
   file.byteOffset + file.byteLength
 );
-const r = new Parser(new Reader(buf));
-r.read();
+
+const sections = parse(new DataView(buf));
+for (const sec of sections) {
+  console.log(sec);
+  switch (sec.type) {
+    case SectionType.code:
+      for (const func of code.parse(new DataView(buf, sec.ofs, sec.len))) {
+        console.log('func');
+        if (func.locals.length > 0) {
+          console.log('  locals', func.locals);
+        }
+        code.print(func.body, 1);
+      }
+      break;
+  }
+}

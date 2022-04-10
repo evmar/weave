@@ -1,4 +1,8 @@
-import {Reader} from './weave';
+/**
+ * 'code' sections (functions and wasm instructions) parsing and printing.
+ */
+
+import { Reader } from './reader';
 
 enum Type {
   i32 = 'i32',
@@ -295,7 +299,10 @@ interface Function {
 }
 
 class Parser {
-  constructor(private r: Reader) {}
+  private r: Reader;
+  constructor(view: DataView) {
+    this.r = new Reader(view);
+  }
 
   readValType() {
     const n = this.r.read8();
@@ -752,7 +759,7 @@ class Parser {
       }
     }
     const body = this.readExpr();
-    return {locals, body};
+    return { locals, body };
   }
 
   readCode(): Function[] {
@@ -766,8 +773,8 @@ class Parser {
   }
 }
 
-export function parse(r: Reader): Function[] {
-  return new Parser(r).readCode();
+export function parse(view: DataView): Function[] {
+  return new Parser(view).readCode();
 }
 
 export function print(instrs: Instruction[], indent = 0) {
