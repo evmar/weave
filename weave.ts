@@ -82,6 +82,10 @@ enum Instr {
   call = 'call',
   call_indirect = 'call_indirect',
 
+  // parametric
+  drop = 'drop',
+  select = 'select',
+
   // variable
   local_get = 'local.get',
   local_set = 'local.set',
@@ -352,6 +356,20 @@ class Parser {
           type: this.r.readUint(),
           table: this.r.readUint(),
         } as Instruction;
+
+      case 0x1a:
+        return { op: Instr.drop };
+      case 0x1b:
+        return { op: Instr.select };
+      case 0x1c: {
+        const types = [];
+        const len = this.r.readUint();
+        for (let i = 0; i < len; i++) {
+          types.push(this.readValType());
+        }
+        return { op: Instr.select, types } as Instruction;
+      }
+
       case 0x20:
         return { op: Instr.local_get, local: this.r.readUint() } as Instruction;
       case 0x21:
