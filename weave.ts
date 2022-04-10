@@ -310,15 +310,25 @@ class Parser {
         break;
       case 0x02:
         instr = Instr.block;
-        extra = this.readBlockType();
+        this.readBlockType();
+        extra = this.readExpr();
         break;
       case 0x03:
         instr = Instr.loop;
-        extra = this.readBlockType();
+        this.readBlockType();
+        extra = this.readExpr();
         break;
       case 0x04:
         instr = Instr.if;
-        extra = this.readBlockType();
+        this.readBlockType();
+        {
+          let [instrs, end] = this.readInstrs();
+          let elses = undefined;
+          if (end === Instr.else) {
+            elses = this.readExpr();
+          }
+          extra = [instrs, elses];
+        }
         break;
       case 0x0b:
         instr = Instr.end;
@@ -869,15 +879,20 @@ class Parser {
     return [instr, extra];
   }
 
-  readExpr() {
-    const instrs = [];
+  readInstrs(): [Array<[Instr, unknown]>, Instr] {
+    const instrs: Array<[Instr, unknown]> = [];
     while (true) {
       const [instr, extra] = this.readInstr();
       console.log(instr, extra);
-      if (instr === Instr.end) break;
-      instrs.push(instr);
+      if (instr === Instr.end || instr === Instr.else) {
+        return [instrs, instr];
+      }
+      instrs.push([instr, extra]);
     }
-    return instrs;
+  }
+
+  readExpr() {
+    return this.readInstrs()[0];
   }
 
   readFunc() {
