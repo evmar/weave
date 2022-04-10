@@ -1,6 +1,6 @@
 /** Wasm-level types (e.g. function type, valtype). */
 
-import { Reader } from "./reader";
+import { Reader } from './reader';
 
 export enum Type {
   i32 = 'i32',
@@ -42,5 +42,5 @@ export interface FuncType {
 export function readFuncType(r: Reader): FuncType {
   const params = r.vec(() => readValType(r));
   const result = r.vec(() => readValType(r));
-  return {params, result};
+  return { params, result };
 }

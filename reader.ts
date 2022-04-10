@@ -32,7 +32,7 @@ export class Reader {
       n |= (b & 0x7f) << shift;
       if ((b & 0x80) === 0) break;
       shift += 7;
-    } 
+    }
     return n;
   }
 

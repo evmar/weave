@@ -290,10 +290,7 @@ interface Function {
 }
 
 class Parser {
-  private r: Reader;
-  constructor(view: DataView) {
-    this.r = new Reader(view);
-  }
+  constructor(private r: Reader) {}
 
   readBlockType() {
     const b = this.r.read8();
@@ -736,8 +733,8 @@ class Parser {
   }
 }
 
-export function parse(view: DataView): Function[] {
-  return new Parser(view).readCode();
+export function parse(r: Reader): Function[] {
+  return new Parser(r).readCode();
 }
 
 export function print(instrs: Instruction[], indent = 0) {

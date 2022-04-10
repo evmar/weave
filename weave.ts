@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as code from './code';
 import { Reader } from './reader';
+import { FuncType, readFuncType } from './type';
 
 enum SectionType {
   custom = 'custom',
@@ -18,19 +19,27 @@ enum SectionType {
   data_count = 'data count',
 }
 
-interface Section {
+interface SectionHeader {
   type: SectionType;
   ofs: number;
   len: number;
 }
 
+class Module {
+  constructor(private buffer: ArrayBuffer, public sections: SectionHeader[]) {}
+
+  getReader(section: SectionHeader) {
+    return new Reader(new DataView(this.buffer, section.ofs, section.len));
+  }
+}
+
 class Parser {
   private r: Reader;
-  constructor(view: DataView) {
+  constructor(private view: DataView) {
     this.r = new Reader(view);
   }
 
-  readHeader(): void {
+  readFileHeader(): void {
     const magic = this.r.read32();
     if (magic !== 0x6d736100)
       throw new Error(`invalid signature: ${magic.toString(16)}`);
@@ -39,7 +48,7 @@ class Parser {
       throw new Error(`bad version, expected 1, got ${version}`);
   }
 
-  readSection(): Section {
+  readSectionHeader(): SectionHeader {
     const id = this.r.read8();
     const len = this.r.readUint();
     const ofs = this.r.ofs;
@@ -62,38 +71,50 @@ class Parser {
     return { type, ofs, len };
   }
 
-  parse(): Section[] {
-    this.readHeader();
+  parse(): Module {
+    this.readFileHeader();
     const sections = [];
     while (!this.r.done()) {
-      sections.push(this.readSection());
+      sections.push(this.readSectionHeader());
     }
-    return sections;
+    return new Module(this.view.buffer, sections);
   }
 }
 
-export function parse(view: DataView): Section[] {
+interface TypeSection {
+  types: FuncType[];
+}
+
+export function parseTypeSection(r: Reader): TypeSection {
+  const types = r.vec(() => readFuncType(r));
+  return { types };
+}
+
+export function parse(view: DataView): Module {
   return new Parser(view).parse();
 }
 
-const file = fs.readFileSync('t.wasm');
-const buf = file.buffer.slice(
-  file.byteOffset,
-  file.byteOffset + file.byteLength
-);
+function main() {
+  const file = fs.readFileSync('t.wasm');
+  const buf = file.buffer.slice(
+    file.byteOffset,
+    file.byteOffset + file.byteLength
+  );
 
-const sections = parse(new DataView(buf));
-for (const sec of sections) {
-  console.log(sec);
-  switch (sec.type) {
-    case SectionType.code:
-      for (const func of code.parse(new DataView(buf, sec.ofs, sec.len))) {
-        console.log('func');
-        if (func.locals.length > 0) {
-          console.log('  locals', func.locals);
+  const module = parse(new DataView(buf));
+  for (const sec of module.sections) {
+    console.log(sec);
+    switch (sec.type) {
+      case SectionType.code:
+        for (const func of code.parse(module.getReader(sec))) {
+          console.log('func');
+          if (func.locals.length > 0) {
+            console.log('  locals', func.locals);
+          }
+          code.print(func.body, 1);
         }
-        code.print(func.body, 1);
-      }
-      break;
+        break;
+    }
   }
 }
+main();
