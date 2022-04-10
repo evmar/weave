@@ -51,4 +51,13 @@ export class Reader {
   skip(len: number) {
     this.ofs += len;
   }
+
+  vec<T>(f: (r: Reader) => T): T[] {
+    const len = this.readUint();
+    const ts = new Array(len);
+    for (let i = 0; i < len; i++) {
+      ts[i] = f(this);
+    }
+    return ts;
+  }
 }

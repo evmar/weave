@@ -3,16 +3,7 @@
  */
 
 import { Reader } from './reader';
-
-enum Type {
-  i32 = 'i32',
-  i64 = 'i64',
-  f32 = 'f32',
-  f64 = 'f64',
-  v128 = 'v128',
-  funcref = 'funcref',
-  externref = 'externref',
-}
+import { readValType, Type } from './type';
 
 enum Instr {
   // control
@@ -304,35 +295,13 @@ class Parser {
     this.r = new Reader(view);
   }
 
-  readValType() {
-    const n = this.r.read8();
-    switch (n) {
-      case 0x7f:
-        return Type.i32;
-      case 0x7e:
-        return Type.i64;
-      case 0x7d:
-        return Type.f32;
-      case 0x7c:
-        return Type.f64;
-      case 0x7b:
-        return Type.v128;
-      case 0x70:
-        return Type.funcref;
-      case 0x6f:
-        return Type.externref;
-      default:
-        throw new Error(`unknown type byte ${n.toString(16)}`);
-    }
-  }
-
   readBlockType() {
     const b = this.r.read8();
     if (b === 0x40) {
       return undefined;
     }
     this.r.back();
-    return this.readValType();
+    return readValType(this.r);
     // todo https://webassembly.github.io/spec/core/binary/instructions.html#binary-blocktype
   }
 
@@ -390,11 +359,7 @@ class Parser {
       case 0x1b:
         return { op: Instr.select };
       case 0x1c: {
-        const types = [];
-        const len = this.r.readUint();
-        for (let i = 0; i < len; i++) {
-          types.push(this.readValType());
-        }
+        const types = this.r.vec(readValType);
         return { op: Instr.select, types };
       }
 
@@ -753,7 +718,7 @@ class Parser {
     const len = this.r.readUint();
     for (let i = 0; i < len; i++) {
       const count = this.r.readUint();
-      const type = this.readValType();
+      const type = readValType(this.r);
       for (let j = 0; j < count; j++) {
         locals.push(type);
       }
@@ -763,12 +728,10 @@ class Parser {
   }
 
   readCode(): Function[] {
-    const len = this.r.readUint();
-    const funcs = [];
-    for (let i = 0; i < len; i++) {
+    const funcs = this.r.vec(() => {
       const size = this.r.readUint();
-      funcs.push(this.readFunc());
-    }
+      return this.readFunc();
+    });
     return funcs;
   }
 }
