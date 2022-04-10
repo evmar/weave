@@ -199,6 +199,7 @@ function main() {
   );
 
   const module = parse(new DataView(buf));
+  let funcIndex = 0;
   for (const sec of module.sections) {
     console.log(`# section: ${sec.type} (${sec.len} bytes)`);
     switch (sec.type) {
@@ -211,7 +212,13 @@ function main() {
       }
       case SectionType.import:
         for (const imp of parseImportSection(module.getReader(sec))) {
-          console.log(`  ${importToString(imp)}`);
+          switch (imp.desc.type) {
+            case IndexType.type:
+              console.log(`  func ${funcIndex++}: ${importToString(imp)}`);
+              break;
+            default:
+              console.log(`  ${importToString(imp)}`);
+          }
         }
         break;
       case SectionType.export:
@@ -221,11 +228,11 @@ function main() {
         break;
       case SectionType.code:
         for (const func of code.parse(module.getReader(sec))) {
-          console.log('func');
+          console.log(`  func ${funcIndex++}`);
           if (func.locals.length > 0) {
-            console.log('  locals', func.locals);
+            console.log('    locals', func.locals);
           }
-          code.print(func.body, 1);
+          code.print(func.body, 2);
         }
         break;
     }
