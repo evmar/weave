@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as code from './code';
 import { Reader } from './reader';
-import { FuncType, readFuncType } from './type';
+import { FuncType, funcTypeToString, readFuncType } from './type';
 
 enum SectionType {
   custom = 'custom',
@@ -81,17 +81,114 @@ class Parser {
   }
 }
 
-interface TypeSection {
-  types: FuncType[];
-}
-
-export function parseTypeSection(r: Reader): TypeSection {
-  const types = r.vec(() => readFuncType(r));
-  return { types };
-}
-
 export function parse(view: DataView): Module {
   return new Parser(view).parse();
+}
+
+export function parseTypeSection(r: Reader): FuncType[] {
+  return r.vec(() => readFuncType(r));
+}
+
+enum IndexType {
+  type = 'type',
+  func = 'func',
+  table = 'table',
+  mem = 'mem',
+  global = 'global',
+}
+interface TypeIndex {
+  type: IndexType.type;
+  index: number;
+}
+interface FuncIndex {
+  type: IndexType.func;
+  index: number;
+}
+interface TableIndex {
+  type: IndexType.table;
+  index: number;
+}
+interface MemIndex {
+  type: IndexType.mem;
+  index: number;
+}
+interface GlobalIndex {
+  type: IndexType.global;
+  index: number;
+}
+
+function indexToString(
+  index: TypeIndex | FuncIndex | TableIndex | MemIndex | GlobalIndex
+): string {
+  switch (index.type) {
+    case IndexType.type:
+      return `func type ${index.index}`;
+    case IndexType.func:
+      return `function ${index.index}`;
+    case IndexType.table:
+      return `table ${index.index}`;
+    case IndexType.mem:
+      return `mem ${index.index}`;
+    case IndexType.global:
+      return `mem ${index.index}`;
+  }
+}
+
+interface Import {
+  module: string;
+  name: string;
+  desc: TypeIndex | TableIndex | MemIndex | GlobalIndex;
+}
+export function importToString(imp: Import): string {
+  return `${imp.module}.${imp.name} (${indexToString(imp.desc)})`;
+}
+
+export function parseImportSection(r: Reader): Import[] {
+  return r.vec(() => {
+    const module = r.name();
+    const name = r.name();
+    const desc8 = r.read8();
+    let type = (
+      [
+        IndexType.type,
+        IndexType.table,
+        IndexType.mem,
+        IndexType.global,
+      ] as const
+    )[desc8];
+    if (!type) {
+      throw new Error(`unhandled export desc type ${desc8.toString(16)}`);
+    }
+    const desc = { type, index: r.readUint() };
+    return { module, name, desc };
+  });
+}
+
+interface Export {
+  name: string;
+  desc: FuncIndex | TableIndex | MemIndex | GlobalIndex;
+}
+function exportToString(exp: Export): string {
+  return `${exp.name} (${indexToString(exp.desc)})`;
+}
+export function parseExportSection(r: Reader): Export[] {
+  return r.vec(() => {
+    const name = r.name();
+    const desc8 = r.read8();
+    let type = (
+      [
+        IndexType.func,
+        IndexType.table,
+        IndexType.mem,
+        IndexType.global,
+      ] as const
+    )[desc8];
+    if (!type) {
+      throw new Error(`unhandled export desc type ${desc8.toString(16)}`);
+    }
+    const desc = { type, index: r.readUint() };
+    return { name, desc };
+  });
 }
 
 function main() {
@@ -103,8 +200,25 @@ function main() {
 
   const module = parse(new DataView(buf));
   for (const sec of module.sections) {
-    console.log(sec);
+    console.log(`# section: ${sec.type} (${sec.len} bytes)`);
     switch (sec.type) {
+      case SectionType.type: {
+        const types = parseTypeSection(module.getReader(sec));
+        for (let i = 0; i < types.length; i++) {
+          console.log(`  ${i}: ${funcTypeToString(types[i])}`);
+        }
+        break;
+      }
+      case SectionType.import:
+        for (const imp of parseImportSection(module.getReader(sec))) {
+          console.log(`  ${importToString(imp)}`);
+        }
+        break;
+      case SectionType.export:
+        for (const exp of parseExportSection(module.getReader(sec))) {
+          console.log(`  ${exportToString(exp)}`);
+        }
+        break;
       case SectionType.code:
         for (const func of code.parse(module.getReader(sec))) {
           console.log('func');

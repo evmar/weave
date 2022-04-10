@@ -40,7 +40,17 @@ export interface FuncType {
 }
 
 export function readFuncType(r: Reader): FuncType {
+  if (r.read8() !== 0x60) throw new Error(`expected function type`);
   const params = r.vec(() => readValType(r));
   const result = r.vec(() => readValType(r));
   return { params, result };
+}
+
+export function funcTypeToString(f: FuncType): string {
+  const params = f.params.join(', ');
+  if (f.result.length == 0) {
+    return `(${params})`;
+  }
+  const result = f.result.join(', ');
+  return `(${params}) => ${result}`;
 }

@@ -60,4 +60,13 @@ export class Reader {
     }
     return ts;
   }
+
+  name(): string {
+    const len = this.readUint();
+    const str = new TextDecoder().decode(
+      new DataView(this.view.buffer, this.view.byteOffset + this.ofs, len)
+    );
+    this.ofs += len;
+    return str;
+  }
 }
