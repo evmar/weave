@@ -255,14 +255,92 @@ enum Instr {
   i64_extend32_s = 'i64.extend32_s',
 }
 
-interface Instruction {
+interface InstructionBase {
   op: Instr;
+}
+interface InstrBlock {
+  op: Instr.block | Instr.loop;
+  body: Instruction[];
 }
 interface InstrIf {
   op: Instr.if;
   body: Instruction[];
   else?: Instruction[];
 }
+interface InstrBranch {
+  op: Instr.br | Instr.br_if;
+  label: number;
+}
+interface InstrCall {
+  op: Instr.call;
+  func: number;
+}
+interface InstrCallIndirect {
+  op: Instr.call_indirect;
+  type: number;
+  table: number;
+}
+interface InstrSelect {
+  op: Instr.select;
+  types?: Type[];
+}
+interface InstrLocal {
+  op: Instr.local_get | Instr.local_set | Instr.local_tee;
+  local: number;
+}
+interface InstrGlobal {
+  op: Instr.global_get | Instr.global_set;
+  global: number;
+}
+interface InstrMem {
+  op:
+    | Instr.i32_load
+    | Instr.i64_load
+    | Instr.f32_load
+    | Instr.f64_load
+    | Instr.i32_load8_s
+    | Instr.i32_load8_u
+    | Instr.i32_load16_s
+    | Instr.i32_load16_u
+    | Instr.i64_load8_s
+    | Instr.i64_load8_u
+    | Instr.i64_load16_s
+    | Instr.i64_load16_u
+    | Instr.i64_load32_s
+    | Instr.i64_load32_u
+    | Instr.i32_store
+    | Instr.i64_store
+    | Instr.f32_store
+    | Instr.f64_store
+    | Instr.i32_store8
+    | Instr.i32_store16
+    | Instr.i64_store8
+    | Instr.i64_store16
+    | Instr.i64_store32;
+  align: number;
+  offset: number;
+}
+interface InstrConstInt {
+  op: Instr.i32_const | Instr.i64_const;
+  n: number;
+}
+interface InstrConstFloat {
+  op: Instr.f32_const | Instr.f64_const;
+  z: number;
+}
+type Instruction =
+  | InstructionBase
+  | InstrBlock
+  | InstrIf
+  | InstrBranch
+  | InstrCall
+  | InstrCallIndirect
+  | InstrSelect
+  | InstrLocal
+  | InstrGlobal
+  | InstrMem
+  | InstrConstInt
+  | InstrConstFloat;
 
 class Parser {
   constructor(private r: Reader) {}
@@ -308,8 +386,8 @@ class Parser {
     // todo https://webassembly.github.io/spec/core/binary/instructions.html#binary-blocktype
   }
 
-  readMemArg(): { align: number; offset: number } {
-    return { align: this.r.readUint(), offset: this.r.readUint() };
+  readMemOp(op: InstrMem['op']): InstrMem {
+    return { op, align: this.r.readUint(), offset: this.r.readUint() };
   }
 
   readInstruction(): Instruction {
@@ -321,10 +399,10 @@ class Parser {
         return { op: Instr.nop };
       case 0x02:
         this.readBlockType();
-        return { op: Instr.block, body: this.readExpr() } as Instruction;
+        return { op: Instr.block, body: this.readExpr() };
       case 0x03:
         this.readBlockType();
-        return { op: Instr.loop, body: this.readExpr() } as Instruction;
+        return { op: Instr.loop, body: this.readExpr() };
       case 0x04:
         this.readBlockType();
         {
@@ -340,22 +418,22 @@ class Parser {
       case 0x0b:
         return { op: Instr.end };
       case 0x0c:
-        return { op: Instr.br, label: this.r.readUint() } as Instruction;
+        return { op: Instr.br, label: this.r.readUint() };
       case 0x0d:
-        return { op: Instr.br_if, label: this.r.readUint() } as Instruction;
+        return { op: Instr.br_if, label: this.r.readUint() };
       case 0x0e:
         //return {op: Instr.br_table};
         throw new Error('unimplemented');
       case 0x0f:
         return { op: Instr.return };
       case 0x10:
-        return { op: Instr.call, func: this.r.readUint() } as Instruction;
+        return { op: Instr.call, func: this.r.readUint() };
       case 0x11:
         return {
           op: Instr.call_indirect,
           type: this.r.readUint(),
           table: this.r.readUint(),
-        } as Instruction;
+        };
 
       case 0x1a:
         return { op: Instr.drop };
@@ -367,99 +445,81 @@ class Parser {
         for (let i = 0; i < len; i++) {
           types.push(this.readValType());
         }
-        return { op: Instr.select, types } as Instruction;
+        return { op: Instr.select, types };
       }
 
       case 0x20:
-        return { op: Instr.local_get, local: this.r.readUint() } as Instruction;
+        return { op: Instr.local_get, local: this.r.readUint() };
       case 0x21:
-        return { op: Instr.local_set, local: this.r.readUint() } as Instruction;
+        return { op: Instr.local_set, local: this.r.readUint() };
       case 0x22:
-        return { op: Instr.local_tee, local: this.r.readUint() } as Instruction;
+        return { op: Instr.local_tee, local: this.r.readUint() };
       case 0x23:
         return {
           op: Instr.global_get,
           global: this.r.readUint(),
-        } as Instruction;
+        };
       case 0x24:
         return {
           op: Instr.global_set,
           global: this.r.readUint(),
-        } as Instruction;
+        };
 
       case 0x28:
-        return { op: Instr.i32_load, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i32_load);
       case 0x29:
-        return { op: Instr.i64_load, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i64_load);
       case 0x2a:
-        return { op: Instr.f32_load, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.f32_load);
       case 0x2b:
-        return { op: Instr.f64_load, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.f64_load);
       case 0x2c:
-        return { op: Instr.i32_load8_s, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i32_load8_s);
       case 0x2d:
-        return { op: Instr.i32_load8_u, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i32_load8_u);
       case 0x2e:
-        return {
-          op: Instr.i32_load16_s,
-          mem: this.readMemArg(),
-        } as Instruction;
+        return this.readMemOp(Instr.i32_load16_s);
       case 0x2f:
-        return {
-          op: Instr.i32_load16_u,
-          mem: this.readMemArg(),
-        } as Instruction;
+        return this.readMemOp(Instr.i32_load16_u);
       case 0x30:
-        return { op: Instr.i64_load8_s, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i64_load8_s);
       case 0x31:
-        return { op: Instr.i64_load8_u, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i64_load8_u);
       case 0x32:
-        return {
-          op: Instr.i64_load16_s,
-          mem: this.readMemArg(),
-        } as Instruction;
+        return this.readMemOp(Instr.i64_load16_s);
       case 0x33:
-        return {
-          op: Instr.i64_load16_u,
-          mem: this.readMemArg(),
-        } as Instruction;
+        return this.readMemOp(Instr.i64_load16_u);
       case 0x34:
-        return {
-          op: Instr.i64_load32_s,
-          mem: this.readMemArg(),
-        } as Instruction;
+        return this.readMemOp(Instr.i64_load32_s);
       case 0x35:
-        return {
-          op: Instr.i64_load32_u,
-          mem: this.readMemArg(),
-        } as Instruction;
+        return this.readMemOp(Instr.i64_load32_u);
       case 0x36:
-        return { op: Instr.i32_store, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i32_store);
       case 0x37:
-        return { op: Instr.i64_store, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i64_store);
       case 0x38:
-        return { op: Instr.f32_store, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.f32_store);
       case 0x39:
-        return { op: Instr.f64_store, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.f64_store);
       case 0x3a:
-        return { op: Instr.i32_store8, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i32_store8);
       case 0x3b:
-        return { op: Instr.i32_store16, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i32_store16);
       case 0x3c:
-        return { op: Instr.i64_store8, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i64_store8);
       case 0x3d:
-        return { op: Instr.i64_store16, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i64_store16);
       case 0x3e:
-        return { op: Instr.i64_store32, mem: this.readMemArg() } as Instruction;
+        return this.readMemOp(Instr.i64_store32);
 
       case 0x41:
-        return { op: Instr.i32_const, n: this.r.readUint() } as Instruction;
+        return { op: Instr.i32_const, n: this.r.readUint() };
       case 0x42:
-        return { op: Instr.i64_const, n: this.r.readUint() } as Instruction;
+        return { op: Instr.i64_const, n: this.r.readUint() };
       case 0x43:
-        return { op: Instr.f32_const, z: this.r.readF32() } as Instruction;
+        return { op: Instr.f32_const, z: this.r.readF32() };
       case 0x44:
-        return { op: Instr.f64_const, z: this.r.readF64() } as Instruction;
+        return { op: Instr.f64_const, z: this.r.readF64() };
 
       case 0x45:
         return { op: Instr.i32_eqz };
