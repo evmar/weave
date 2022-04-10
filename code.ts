@@ -733,7 +733,7 @@ class Parser {
   }
 }
 
-export function parse(r: Reader): Function[] {
+export function read(r: Reader): Function[] {
   return new Parser(r).readCode();
 }
 

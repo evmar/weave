@@ -71,7 +71,7 @@ class Parser {
     return { type, ofs, len };
   }
 
-  parse(): Module {
+  read(): Module {
     this.readFileHeader();
     const sections = [];
     while (!this.r.done()) {
@@ -81,11 +81,11 @@ class Parser {
   }
 }
 
-export function parse(view: DataView): Module {
-  return new Parser(view).parse();
+export function read(view: DataView): Module {
+  return new Parser(view).read();
 }
 
-export function parseTypeSection(r: Reader): FuncType[] {
+export function readTypeSection(r: Reader): FuncType[] {
   return r.vec(() => readFuncType(r));
 }
 
@@ -143,7 +143,7 @@ export function importToString(imp: Import): string {
   return `${imp.module}.${imp.name} (${indexToString(imp.desc)})`;
 }
 
-export function parseImportSection(r: Reader): Import[] {
+export function readImportSection(r: Reader): Import[] {
   return r.vec(() => {
     const module = r.name();
     const name = r.name();
@@ -171,7 +171,7 @@ interface Export {
 function exportToString(exp: Export): string {
   return `${exp.name} (${indexToString(exp.desc)})`;
 }
-export function parseExportSection(r: Reader): Export[] {
+export function readExportSection(r: Reader): Export[] {
   return r.vec(() => {
     const name = r.name();
     const desc8 = r.read8();
@@ -198,20 +198,20 @@ function main() {
     file.byteOffset + file.byteLength
   );
 
-  const module = parse(new DataView(buf));
+  const module = read(new DataView(buf));
   let funcIndex = 0;
   for (const sec of module.sections) {
     console.log(`# section: ${sec.type} (${sec.len} bytes)`);
     switch (sec.type) {
       case SectionType.type: {
-        const types = parseTypeSection(module.getReader(sec));
+        const types = readTypeSection(module.getReader(sec));
         for (let i = 0; i < types.length; i++) {
           console.log(`  ${i}: ${funcTypeToString(types[i])}`);
         }
         break;
       }
       case SectionType.import:
-        for (const imp of parseImportSection(module.getReader(sec))) {
+        for (const imp of readImportSection(module.getReader(sec))) {
           switch (imp.desc.type) {
             case IndexType.type:
               console.log(`  func ${funcIndex++}: ${importToString(imp)}`);
@@ -222,12 +222,12 @@ function main() {
         }
         break;
       case SectionType.export:
-        for (const exp of parseExportSection(module.getReader(sec))) {
+        for (const exp of readExportSection(module.getReader(sec))) {
           console.log(`  ${exportToString(exp)}`);
         }
         break;
       case SectionType.code:
-        for (const func of code.parse(module.getReader(sec))) {
+        for (const func of code.read(module.getReader(sec))) {
           console.log(`  func ${funcIndex++}`);
           if (func.locals.length > 0) {
             console.log('    locals', func.locals);
