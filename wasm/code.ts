@@ -207,6 +207,11 @@ interface InstrBranch {
   op: Instr.br | Instr.br_if;
   label: number;
 }
+interface InstrBranchTable {
+  op: Instr.br_table;
+  labels: number[];
+  default: number;
+}
 interface InstrCall {
   op: Instr.call;
   func: number;
@@ -268,6 +273,7 @@ type InstructionWithFields =
   | InstrBlock
   | InstrIf
   | InstrBranch
+  | InstrBranchTable
   | InstrCall
   | InstrCallIndirect
   | InstrSelect
@@ -338,8 +344,7 @@ class Parser {
       case 0x0d:
         return { op: Instr.br_if, label: this.r.readUint() };
       case 0x0e:
-        //return {op: Instr.br_table};
-        throw new Error('unimplemented');
+        return {op: Instr.br_table, labels: this.r.vec(() => this.r.readUint()), default: this.r.readUint()};
       case 0x0f:
         return { op: Instr.return };
       case 0x10:
