@@ -2,7 +2,7 @@ import * as d3 from 'd3';
 import * as wasm from 'wasm';
 import * as code from 'wasm/code';
 import * as preact from 'preact';
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
 
 type IndexedSection = wasm.SectionHeader & { index: number };
 
@@ -86,34 +86,48 @@ function Table({ sections, hovered, onHover }: TableProps) {
   );
 }
 
+type IndexedFunction = code.Function & { index: number };
 interface FuncsProps {
-  children: code.Function[];
+  children: IndexedFunction[];
 }
 interface FuncsState {
-  funcs: code.Function[];
+  funcs: IndexedFunction[];
 }
 class Funcs extends preact.Component<FuncsProps, FuncsState> {
   state = { funcs: [] };
   static getDerivedStateFromProps(props: FuncsProps): object {
-    const funcs = d3.sort(props.children, (f1, f2) =>
-      d3.descending(f1.body.length, f2.body.length)
-    );
+    const funcs = d3
+      .sort(props.children, (f1, f2) =>
+        d3.descending(f1.body.length, f2.body.length)
+      )
+      .slice(0, 10);
     return { funcs };
   }
   render(_: FuncsProps, { funcs }: FuncsState) {
     return (
-      <pre>
-        {funcs[0].body.map((instr) => (
-          <div>{instr.op}</div>
+      <>
+        {funcs.map((f) => (
+          <div>{f.index}</div>
         ))}
-      </pre>
+        <Code func={funcs[0]} />
+      </>
     );
   }
 }
 
+function Code({ func }: { func: IndexedFunction }) {
+  return (
+    <pre>
+      {func.body.map((instr) => (
+        <div>{instr.op}</div>
+      ))}
+    </pre>
+  );
+}
+
 interface AppProps {
   sections: IndexedSection[];
-  funcs: code.Function[];
+  funcs: IndexedFunction[];
 }
 interface AppState {
   hovered: number | undefined;
@@ -153,9 +167,11 @@ async function main() {
   const codeSection = module.sections.find(
     (sec) => sec.type === wasm.SectionType.code
   );
-  let funcs: code.Function[] = [];
+  let funcs: IndexedFunction[] = [];
   if (codeSection) {
-    funcs = code.read(module.getReader(codeSection));
+    funcs = code
+      .read(module.getReader(codeSection))
+      .map((f, i) => ({ ...f, index: i }));
   }
   preact.render(<App sections={sections} funcs={funcs}></App>, document.body);
 }
