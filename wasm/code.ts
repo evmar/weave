@@ -284,7 +284,7 @@ interface InstructionWithoutFields {
 }
 type Instruction = InstructionWithoutFields | InstructionWithFields;
 
-interface Function {
+export interface Function {
   locals: Type[];
   body: Instruction[];
 }

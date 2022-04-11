@@ -1,5 +1,6 @@
 import * as d3 from 'd3';
 import * as wasm from 'wasm';
+import * as code from 'wasm/code';
 import * as preact from 'preact';
 import { h } from 'preact';
 
@@ -60,7 +61,7 @@ interface TableProps {
 function Table({ sections, hovered, onHover }: TableProps) {
   const totalSize = d3.sum(sections.map((sec) => sec.len));
   return (
-    <table style='flex:1' cellSpacing="0" cellPadding="0">
+    <table style="flex:1" cellSpacing="0" cellPadding="0">
       <thead>
         <tr>
           <th>section</th>
@@ -85,8 +86,34 @@ function Table({ sections, hovered, onHover }: TableProps) {
   );
 }
 
+interface FuncsProps {
+  children: code.Function[];
+}
+interface FuncsState {
+  funcs: code.Function[];
+}
+class Funcs extends preact.Component<FuncsProps, FuncsState> {
+  state = { funcs: [] };
+  static getDerivedStateFromProps(props: FuncsProps): object {
+    const funcs = d3.sort(props.children, (f1, f2) =>
+      d3.descending(f1.body.length, f2.body.length)
+    );
+    return { funcs };
+  }
+  render(_: FuncsProps, { funcs }: FuncsState) {
+    return (
+      <pre>
+        {funcs[0].body.map((instr) => (
+          <div>{instr.op}</div>
+        ))}
+      </pre>
+    );
+  }
+}
+
 interface AppProps {
   sections: IndexedSection[];
+  funcs: code.Function[];
 }
 interface AppState {
   hovered: number | undefined;
@@ -98,19 +125,22 @@ class App extends preact.Component<AppProps, AppState> {
     this.setState({ hovered: sec });
   };
 
-  render({ sections }: AppProps) {
+  render({ sections, funcs }: AppProps) {
     return (
       <main>
-        <Pie
-          sections={sections}
-          hovered={this.state.hovered}
-          onHover={this.onHover}
-        ></Pie>
-        <Table
-          sections={sections}
-          hovered={this.state.hovered}
-          onHover={this.onHover}
-        ></Table>
+        <div style="display: flex">
+          <Pie
+            sections={sections}
+            hovered={this.state.hovered}
+            onHover={this.onHover}
+          ></Pie>
+          <Table
+            sections={sections}
+            hovered={this.state.hovered}
+            onHover={this.onHover}
+          ></Table>
+        </div>
+        <Funcs>{funcs}</Funcs>
       </main>
     );
   }
@@ -120,7 +150,14 @@ async function main() {
   const wasmBytes = await (await fetch('t.wasm')).arrayBuffer();
   const module = wasm.read(new DataView(wasmBytes));
   const sections = module.sections.map((sec, index) => ({ ...sec, index }));
-  preact.render(<App sections={sections}></App>, document.body);
+  const codeSection = module.sections.find(
+    (sec) => sec.type === wasm.SectionType.code
+  );
+  let funcs: code.Function[] = [];
+  if (codeSection) {
+    funcs = code.read(module.getReader(codeSection));
+  }
+  preact.render(<App sections={sections} funcs={funcs}></App>, document.body);
 }
 
 main().catch((err) => {
