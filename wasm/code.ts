@@ -57,6 +57,13 @@ enum Instr {
   i64_store16 = 'i64.store16',
   i64_store32 = 'i64.store32',
 
+  memory_size = 'memory.size',
+  memory_grow = 'memory.grow',
+  memory_init = 'memory.init',
+  data_drop = 'data.drop',
+  memory_copy = 'memory.copy',
+  memory_fill = 'memory.fill',
+
   // numeric
   // const
   i32_const = 'i32.const',
@@ -428,6 +435,21 @@ class Parser {
         return this.readMemOp(Instr.i64_store16);
       case 0x3e:
         return this.readMemOp(Instr.i64_store32);
+
+      case 0x3f: {
+        const b = this.r.read8();
+        if (b !== 0) {
+          throw new Error(`bad instruction sequence 0x3f ${b.toString(16)}`)
+        }
+        return {op: Instr.memory_size };
+      }
+      case 0x40: {
+        const b = this.r.read8();
+        if (b !== 0) {
+          throw new Error(`bad instruction sequence 0x40 ${b.toString(16)}`)
+        }
+        return {op: Instr.memory_grow };
+      }
 
       case 0x41:
         return { op: Instr.i32_const, n: this.r.readUint() };
