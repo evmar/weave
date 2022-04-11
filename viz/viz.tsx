@@ -1,13 +1,19 @@
 import * as d3 from 'd3';
 import * as wasm from 'wasm';
-import * as code from 'wasm/code';
+import * as wasmCode from 'wasm/code';
 import * as preact from 'preact';
 import { h, Fragment } from 'preact';
 
-type IndexedSection = wasm.SectionHeader & { index: number };
+type Indexed<T> = T & { index: number };
+interface ParsedModule {
+  sections: Indexed<wasm.SectionHeader>[];
+  imports: Indexed<wasm.Import>[];
+  exports: wasm.Export[];
+  code: Indexed<wasmCode.Function>[];
+}
 
 interface PieProps {
-  sections: IndexedSection[];
+  sections: Indexed<wasm.SectionHeader>[];
   hovered: number | undefined;
   onHover: (index: number | undefined) => void;
 }
@@ -17,7 +23,7 @@ function Pie({ sections, hovered, onHover }: PieProps) {
   const colors = d3.schemeSpectral[sections.length];
 
   const arcs = d3
-    .pie<IndexedSection>()
+    .pie<Indexed<wasm.SectionHeader>>()
     .padAngle(0.01)
     .value((s) => s.len)(sections);
   const arc = d3
@@ -54,7 +60,7 @@ function Pie({ sections, hovered, onHover }: PieProps) {
 }
 
 interface TableProps {
-  sections: IndexedSection[];
+  sections: Indexed<wasm.SectionHeader>[];
   hovered: number | undefined;
   onHover: (index: number | undefined) => void;
 }
@@ -65,7 +71,9 @@ function Table({ sections, hovered, onHover }: TableProps) {
       <thead>
         <tr>
           <th>section</th>
+          {/* @ts-ignore */}
           <th align="right">size</th>
+          {/* @ts-ignore */}
           <th align="right">%</th>
         </tr>
       </thead>
@@ -77,7 +85,9 @@ function Table({ sections, hovered, onHover }: TableProps) {
             onMouseLeave={() => onHover(undefined)}
           >
             <td>{sec.type}</td>
+            {/* @ts-ignore */}
             <td align="right">{d3.format(',')(sec.len)}</td>
+            {/* @ts-ignore */}
             <td align="right">{d3.format('.1%')(sec.len / totalSize)}</td>
           </tr>
         ))}
@@ -86,12 +96,31 @@ function Table({ sections, hovered, onHover }: TableProps) {
   );
 }
 
-type IndexedFunction = code.Function & { index: number };
+function Imports(props: { children: Indexed<wasm.Import>[] }) {
+  const imports = props.children;
+  return (
+    <pre>
+      <b>imports</b>{'\n'}
+      {imports.map((imp) => `${imp.index}: ${wasm.importToString(imp)}\n`)}
+    </pre>
+  );
+}
+
+function Exports(props: { children: wasm.Export[] }) {
+  const exports = props.children;
+  return (
+    <pre>
+      <b>exports</b>
+      {exports.map((exp) => wasm.exportToString(exp) + '\n')}
+    </pre>
+  );
+}
+
 interface FuncsProps {
-  children: IndexedFunction[];
+  children: Indexed<wasmCode.Function>[];
 }
 interface FuncsState {
-  funcs: IndexedFunction[];
+  funcs: Indexed<wasmCode.Function>[];
 }
 class Funcs extends preact.Component<FuncsProps, FuncsState> {
   state = { funcs: [] };
@@ -106,18 +135,26 @@ class Funcs extends preact.Component<FuncsProps, FuncsState> {
   render(_: FuncsProps, { funcs }: FuncsState) {
     return (
       <>
-        {funcs.map((f) => (
-          <div>{f.index}</div>
+        <b>code</b>{'\n'}
+        <table>
+          <thead><tr><th>index</th><th>size</th><th>%</th></tr></thead>
+          <tbody>
+          {funcs.map((f) => (
+          <tr><td>{f.index}</td><td>{f.body.length}</td><td></td></tr>
         ))}
+          </tbody>
+
+        </table>
         <Code func={funcs[0]} />
       </>
     );
   }
 }
 
-function Code({ func }: { func: IndexedFunction }) {
+function Code({ func }: { func: Indexed<wasmCode.Function> }) {
   return (
     <pre>
+      <b>function {func.index}:</b>
       {func.body.map((instr) => (
         <div>{instr.op}</div>
       ))}
@@ -126,8 +163,7 @@ function Code({ func }: { func: IndexedFunction }) {
 }
 
 interface AppProps {
-  sections: IndexedSection[];
-  funcs: IndexedFunction[];
+  module: ParsedModule;
 }
 interface AppState {
   hovered: number | undefined;
@@ -139,22 +175,24 @@ class App extends preact.Component<AppProps, AppState> {
     this.setState({ hovered: sec });
   };
 
-  render({ sections, funcs }: AppProps) {
+  render({ module }: AppProps) {
     return (
       <main>
         <div style="display: flex">
           <Pie
-            sections={sections}
+            sections={module.sections}
             hovered={this.state.hovered}
             onHover={this.onHover}
           ></Pie>
           <Table
-            sections={sections}
+            sections={module.sections}
             hovered={this.state.hovered}
             onHover={this.onHover}
           ></Table>
         </div>
-        <Funcs>{funcs}</Funcs>
+        <Exports>{module.exports}</Exports>
+        <Imports>{module.imports}</Imports>
+        <Funcs>{module.code}</Funcs>
       </main>
     );
   }
@@ -162,18 +200,31 @@ class App extends preact.Component<AppProps, AppState> {
 
 async function main() {
   const wasmBytes = await (await fetch('t.wasm')).arrayBuffer();
-  const module = wasm.read(new DataView(wasmBytes));
-  const sections = module.sections.map((sec, index) => ({ ...sec, index }));
-  const codeSection = module.sections.find(
-    (sec) => sec.type === wasm.SectionType.code
-  );
-  let funcs: IndexedFunction[] = [];
-  if (codeSection) {
-    funcs = code
-      .read(module.getReader(codeSection))
-      .map((f, i) => ({ ...f, index: i }));
+  const wasmModule = wasm.read(new DataView(wasmBytes));
+  const module: ParsedModule = {
+    sections: wasmModule.sections.map((sec, index) => ({ ...sec, index })),
+    imports: [],
+    exports: [],
+    code: [],
+  };
+  for (const section of module.sections) {
+    switch (section.type) {
+      case wasm.SectionType.import:
+        module.imports = wasm
+          .readImportSection(wasmModule.getReader(section))
+          .map((imp, i) => ({ ...imp, index: i }));
+        break;
+      case wasm.SectionType.export:
+        module.exports = wasm.readExportSection(wasmModule.getReader(section));
+        break;
+      case wasm.SectionType.code:
+        module.code = wasmCode
+          .read(wasmModule.getReader(section))
+          .map((f, i) => ({ ...f, index: i + module.imports.length }));
+        break;
+    }
   }
-  preact.render(<App sections={sections} funcs={funcs}></App>, document.body);
+  preact.render(<App module={module}></App>, document.body);
 }
 
 main().catch((err) => {
