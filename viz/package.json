@@ -4,14 +4,15 @@
   "description": "",
   "main": "viz.js",
   "scripts": {
-    "serve": "esbuild --bundle --servedir=. --outfile=bundle.js viz.ts",
+    "serve": "esbuild --bundle --servedir=. --outfile=bundle.js viz.tsx",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "d3": "^7.4.3"
+    "d3": "^7.4.3",
+    "preact": "^10.7.1"
   },
   "devDependencies": {
     "@types/d3": "^7.1.0",
