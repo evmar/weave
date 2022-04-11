@@ -1,58 +1,67 @@
 import * as d3 from 'd3';
 import * as wasm from 'wasm';
 
-function render(module: wasm.Module) {
-  const width = 120,
-    height = 120;
-  const colors = d3.schemeSpectral[module.sections.length];
-  const svg = d3
-    .create('svg')
-    .attr('width', width)
-    .attr('height', height)
-    .attr('viewBox', [-width / 2, -height / 2, width, height]);
-  const arcs = d3.pie<wasm.SectionHeader>().value((s) => s.len)(
-    module.sections
+type IndexedSection = wasm.SectionHeader & {index:number};
+interface State {
+  module?: wasm.Module;
+  sections?: IndexedSection[];
+  hovered?: number;
+}
+const state: State = {};
+
+function hover(sec: number|undefined) {
+  if (sec === state.hovered) return;
+  state.hovered = sec;
+  render();
+}
+
+function pie() {
+  const colors = d3.schemeSpectral[state.sections!.length];
+  const svg = d3.select('#pie');
+  const width = parseInt(svg.attr('width'));
+  const height = parseInt(svg.attr('height'));
+  svg.attr('viewBox', [-width / 2, -height / 2, width, height]);
+  const arcs = d3.pie<IndexedSection>().padAngle(0.01).value((s) => s.len)(
+    state.sections!
   );
   const arc = d3
     .arc<d3.PieArcDatum<wasm.SectionHeader>>()
     .innerRadius((width / 2) * 0.6)
-    .outerRadius(width / 2);
+    .outerRadius((width / 2) * 0.95);
   svg
-    .append('g')
-    .attr('stroke', 'white')
-    .attr('stroke-width', 1)
+    .select('g')
     .attr('stroke-linejoin', 'round')
+    .attr('stroke-width', 2)
     .selectAll('path')
     .data(arcs)
     .join('path')
-    .attr('fill', (d, i) => colors[i])
+    .attr('fill', (d) => colors[d.data.index])
+    .attr('stroke', (d) => d.data.index === state.hovered ? 'black' : 'none')
     .attr('d', arc)
-    .append('title')
-    .text((d) => d.data.type);
+    .on('mouseover', (ev, d) => hover(d.data.index))
+    .on('mouseout', (ev, d) => hover(undefined));
   return svg.node()!;
 }
 
-function table(module: wasm.Module) {
-  const table = d3.create('table');
-  const totalSize = d3.sum(module.sections.map((sec) => sec.len));
-  table // table headers
-    .append('thead')
-    .append('tr')
-    .selectAll('th')
-    .data([{ text: 'section' }, { text: 'size', align: 'right' }])
-    .join('th')
-    .attr('align', (d) => d.align ?? null)
-    .text((d) => d.text);
-  table // table data
-    .append('tbody')
+function table() {
+  const totalSize = d3.sum(state.sections!.map((sec) => sec.len));
+  const table = d3.select('#table');
+  table 
     .selectAll('tr')
-    .data(module.sections)
+    .data(state.sections!)
     .join('tr')
+    .style('background', (d) => d.index === state.hovered ? '#eee' : 'none')
+    .on('mouseover', (ev, d) => hover(d.index))
+    .on('mouseout', (ev, d) => hover(undefined))
     .selectAll('td')
     .data((sec) => [
       { text: sec.type },
       {
-        text: `${sec.len} (${d3.format('.1%')(sec.len / totalSize)})`,
+        text: d3.format(',')(sec.len),
+        align: 'right',
+      },
+      {
+        text: d3.format('.1%')(sec.len / totalSize),
         align: 'right',
       },
     ])
@@ -62,11 +71,17 @@ function table(module: wasm.Module) {
   return table.node()!;
 }
 
+function render() {
+  pie();
+  table();
+}
+
 async function main() {
   const wasmBytes = await (await fetch('t.wasm')).arrayBuffer();
   const module = wasm.read(new DataView(wasmBytes));
-  document.body.append(render(module));
-  document.body.append(table(module));
+  state.module = module;
+  state.sections = module.sections.map((sec, index) => ({...sec, index}));
+  render();
 }
 
 main().catch((err) => {

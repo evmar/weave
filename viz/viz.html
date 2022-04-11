@@ -7,13 +7,26 @@
         font-family: sans-serif;
         padding: 4ex 8ex;
       }
-      table {
-        border-spacing: 2ex 0.5ex;
+      th, td {
+        padding: 0.5ex 2ex;
+      }
+      main {
+        display: flex;
       }
     </style>
   </head>
   <body>
-
+    <main>
+      <svg id='pie' width='200' height='200'><g></g></svg>
+      <table cellspacing='0' cellpadding='0'>
+        <thead><tr>
+          <th>section</th>
+          <th align='right'>size</th>
+          <th align='right'>%</th>
+        </tr></thead>
+        <tbody id='table'></tbody>
+      </table>
+    </main>
   </body>
   <script src='bundle.js'></script>
 </html>
