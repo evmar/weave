@@ -60,7 +60,7 @@ interface TableProps {
 function Table({ sections, hovered, onHover }: TableProps) {
   const totalSize = d3.sum(sections.map((sec) => sec.len));
   return (
-    <table cellSpacing="0" cellPadding="0">
+    <table style='flex:1' cellSpacing="0" cellPadding="0">
       <thead>
         <tr>
           <th>section</th>
