@@ -60,11 +60,40 @@ function Pie({ sections, hovered, onHover }: PieProps) {
 }
 
 interface TableProps {
+  columns: Array<{ name: string; align?: string }>;
+  rows: preact.ComponentChild[][];
+}
+class Table extends preact.Component<TableProps> {
+  render({ columns, rows }: TableProps) {
+    return (
+      <table cellSpacing="0" cellPadding="0">
+        <thead>
+          <tr>
+            {columns.map(({ name, align }) => (
+              <th align={align}>{name}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr>
+              {row.map((val, i) => (
+                <td align={columns[i].align}>{val}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    );
+  }
+}
+
+interface SectionTableProps {
   sections: Indexed<wasm.SectionHeader>[];
   hovered: number | undefined;
   onHover: (index: number | undefined) => void;
 }
-function Table({ sections, hovered, onHover }: TableProps) {
+function SectionTable({ sections, hovered, onHover }: SectionTableProps) {
   const totalSize = d3.sum(sections.map((sec) => sec.len));
   return (
     <table style="flex:1" cellSpacing="0" cellPadding="0">
@@ -99,10 +128,18 @@ function Table({ sections, hovered, onHover }: TableProps) {
 function Imports(props: { children: Indexed<wasm.Import>[] }) {
   const imports = props.children;
   return (
-    <pre>
-      <b>imports</b>{'\n'}
-      {imports.map((imp) => `${imp.index}: ${wasm.importToString(imp)}\n`)}
-    </pre>
+    <Table
+      columns={[
+        { name: 'index', align: 'right' },
+        { name: 'name' },
+        { name: 'desc' },
+      ]}
+      rows={imports.map((imp) => [
+        `${imp.index}`,
+        <code>{`${imp.module}.${imp.name}`}</code>,
+        `${imp.desc}`,
+      ])}
+    />
   );
 }
 
@@ -135,16 +172,16 @@ class Funcs extends preact.Component<FuncsProps, FuncsState> {
   render(_: FuncsProps, { funcs }: FuncsState) {
     return (
       <>
-        <b>code</b>{'\n'}
-        <table>
-          <thead><tr><th>index</th><th>size</th><th>%</th></tr></thead>
-          <tbody>
-          {funcs.map((f) => (
-          <tr><td>{f.index}</td><td>{f.body.length}</td><td></td></tr>
-        ))}
-          </tbody>
-
-        </table>
+        <b>code</b>
+        {'\n'}
+        <Table
+          columns={[
+            { name: 'index', align: 'right' },
+            { name: 'size', align: 'right' },
+            { name: '%', align: 'right' },
+          ]}
+          rows={funcs.map((f) => [`${f.index}`, `${f.body.length}`])}
+        />
         <Code func={funcs[0]} />
       </>
     );
@@ -184,11 +221,11 @@ class App extends preact.Component<AppProps, AppState> {
             hovered={this.state.hovered}
             onHover={this.onHover}
           ></Pie>
-          <Table
+          <SectionTable
             sections={module.sections}
             hovered={this.state.hovered}
             onHover={this.onHover}
-          ></Table>
+          ></SectionTable>
         </div>
         <Exports>{module.exports}</Exports>
         <Imports>{module.imports}</Imports>
