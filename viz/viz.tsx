@@ -60,7 +60,7 @@ function Pie({ sections, hovered, onHover }: PieProps) {
 }
 
 interface TableProps {
-  columns: Array<{ name: string; align?: string }>;
+  columns: Array<{ name: string; className?: string }>;
   rows: preact.ComponentChild[][];
 }
 class Table extends preact.Component<TableProps> {
@@ -69,8 +69,8 @@ class Table extends preact.Component<TableProps> {
       <table cellSpacing="0" cellPadding="0">
         <thead>
           <tr>
-            {columns.map(({ name, align }) => (
-              <th align={align}>{name}</th>
+            {columns.map(({ name, className }) => (
+              <th className={className}>{name}</th>
             ))}
           </tr>
         </thead>
@@ -78,7 +78,7 @@ class Table extends preact.Component<TableProps> {
           {rows.map((row) => (
             <tr>
               {row.map((val, i) => (
-                <td align={columns[i].align}>{val}</td>
+              <td className={columns[i].className}>{val}</td>
               ))}
             </tr>
           ))}
@@ -130,7 +130,7 @@ function Imports(props: { children: Indexed<wasm.Import>[] }) {
   return (
     <Table
       columns={[
-        { name: 'index', align: 'right' },
+        { name: 'index', className: 'right' },
         { name: 'name' },
         { name: 'desc' },
       ]}
@@ -176,9 +176,9 @@ class Funcs extends preact.Component<FuncsProps, FuncsState> {
         {'\n'}
         <Table
           columns={[
-            { name: 'index', align: 'right' },
-            { name: 'size', align: 'right' },
-            { name: '%', align: 'right' },
+            { name: 'index', className: 'right' },
+            { name: 'size', className: 'right' },
+            { name: '%', className: 'right' },
           ]}
           rows={funcs.map((f) => [`${f.index}`, `${f.body.length}`])}
         />
