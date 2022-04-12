@@ -20,6 +20,7 @@ export enum SectionType {
 }
 
 export interface SectionHeader {
+  index: number;
   type: SectionType;
   ofs: number;
   len: number;
@@ -48,7 +49,7 @@ class Parser {
       throw new Error(`bad version, expected 1, got ${version}`);
   }
 
-  readSectionHeader(): SectionHeader {
+  readSectionHeader(index: number): SectionHeader {
     const id = this.r.read8();
     const len = this.r.readUint();
     const ofs = this.r.ofs;
@@ -68,14 +69,15 @@ class Parser {
       SectionType.data,
       SectionType.data_count,
     ][id];
-    return { type, ofs, len };
+    return { index, type, ofs, len };
   }
 
   read(): Module {
     this.readFileHeader();
     const sections = [];
+    let index = 0;
     while (!this.r.done()) {
-      sections.push(this.readSectionHeader());
+      sections.push(this.readSectionHeader(index++));
     }
     return new Module(this.view.buffer, sections);
   }
