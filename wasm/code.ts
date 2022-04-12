@@ -5,7 +5,7 @@
 import { Reader } from './reader';
 import { readValType, Type } from './type';
 
-enum Instr {
+export enum Instr {
   // control
   unreachable = 'unreachable',
   nop = 'nop',
@@ -295,7 +295,7 @@ type InstructionWithFields =
 interface InstructionWithoutFields {
   op: Exclude<Instr, InstructionWithFields['op']>;
 }
-type Instruction = InstructionWithoutFields | InstructionWithFields;
+export type Instruction = InstructionWithoutFields | InstructionWithFields;
 
 export interface Function {
   size: number;

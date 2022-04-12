@@ -1,7 +1,7 @@
 import * as wasm from 'wasm';
 import * as wasmCode from 'wasm/code';
 import * as preact from 'preact';
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
 import * as d3 from 'd3';
 
 import { Sections } from './sections';
@@ -109,16 +109,47 @@ class Funcs extends preact.Component<FuncsProps, FuncsState> {
   }
 }
 
+function* renderInstr(instr: wasmCode.Instruction, indent = 0): Generator<preact.ComponentChild> {
+  switch (instr.op) {
+  // TODO: custom rendering here.
+  default:
+    const toPrint = [instr.op.toString()];
+    for (const [key, val] of Object.entries(instr)) {
+      if (key === 'op') continue;
+      if (val instanceof Array) continue;
+      toPrint.push(` ${key}=${val}`);
+    }
+    yield <div>{'  '.repeat(indent)}{toPrint.join('')}</div>;
+  }
+
+  if (
+    instr.op === wasmCode.Instr.if ||
+    instr.op === wasmCode.Instr.block ||
+    instr.op === wasmCode.Instr.loop
+  ) {
+    yield* renderInstrs(instr.body, indent + 1);
+    if (instr.op === wasmCode.Instr.if && instr.else) {
+      yield <div>{'  '.repeat(indent)}{'else'}</div>;
+      yield* renderInstrs(instr.else, indent + 1);
+    }
+  }
+}
+function* renderInstrs(instrs: wasmCode.Instruction[], indent = 0) {
+  for (const instr of instrs) {
+    yield* renderInstr(instr, indent);
+  }
+}
+
 function Code({ func }: { func: Indexed<wasmCode.Function> }) {
   return (
-    <pre>
+    <>
       <b>
         function {func.index} {func.size}:
       </b>
-      {func.body.map((instr) => (
-        <div>{instr.op}</div>
-      ))}
-    </pre>
+      <pre>
+      {Array.from(renderInstrs(func.body))}
+      </pre>
+    </>
   );
 }
 
