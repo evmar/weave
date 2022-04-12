@@ -15,6 +15,26 @@ interface ParsedModule {
   functionNames: Map<number, string>;
 }
 
+interface Link {
+  target: string;
+  index: number;
+}
+type Nav = (link: Link) => void;
+function urlFromLink(link: Link): string {
+  let url = '#';
+  if (link.target) {
+    url += `${link.target}=${link.index}`;
+  }
+  return url;
+}
+function linkFromHash(hash: string): Link {
+  const parts = hash.substring(1).split('=');
+  return {target: parts[0], index: parseInt(parts[1])};
+}
+function link(props: {nav: Nav, target: Link, children: preact.ComponentChildren}) {
+  return <a href={urlFromLink(props.target)}>{props.children}</a>;
+}
+
 function Imports(props: { children: Indexed<wasm.Import>[] }) {
   const imports = props.children;
   return (
@@ -186,13 +206,40 @@ interface AppState {
 class App extends preact.Component<AppProps, AppState> {
   state: AppState = {};
 
+  private onHashChange = () => {
+    const link = linkFromHash(document.location.hash);
+    if (link.target === 'section') {
+      const section = this.props.module.sections.find(sec => sec.index === link.index);
+      if (section) {
+        this.setState({section, func: undefined});
+      }
+    } else if (link.target === 'function') {
+      if (link.index <= this.props.module.imports.length) {
+        const section = this.props.module.sections.find(sec => sec.type === wasm.SectionType.import);
+        if (section) {
+          this.setState({section, func: undefined});
+        }
+      } else {
+        const func = this.props.module.code[link.index - this.props.module.imports.length];
+        if (func) {
+          this.setState({section: undefined, func});
+        }
+      }
+    }
+  };
+  private nav: Nav = (link: Link) => {
+    window.location.hash = urlFromLink(link);
+  };
   private onSectionClick = (section: wasm.SectionHeader) => {
-    this.setState({ section, func: undefined });
+    this.nav({target:'section', index: section.index});
   };
   private onFuncClick = (func: Indexed<wasmCode.Function>) => {
-    this.setState({ section: undefined, func });
+    this.nav({target:'function', index: func.index});
   };
 
+  componentDidMount() {
+    window.onhashchange = this.onHashChange;
+  }
   render({ module }: AppProps) {
     let extra;
     if (this.state.section) {
