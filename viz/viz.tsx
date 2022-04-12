@@ -131,14 +131,16 @@ function Imports(props: { children: Indexed<wasm.Import>[] }) {
     <Table
       columns={[
         { name: 'index', className: 'right' },
-        { name: 'name' },
-        { name: 'desc' },
+        { name: 'name', className: 'break-all' },
+        { name: 'desc', className: 'nowrap' },
       ]}
-      rows={imports.map((imp) => [
-        `${imp.index}`,
-        <code>{`${imp.module}.${imp.name}`}</code>,
-        `${imp.desc}`,
-      ])}
+      rows={imports
+        .slice(0, 100)
+        .map((imp) => [
+          `${imp.index}`,
+          <code>{`${imp.module}.${imp.name}`}</code>,
+          `${wasm.indexToString(imp.desc)}`,
+        ])}
     />
   );
 }
@@ -146,10 +148,18 @@ function Imports(props: { children: Indexed<wasm.Import>[] }) {
 function Exports(props: { children: wasm.Export[] }) {
   const exports = props.children;
   return (
-    <pre>
-      <b>exports</b>
-      {exports.map((exp) => wasm.exportToString(exp) + '\n')}
-    </pre>
+    <Table
+      columns={[
+        { name: 'name', className: 'break-all' },
+        { name: 'desc', className: 'nowrap' },
+      ]}
+      rows={exports
+        .slice(0, 100)
+        .map((exp) => [
+          <code>{`${exp.name}`}</code>,
+          `${wasm.indexToString(exp.desc)}`,
+        ])}
+    />
   );
 }
 
