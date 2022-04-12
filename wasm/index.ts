@@ -195,12 +195,41 @@ export function readExportSection(r: Reader): Export[] {
 
 export interface CustomSection {
   name: string;
-  data: number;
 }
+/** Leaves the reader in a state ready to read the content of the section. */
 export function readCustomSection(r: Reader): CustomSection {
   const name = r.name();
-  const ofs = r.ofs;
-  return { name, data: ofs };
+  return { name };
 }
 
-export const x = 3;
+export interface NameSection {
+  moduleName?: string;
+  functionNames?: Array<[number, string]>;
+}
+
+export function readNameSection(r: Reader): NameSection {
+  let moduleName;
+  let functionNames: Array<[number, string]> | undefined;
+  while (!r.done()) {
+    const b = r.read8();
+    const size = r.readUint();
+    switch (b) {
+      case 0:
+        moduleName = r.name();
+        break;
+      case 1:
+        functionNames = [];
+        r.vec(() => {
+          const idx = r.readUint();
+          const name = r.name();
+          functionNames!.push([idx, name]);
+        });
+        break;
+      default:
+        console.warn(`ignoring unknown name subsection id ${b.toString(16)}`);
+        r.skip(size);
+        break;
+    }
+  }
+  return { moduleName, functionNames };
+}

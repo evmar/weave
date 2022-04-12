@@ -12,6 +12,7 @@ interface ParsedModule {
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
   code: Indexed<wasmCode.Function>[];
+  names?: wasm.NameSection;
   functionNames: Map<number, string>;
 }
 
@@ -309,10 +310,20 @@ async function main() {
   (window as any)['module'] = module;
   for (const section of module.sections) {
     switch (section.type) {
-      case wasm.SectionType.custom:
-        const custom = wasm.readCustomSection(wasmModule.getReader(section));
-        section.name = `custom: '${custom.name}'`;
-        break;
+      case wasm.SectionType.custom: {
+        const reader = wasmModule.getReader(section);
+        const custom = wasm.readCustomSection(reader);
+        switch (custom.name) {
+          case 'name':
+            section.name = 'name';
+            module.names = wasm.readNameSection(reader);
+
+            break;
+          default:
+            section.name = `custom: '${custom.name}'`;
+            break;
+        }
+      }
       case wasm.SectionType.import:
         module.imports = wasm
           .readImportSection(wasmModule.getReader(section))
