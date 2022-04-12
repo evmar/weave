@@ -255,6 +255,7 @@ class App extends preact.Component<AppProps, AppState> {
 
   componentDidMount() {
     window.onhashchange = this.onHashChange;
+    this.onHashChange();
   }
   render({ module }: AppProps) {
     let extra;
