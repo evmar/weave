@@ -19,7 +19,6 @@ interface Link {
   target: string;
   index: number;
 }
-type Nav = (link: Link) => void;
 function urlFromLink(link: Link): string {
   let url = '#';
   if (link.target) {
@@ -29,9 +28,12 @@ function urlFromLink(link: Link): string {
 }
 function linkFromHash(hash: string): Link {
   const parts = hash.substring(1).split('=');
-  return {target: parts[0], index: parseInt(parts[1])};
+  return { target: parts[0], index: parseInt(parts[1]) };
 }
-function link(props: {nav: Nav, target: Link, children: preact.ComponentChildren}) {
+function go(link: Link) {
+  window.location.hash = urlFromLink(link);
+}
+function Link(props: { target: Link; children: preact.ComponentChildren }) {
   return <a href={urlFromLink(props.target)}>{props.children}</a>;
 }
 
@@ -135,63 +137,80 @@ class Code extends preact.Component<CodeProps, CodeState> {
   }
 }
 
-function* renderInstr(
-  instr: wasmCode.Instruction,
-  indent = 0
-): Generator<preact.ComponentChild> {
-  switch (instr.op) {
-    // TODO: custom rendering here.
-    default:
-      const toPrint = [instr.op.toString()];
-      for (const [key, val] of Object.entries(instr)) {
-        if (key === 'op') continue;
-        if (val instanceof Array) continue;
-        toPrint.push(` ${key}=${val}`);
-      }
-      yield (
-        <div>
-          {'  '.repeat(indent)}
-          {toPrint.join('')}
-        </div>
-      );
+function renderFunctionBody(module: ParsedModule, func: wasmCode.Function) {
+  return <pre>{Array.from(renderInstrs(func.body))}</pre>;
+
+  function renderFunc(index: number) {
+    return (
+      <Link target={{ target: 'function', index: index }}>
+        {module.functionNames.get(index) ?? `function ${index}`}
+      </Link>
+    );
   }
 
-  if (
-    instr.op === wasmCode.Instr.if ||
-    instr.op === wasmCode.Instr.block ||
-    instr.op === wasmCode.Instr.loop
-  ) {
-    yield* renderInstrs(instr.body, indent + 1);
-    if (instr.op === wasmCode.Instr.if && instr.else) {
-      yield (
-        <div>
-          {'  '.repeat(indent)}
-          {'else'}
-        </div>
-      );
-      yield* renderInstrs(instr.else, indent + 1);
+  function* renderInstr(
+    instr: wasmCode.Instruction,
+    indent = 0
+  ): Generator<preact.ComponentChild> {
+    switch (instr.op) {
+      case wasmCode.Instr.call:
+        yield (
+          <div>
+            {instr.op} {renderFunc(instr.func)}
+          </div>
+        );
+        break;
+      // TODO: custom rendering here.
+      default:
+        const toPrint = [instr.op.toString()];
+        for (const [key, val] of Object.entries(instr)) {
+          if (key === 'op') continue;
+          if (val instanceof Array) continue;
+          toPrint.push(` ${key}=${val}`);
+        }
+        yield (
+          <div>
+            {'  '.repeat(indent)}
+            {toPrint.join('')}
+          </div>
+        );
+    }
+
+    if (
+      instr.op === wasmCode.Instr.if ||
+      instr.op === wasmCode.Instr.block ||
+      instr.op === wasmCode.Instr.loop
+    ) {
+      yield* renderInstrs(instr.body, indent + 1);
+      if (instr.op === wasmCode.Instr.if && instr.else) {
+        yield (
+          <div>
+            {'  '.repeat(indent)}
+            {'else'}
+          </div>
+        );
+        yield* renderInstrs(instr.else, indent + 1);
+      }
+    }
+  }
+  function* renderInstrs(instrs: wasmCode.Instruction[], indent = 0) {
+    for (const instr of instrs) {
+      yield* renderInstr(instr, indent);
     }
   }
 }
-function* renderInstrs(instrs: wasmCode.Instruction[], indent = 0) {
-  for (const instr of instrs) {
-    yield* renderInstr(instr, indent);
-  }
-}
 
-function Function({
-  func,
-  name,
-}: {
+function Function(props: {
+  module: ParsedModule;
   func: Indexed<wasmCode.Function>;
   name?: string;
 }) {
   return (
     <>
       <b>
-        function {func.index} {name} {func.size}:
+        function {props.func.index} {props.name} {props.func.size}:
       </b>
-      <pre>{Array.from(renderInstrs(func.body))}</pre>
+      {renderFunctionBody(props.module, props.func)}
     </>
   );
 }
@@ -209,32 +228,35 @@ class App extends preact.Component<AppProps, AppState> {
   private onHashChange = () => {
     const link = linkFromHash(document.location.hash);
     if (link.target === 'section') {
-      const section = this.props.module.sections.find(sec => sec.index === link.index);
+      const section = this.props.module.sections.find(
+        (sec) => sec.index === link.index
+      );
       if (section) {
-        this.setState({section, func: undefined});
+        this.setState({ section, func: undefined });
       }
     } else if (link.target === 'function') {
       if (link.index <= this.props.module.imports.length) {
-        const section = this.props.module.sections.find(sec => sec.type === wasm.SectionType.import);
+        const section = this.props.module.sections.find(
+          (sec) => sec.type === wasm.SectionType.import
+        );
         if (section) {
-          this.setState({section, func: undefined});
+          this.setState({ section, func: undefined });
         }
       } else {
-        const func = this.props.module.code[link.index - this.props.module.imports.length];
+        const func =
+          this.props.module.code[link.index - this.props.module.imports.length];
         if (func) {
-          this.setState({section: undefined, func});
+          this.setState({ section: undefined, func });
         }
       }
     }
   };
-  private nav: Nav = (link: Link) => {
-    window.location.hash = urlFromLink(link);
-  };
+
   private onSectionClick = (section: wasm.SectionHeader) => {
-    this.nav({target:'section', index: section.index});
+    go({ target: 'section', index: section.index });
   };
   private onFuncClick = (func: Indexed<wasmCode.Function>) => {
-    this.nav({target:'function', index: func.index});
+    go({ target: 'function', index: func.index });
   };
 
   componentDidMount() {
@@ -264,6 +286,7 @@ class App extends preact.Component<AppProps, AppState> {
     } else if (this.state.func) {
       extra = (
         <Function
+          module={this.props.module}
           func={this.state.func}
           name={module.functionNames.get(this.state.func.index)}
         ></Function>
@@ -288,6 +311,7 @@ async function main() {
     code: [],
     functionNames: new Map(),
   };
+  (window as any)['module'] = module;
   for (const section of module.sections) {
     switch (section.type) {
       case wasm.SectionType.custom:
@@ -298,6 +322,12 @@ async function main() {
         module.imports = wasm
           .readImportSection(wasmModule.getReader(section))
           .map((imp, i) => ({ ...imp, index: i }));
+        let funcIndex = 0;
+        for (const imp of module.imports) {
+          if (imp.desc.type == wasm.IndexType.type) {
+            module.functionNames.set(funcIndex++, imp.name);
+          }
+        }
         break;
       case wasm.SectionType.export:
         module.exports = wasm.readExportSection(wasmModule.getReader(section));
