@@ -8,6 +8,14 @@ export class Reader {
     return this.ofs == this.view.byteLength;
   }
 
+  debug(): string {
+    let out = `${this.view.byteLength - this.ofs} remaining:`;
+    for (let i = 0; i < 16; i++) {
+      out += ' ' + this.read8().toString(16);
+    }
+    return out;
+  }
+
   read8(): number {
     const val = this.view.getUint8(this.ofs);
     this.ofs += 1;

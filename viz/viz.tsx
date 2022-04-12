@@ -52,7 +52,7 @@ function Imports(props: { children: Indexed<wasm.Import>[] }) {
                 {imp.module}.{imp.name}
               </code>
             </td>
-            <td className="nowrap">{wasm.indexToString(imp.desc)}</td>
+            <td className="nowrap">{wasm.descToString(imp.desc)}</td>
           </tr>
         ))}
       </tbody>
@@ -76,7 +76,7 @@ function Exports(props: { children: wasm.Export[] }) {
             <td className="break-all">
               <code>{exp.name}</code>
             </td>
-            <td className="nowrap">{wasm.indexToString(exp.desc)}</td>
+            <td className="nowrap">{wasm.descToString(exp.desc)}</td>
           </tr>
         ))}
       </tbody>
@@ -330,6 +330,7 @@ async function main() {
             section.name = `custom: '${custom.name}'`;
             break;
         }
+        break;
       }
       case wasm.SectionType.import:
         module.imports = wasm
@@ -337,7 +338,7 @@ async function main() {
           .map((imp, i) => ({ ...imp, index: i }));
         let funcIndex = 0;
         for (const imp of module.imports) {
-          if (imp.desc.type == wasm.IndexType.type) {
+          if (imp.desc.type == wasm.DescType.typeidx) {
             module.functionNames.set(funcIndex++, imp.name);
           }
         }
@@ -345,7 +346,7 @@ async function main() {
       case wasm.SectionType.export:
         module.exports = wasm.readExportSection(wasmModule.getReader(section));
         for (const exp of module.exports) {
-          if (exp.desc.type == wasm.IndexType.func) {
+          if (exp.desc.type == wasm.DescType.funcidx) {
             module.functionNames.set(exp.desc.index, exp.name);
           }
         }

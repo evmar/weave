@@ -24,7 +24,7 @@ function main(args: string[]) {
       case wasm.SectionType.import:
         for (const imp of wasm.readImportSection(module.getReader(sec))) {
           switch (imp.desc.type) {
-            case wasm.IndexType.type:
+            case wasm.DescType.type:
               console.log(`  func ${funcIndex++}: ${wasm.importToString(imp)}`);
               break;
             default:

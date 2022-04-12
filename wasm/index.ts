@@ -1,5 +1,5 @@
 import { Reader } from './reader';
-import { FuncType, readFuncType } from './type';
+import { FuncType, readFuncType, readValType, Type } from './type';
 
 export { funcTypeToString } from './type';
 
@@ -91,58 +91,107 @@ export function readTypeSection(r: Reader): FuncType[] {
   return r.vec(() => readFuncType(r));
 }
 
-export enum IndexType {
-  type = 'type',
-  func = 'func',
+export enum DescType {
   table = 'table',
   mem = 'mem',
   global = 'global',
+
+  funcidx = 'funcidx',
+  typeidx = 'typeidx',
+  tableidx = 'tableidx',
+  memidx = 'tableidx',
+  globalidx = 'globalidx',
 }
-export interface TypeIndex {
-  type: IndexType.type;
+export interface DescIndex<T> {
+  type: T;
   index: number;
 }
-export interface FuncIndex {
-  type: IndexType.func;
-  index: number;
+export interface DescTable {
+  type: DescType.table;
+  table: TableType;
 }
-export interface TableIndex {
-  type: IndexType.table;
-  index: number;
+export interface DescMem {
+  type: DescType.mem;
+  limits: Limits;
 }
-export interface MemIndex {
-  type: IndexType.mem;
-  index: number;
-}
-export interface GlobalIndex {
-  type: IndexType.global;
-  index: number;
+export interface DescGlobal {
+  type: DescType.global;
+  globalType: GlobalType;
 }
 
-export function indexToString(
-  index: TypeIndex | FuncIndex | TableIndex | MemIndex | GlobalIndex
-): string {
-  switch (index.type) {
-    case IndexType.type:
-      return `func type ${index.index}`;
-    case IndexType.func:
-      return `function ${index.index}`;
-    case IndexType.table:
-      return `table ${index.index}`;
-    case IndexType.mem:
-      return `mem ${index.index}`;
-    case IndexType.global:
-      return `mem ${index.index}`;
+export function descToString(desc: Import['desc'] | Export['desc']): string {
+  switch (desc.type) {
+    case DescType.table:
+      return `table ${desc.table}`;
+    case DescType.mem:
+      return `mem ${desc.limits}`;
+    case DescType.global:
+      return `mem ${desc}`;
+    default:
+      return `${desc.type} index ${desc.index}`;
   }
 }
 
 export interface Import {
   module: string;
   name: string;
-  desc: TypeIndex | TableIndex | MemIndex | GlobalIndex;
+  desc: DescIndex<DescType.typeidx> | DescTable | DescMem | DescGlobal;
 }
 export function importToString(imp: Import): string {
-  return `${imp.module}.${imp.name} (${indexToString(imp.desc)})`;
+  return `${imp.module}.${imp.name} (${descToString(imp.desc)})`;
+}
+
+export interface Limits {
+  minimum: number;
+  maximum?: number;
+}
+function readLimits(r: Reader): Limits {
+  const b = r.read8();
+  let minimum: number;
+  let maximum: number | undefined;
+  switch (b) {
+    case 0:
+      minimum = r.readUint();
+      break;
+    case 1:
+      minimum = r.readUint();
+      maximum = r.readUint();
+      break;
+    default:
+      throw new Error(`invalid limits flag ${b.toString(16)}`);
+  }
+  return { minimum, maximum };
+}
+
+export interface TableType {
+  element: Type;
+  limits: Limits;
+}
+function readTable(r: Reader): TableType {
+  const element = readValType(r);
+  const limits = readLimits(r);
+  return { element, limits };
+}
+
+export interface GlobalType {
+  valType: Type;
+  mut: boolean;
+}
+function readGlobalType(r: Reader): GlobalType {
+  const valType = readValType(r);
+  const mutB = r.read8();
+  let mut;
+  switch (mutB) {
+    case 0:
+      mut = false;
+      break;
+    case 1:
+      mut = true;
+      break;
+    default:
+      throw new Error(`invalid mutability flag ${mutB.toString(16)}`);
+  }
+  return { valType, mut };
 }
 
 export function readImportSection(r: Reader): Import[] {
@@ -150,46 +199,55 @@ export function readImportSection(r: Reader): Import[] {
     const module = r.name();
     const name = r.name();
     const desc8 = r.read8();
-    let type = (
-      [
-        IndexType.type,
-        IndexType.table,
-        IndexType.mem,
-        IndexType.global,
-      ] as const
-    )[desc8];
-    if (!type) {
-      throw new Error(`unhandled export desc type ${desc8.toString(16)}`);
+    let desc: Import['desc'];
+    switch (desc8) {
+      case 0:
+        desc = { type: DescType.typeidx, index: r.readUint() };
+        break;
+      case 1:
+        desc = { type: DescType.table, table: readTable(r) };
+        break;
+      case 2:
+        desc = { type: DescType.mem, limits: readLimits(r) };
+        break;
+      case 3:
+        desc = { type: DescType.global, globalType: readGlobalType(r) };
+        break;
+      default:
+        throw new Error(`unhandled import desc type ${desc8.toString(16)}`);
     }
-    const desc = { type, index: r.readUint() };
     return { module, name, desc };
   });
 }
 
 export interface Export {
   name: string;
-  desc: FuncIndex | TableIndex | MemIndex | GlobalIndex;
+  desc:
+    | DescIndex<DescType.funcidx>
+    | DescIndex<DescType.tableidx>
+    | DescIndex<DescType.memidx>
+    | DescIndex<DescType.globalidx>;
 }
 export function exportToString(exp: Export): string {
-  return `${exp.name} (${indexToString(exp.desc)})`;
+  return `${exp.name} (${descToString(exp.desc)})`;
 }
 export function readExportSection(r: Reader): Export[] {
   return r.vec(() => {
     const name = r.name();
     const desc8 = r.read8();
-    let type = (
+    let desc: Export['desc'];
+    const type = (
       [
-        IndexType.func,
-        IndexType.table,
-        IndexType.mem,
-        IndexType.global,
+        DescType.funcidx,
+        DescType.tableidx,
+        DescType.memidx,
+        DescType.globalidx,
       ] as const
     )[desc8];
     if (!type) {
       throw new Error(`unhandled export desc type ${desc8.toString(16)}`);
     }
-    const desc = { type, index: r.readUint() };
-    return { name, desc };
+    return { name, desc: { type, index: r.readUint() } };
   });
 }
 
