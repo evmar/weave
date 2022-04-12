@@ -117,7 +117,7 @@ class Code extends preact.Component<CodeProps, CodeState> {
           {state.funcs.map((f) => (
             <tr className="pointer" onClick={() => props.onClick(f)}>
               <td className="right">{f.index}</td>
-              <td>
+              <td className='break-all'>
                 <code>{props.functionNames.get(f.index)}</code>
               </td>
               <td className="right">{d3.format(',')(f.size)}</td>
@@ -316,8 +316,15 @@ async function main() {
         switch (custom.name) {
           case 'name':
             section.name = 'name';
-            module.names = wasm.readNameSection(reader);
-
+            const names = wasm.readNameSection(reader);
+            if (names.functionNames) {
+              for (const [idx, name] of names.functionNames) {
+                if (module.functionNames.has(idx)) {
+                  continue;
+                }
+                module.functionNames.set(idx, name);
+              }
+            }
             break;
           default:
             section.name = `custom: '${custom.name}'`;
