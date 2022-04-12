@@ -12,13 +12,13 @@ interface ParsedModule {
   code: Indexed<wasmCode.Function>[];
 }
 
-interface PieProps {
-  sections: wasm.SectionHeader[];
-  hovered: wasm.SectionHeader | undefined;
-  onHover: (sec: wasm.SectionHeader | undefined) => void;
+interface SectionsPartProps {
+  sections: (wasm.SectionHeader & { name?: string })[];
   onClick: (sec: wasm.SectionHeader) => void;
+  onHover: (sec: wasm.SectionHeader|undefined) => void;
+  hovered?: wasm.SectionHeader;
 }
-function Pie(props: PieProps) {
+function Pie(props: SectionsPartProps) {
   const width = 200;
   const height = 200;
   const colors = d3.schemeSpectral[props.sections.length];
@@ -62,13 +62,7 @@ function Pie(props: PieProps) {
   );
 }
 
-interface SectionTableProps {
-  sections: ParsedModule['sections'];
-  hovered: wasm.SectionHeader | undefined;
-  onHover: (sec: wasm.SectionHeader | undefined) => void;
-  onClick: (sec: wasm.SectionHeader) => void;
-}
-function SectionTable(props: SectionTableProps) {
+function SectionTable(props: SectionsPartProps) {
   const totalSize = d3.sum(props.sections.map((sec) => sec.len));
   return (
     <table style="flex:1" cellSpacing="0" cellPadding="0">
@@ -95,6 +89,27 @@ function SectionTable(props: SectionTableProps) {
       </tbody>
     </table>
   );
+}
+
+interface SectionsProps {
+  sections: (wasm.SectionHeader & { name?: string })[];
+  onClick: (sec: wasm.SectionHeader) => void;
+}
+interface SectionsState {
+  hovered?: wasm.SectionHeader;
+}
+class Sections extends preact.Component<SectionsProps, SectionsState> {
+  private onSectionHover = (section: wasm.SectionHeader | undefined) => {
+    this.setState({ hovered: section });
+  };
+  render(props: SectionsProps, state: SectionsState) {
+    return (
+      <div style="display: flex">
+        <Pie {...props} {...state} onHover={this.onSectionHover} />
+        <SectionTable {...props} {...state}  onHover={this.onSectionHover}/>
+      </div>
+    );
+  }
 }
 
 function Imports(props: { children: Indexed<wasm.Import>[] }) {
@@ -151,21 +166,22 @@ function Exports(props: { children: wasm.Export[] }) {
 
 interface FuncsProps {
   children: Indexed<wasmCode.Function>[];
+  onClick: (func: wasmCode.Function) => void;
 }
 interface FuncsState {
+  totalSize: number;
   funcs: Indexed<wasmCode.Function>[];
 }
 class Funcs extends preact.Component<FuncsProps, FuncsState> {
-  state = { funcs: [] };
+  state = { totalSize: 0, funcs: [] };
   static getDerivedStateFromProps(props: FuncsProps): object {
+    const totalSize = d3.sum(props.children.map((f) => f.size));
     const funcs = d3
-      .sort(props.children, (f1, f2) =>
-        d3.descending(f1.body.length, f2.body.length)
-      )
-      .slice(0, 10);
-    return { funcs };
+      .sort(props.children, (f1, f2) => d3.descending(f1.size, f2.size))
+      .slice(0, 100);
+    return { totalSize, funcs };
   }
-  render(_: FuncsProps, { funcs }: FuncsState) {
+  render(props: FuncsProps, state: FuncsState) {
     return (
       <table>
         <thead>
@@ -176,10 +192,13 @@ class Funcs extends preact.Component<FuncsProps, FuncsState> {
           </tr>
         </thead>
         <tbody>
-          {funcs.map((f) => (
-            <tr>
+          {state.funcs.map((f) => (
+            <tr className="pointer" onClick={() => props.onClick(f)}>
               <td className="right">{f.index}</td>
-              <td className="right">{f.body.length}</td>
+              <td className="right">{d3.format(',')(f.size)}</td>
+              <td className="right">
+                {d3.format('.1%')(f.size / state.totalSize)}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -206,14 +225,16 @@ interface AppProps {
 interface AppState {
   hovered?: wasm.SectionHeader;
   section?: wasm.SectionHeader;
+  func?: wasmCode.Function;
 }
 class App extends preact.Component<AppProps, AppState> {
-  state: AppState = { };
-  private onSectionHover = (section: wasm.SectionHeader | undefined) => {
-    this.setState({ hovered: section });
-  };
+  state: AppState = {};
+
   private onSectionClick = (section: wasm.SectionHeader) => {
-    this.setState({ section });
+    this.setState({ section, func: undefined });
+  };
+  private onFuncClick = (func: wasmCode.Function) => {
+    this.setState({ section: undefined, func });
   };
 
   render({ module }: AppProps) {
@@ -226,25 +247,12 @@ class App extends preact.Component<AppProps, AppState> {
         extra = <Exports>{module.exports}</Exports>;
         break;
       case wasm.SectionType.code:
-        extra = <Funcs>{module.code}</Funcs>;
+        extra = <Funcs onClick={this.onFuncClick}>{module.code}</Funcs>;
         break;
     }
     return (
       <main>
-        <div style="display: flex">
-          <Pie
-            sections={module.sections}
-            hovered={this.state.hovered}
-            onHover={this.onSectionHover}
-            onClick={this.onSectionClick}
-          ></Pie>
-          <SectionTable
-            sections={module.sections}
-            hovered={this.state.hovered}
-            onHover={this.onSectionHover}
-            onClick={this.onSectionClick}
-          ></SectionTable>
-        </div>
+        <Sections sections={module.sections} onClick={this.onSectionClick} />
         {extra}
       </main>
     );

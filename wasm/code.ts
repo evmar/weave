@@ -298,6 +298,7 @@ interface InstructionWithoutFields {
 type Instruction = InstructionWithoutFields | InstructionWithFields;
 
 export interface Function {
+  size: number;
   locals: Type[];
   body: Instruction[];
 }
@@ -741,7 +742,7 @@ class Parser {
     return this.readInstrs()[0];
   }
 
-  readFunc(): Function {
+  readFunc(size: number): Function {
     const locals: Type[] = [];
     const len = this.r.readUint();
     for (let i = 0; i < len; i++) {
@@ -752,13 +753,13 @@ class Parser {
       }
     }
     const body = this.readExpr();
-    return { locals, body };
+    return { size, locals, body };
   }
 
   readCode(): Function[] {
     const funcs = this.r.vec(() => {
       const size = this.r.readUint();
-      return this.readFunc();
+      return this.readFunc(size);
     });
     return funcs;
   }
