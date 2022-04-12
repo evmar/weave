@@ -4,7 +4,7 @@ import * as preact from 'preact';
 import { h } from 'preact';
 import * as d3 from 'd3';
 
-import {Sections} from './sections';
+import { Sections } from './sections';
 
 type Indexed<T> = T & { index: number };
 interface ParsedModule {
@@ -68,7 +68,7 @@ function Exports(props: { children: wasm.Export[] }) {
 
 interface FuncsProps {
   children: Indexed<wasmCode.Function>[];
-  onClick: (func: wasmCode.Function) => void;
+  onClick: (func: Indexed<wasmCode.Function>) => void;
 }
 interface FuncsState {
   totalSize: number;
@@ -105,7 +105,6 @@ class Funcs extends preact.Component<FuncsProps, FuncsState> {
           ))}
         </tbody>
       </table>
-      //<Code func={funcs[0]} />
     );
   }
 }
@@ -113,7 +112,9 @@ class Funcs extends preact.Component<FuncsProps, FuncsState> {
 function Code({ func }: { func: Indexed<wasmCode.Function> }) {
   return (
     <pre>
-      <b>function {func.index}:</b>
+      <b>
+        function {func.index} {func.size}:
+      </b>
       {func.body.map((instr) => (
         <div>{instr.op}</div>
       ))}
@@ -126,7 +127,7 @@ interface AppProps {
 }
 interface AppState {
   section?: wasm.SectionHeader;
-  func?: wasmCode.Function;
+  func?: Indexed<wasmCode.Function>;
 }
 class App extends preact.Component<AppProps, AppState> {
   state: AppState = {};
@@ -134,22 +135,26 @@ class App extends preact.Component<AppProps, AppState> {
   private onSectionClick = (section: wasm.SectionHeader) => {
     this.setState({ section, func: undefined });
   };
-  private onFuncClick = (func: wasmCode.Function) => {
+  private onFuncClick = (func: Indexed<wasmCode.Function>) => {
     this.setState({ section: undefined, func });
   };
 
   render({ module }: AppProps) {
     let extra;
-    switch (this.state.section?.type) {
-      case wasm.SectionType.import:
-        extra = <Imports>{module.imports}</Imports>;
-        break;
-      case wasm.SectionType.export:
-        extra = <Exports>{module.exports}</Exports>;
-        break;
-      case wasm.SectionType.code:
-        extra = <Funcs onClick={this.onFuncClick}>{module.code}</Funcs>;
-        break;
+    if (this.state.section) {
+      switch (this.state.section.type) {
+        case wasm.SectionType.import:
+          extra = <Imports>{module.imports}</Imports>;
+          break;
+        case wasm.SectionType.export:
+          extra = <Exports>{module.exports}</Exports>;
+          break;
+        case wasm.SectionType.code:
+          extra = <Funcs onClick={this.onFuncClick}>{module.code}</Funcs>;
+          break;
+      }
+    } else if (this.state.func) {
+      extra = <Code func={this.state.func}></Code>;
     }
     return (
       <main>

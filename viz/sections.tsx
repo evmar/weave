@@ -1,6 +1,6 @@
 import * as wasm from 'wasm';
 import * as d3 from 'd3';
-import { h, } from 'preact';
+import { h } from 'preact';
 import * as preact from 'preact';
 
 interface SectionsPartProps {
