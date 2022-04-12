@@ -6,26 +6,28 @@ import { h, Fragment } from 'preact';
 
 type Indexed<T> = T & { index: number };
 interface ParsedModule {
-  sections: Indexed<wasm.SectionHeader & { name?: string }>[];
+  sections: (wasm.SectionHeader & { name?: string })[];
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
   code: Indexed<wasmCode.Function>[];
 }
 
 interface PieProps {
-  sections: Indexed<wasm.SectionHeader>[];
-  hovered: number | undefined;
-  onHover: (index: number | undefined) => void;
+  sections: wasm.SectionHeader[];
+  hovered: wasm.SectionHeader | undefined;
+  onHover: (sec: wasm.SectionHeader | undefined) => void;
+  onClick: (sec: wasm.SectionHeader) => void;
 }
-function Pie({ sections, hovered, onHover }: PieProps) {
+function Pie(props: PieProps) {
   const width = 200;
   const height = 200;
-  const colors = d3.schemeSpectral[sections.length];
+  const colors = d3.schemeSpectral[props.sections.length];
+  const color = d3.scaleOrdinal(props.sections, colors);
 
   const arcs = d3
-    .pie<Indexed<wasm.SectionHeader>>()
+    .pie<wasm.SectionHeader>()
     .padAngle(0.01)
-    .value((s) => s.len)(sections);
+    .value((s) => s.len)(props.sections);
   const arc = d3
     .arc<d3.PieArcDatum<wasm.SectionHeader>>()
     .innerRadius((width / 2) * 0.6)
@@ -46,13 +48,14 @@ function Pie({ sections, hovered, onHover }: PieProps) {
             .selectAll('path')
             .data(arcs)
             .join('path')
-            .attr('fill', (d) => colors[d.data.index])
+            .attr('fill', (d) => color(d.data))
             .attr('stroke', (d) =>
-              d.data.index === hovered ? 'black' : 'none'
+              d.data === props.hovered ? 'black' : 'none'
             )
             .attr('d', arc)
-            .on('mouseover', (ev, d) => onHover(d.data.index))
-            .on('mouseout', (ev, d) => onHover(undefined))
+            .on('mouseover', (ev, d) => props.onHover(d.data))
+            .on('mouseout', (ev, d) => props.onHover(undefined))
+            .on('click', (e, d) => props.onClick(d.data))
         }
       ></g>
     </svg>
@@ -61,11 +64,12 @@ function Pie({ sections, hovered, onHover }: PieProps) {
 
 interface SectionTableProps {
   sections: ParsedModule['sections'];
-  hovered: number | undefined;
-  onHover: (index: number | undefined) => void;
+  hovered: wasm.SectionHeader | undefined;
+  onHover: (sec: wasm.SectionHeader | undefined) => void;
+  onClick: (sec: wasm.SectionHeader) => void;
 }
-function SectionTable({ sections, hovered, onHover }: SectionTableProps) {
-  const totalSize = d3.sum(sections.map((sec) => sec.len));
+function SectionTable(props: SectionTableProps) {
+  const totalSize = d3.sum(props.sections.map((sec) => sec.len));
   return (
     <table style="flex:1" cellSpacing="0" cellPadding="0">
       <thead>
@@ -76,11 +80,12 @@ function SectionTable({ sections, hovered, onHover }: SectionTableProps) {
         </tr>
       </thead>
       <tbody id="table">
-        {sections.map((sec) => (
+        {props.sections.map((sec) => (
           <tr
-            className={sec.index === hovered ? 'hover' : ''}
-            onMouseEnter={() => onHover(sec.index)}
-            onMouseLeave={() => onHover(undefined)}
+            className={'pointer ' + (sec === props.hovered ? 'hover' : '')}
+            onMouseEnter={() => props.onHover(sec)}
+            onMouseLeave={() => props.onHover(undefined)}
+            onClick={() => props.onClick(sec)}
           >
             <td>{sec.name ?? sec.type}</td>
             <td className="right">{d3.format(',')(sec.len)}</td>
@@ -104,13 +109,12 @@ function Imports(props: { children: Indexed<wasm.Import>[] }) {
         </tr>
       </thead>
       <tbody>
-        {imports.slice(0, 100).map((imp) => (
+        {imports.map((imp) => (
           <tr>
             <td className="right">{imp.index}</td>
             <td className="break-all">
               <code>
-                {imp.module}
-                {imp.name}
+                {imp.module}.{imp.name}
               </code>
             </td>
             <td className="nowrap">{wasm.indexToString(imp.desc)}</td>
@@ -200,33 +204,48 @@ interface AppProps {
   module: ParsedModule;
 }
 interface AppState {
-  hovered: number | undefined;
+  hovered?: wasm.SectionHeader;
+  section?: wasm.SectionHeader;
 }
 class App extends preact.Component<AppProps, AppState> {
-  state: AppState = { hovered: undefined };
-  private onHover = (sec: number | undefined) => {
-    if (sec === this.state.hovered) return;
-    this.setState({ hovered: sec });
+  state: AppState = { };
+  private onSectionHover = (section: wasm.SectionHeader | undefined) => {
+    this.setState({ hovered: section });
+  };
+  private onSectionClick = (section: wasm.SectionHeader) => {
+    this.setState({ section });
   };
 
   render({ module }: AppProps) {
+    let extra;
+    switch (this.state.section?.type) {
+      case wasm.SectionType.import:
+        extra = <Imports>{module.imports}</Imports>;
+        break;
+      case wasm.SectionType.export:
+        extra = <Exports>{module.exports}</Exports>;
+        break;
+      case wasm.SectionType.code:
+        extra = <Funcs>{module.code}</Funcs>;
+        break;
+    }
     return (
       <main>
         <div style="display: flex">
           <Pie
             sections={module.sections}
             hovered={this.state.hovered}
-            onHover={this.onHover}
+            onHover={this.onSectionHover}
+            onClick={this.onSectionClick}
           ></Pie>
           <SectionTable
             sections={module.sections}
             hovered={this.state.hovered}
-            onHover={this.onHover}
+            onHover={this.onSectionHover}
+            onClick={this.onSectionClick}
           ></SectionTable>
         </div>
-        <Exports>{module.exports}</Exports>
-        <Imports>{module.imports}</Imports>
-        <Funcs>{module.code}</Funcs>
+        {extra}
       </main>
     );
   }
