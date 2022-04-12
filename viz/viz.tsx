@@ -117,7 +117,7 @@ class Code extends preact.Component<CodeProps, CodeState> {
           {state.funcs.map((f) => (
             <tr className="pointer" onClick={() => props.onClick(f)}>
               <td className="right">{f.index}</td>
-              <td className='break-all'>
+              <td className="break-all">
                 <code>{props.functionNames.get(f.index)}</code>
               </td>
               <td className="right">{d3.format(',')(f.size)}</td>
@@ -171,21 +171,26 @@ function renderFunctionBody(module: ParsedModule, func: wasmCode.Function) {
         );
     }
 
-    if (
-      instr.op === wasmCode.Instr.if ||
-      instr.op === wasmCode.Instr.block ||
-      instr.op === wasmCode.Instr.loop
-    ) {
-      yield* renderInstrs(instr.body, indent + 1);
-      if (instr.op === wasmCode.Instr.if && instr.else) {
-        yield (
-          <div>
-            {'  '.repeat(indent)}
-            {'else'}
-          </div>
-        );
-        yield* renderInstrs(instr.else, indent + 1);
-      }
+    // Render bodies of block instructions.
+    switch (instr.op) {
+      case wasmCode.Instr.if:
+        yield* renderInstrs(instr.body, indent + 1);
+        if (instr.else) {
+          yield (
+            <div>
+              {'  '.repeat(indent)}
+              {'else'}
+            </div>
+          );
+          yield* renderInstrs(instr.else, indent + 1);
+        }
+        break;
+      case wasmCode.Instr.block:
+        yield* renderInstrs(instr.body, indent);
+        break;
+      case wasmCode.Instr.loop:
+        yield* renderInstrs(instr.body, indent + 1);
+        break;
     }
   }
   function* renderInstrs(instrs: wasmCode.Instruction[], indent = 0) {
