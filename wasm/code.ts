@@ -351,7 +351,11 @@ class Parser {
       case 0x0d:
         return { op: Instr.br_if, label: this.r.readUint() };
       case 0x0e:
-        return {op: Instr.br_table, labels: this.r.vec(() => this.r.readUint()), default: this.r.readUint()};
+        return {
+          op: Instr.br_table,
+          labels: this.r.vec(() => this.r.readUint()),
+          default: this.r.readUint(),
+        };
       case 0x0f:
         return { op: Instr.return };
       case 0x10:
@@ -439,16 +443,16 @@ class Parser {
       case 0x3f: {
         const b = this.r.read8();
         if (b !== 0) {
-          throw new Error(`bad instruction sequence 0x3f ${b.toString(16)}`)
+          throw new Error(`bad instruction sequence 0x3f ${b.toString(16)}`);
         }
-        return {op: Instr.memory_size };
+        return { op: Instr.memory_size };
       }
       case 0x40: {
         const b = this.r.read8();
         if (b !== 0) {
-          throw new Error(`bad instruction sequence 0x40 ${b.toString(16)}`)
+          throw new Error(`bad instruction sequence 0x40 ${b.toString(16)}`);
         }
-        return {op: Instr.memory_grow };
+        return { op: Instr.memory_grow };
       }
 
       case 0x41:

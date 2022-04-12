@@ -78,7 +78,7 @@ class Table extends preact.Component<TableProps> {
           {rows.map((row) => (
             <tr>
               {row.map((val, i) => (
-              <td className={columns[i].className}>{val}</td>
+                <td className={columns[i].className}>{val}</td>
               ))}
             </tr>
           ))}
