@@ -15,20 +15,14 @@ interface ParsedModule {
   functionNames: Map<number, string>;
 }
 
-interface Link {
-  target: string;
-  index: number;
-}
-function urlFromLink(link: Link): string {
-  let url = '#';
-  if (link.target) {
-    url += `${link.target}=${link.index}`;
-  }
+type Link = [target: string, index: number];
+function urlFromLink([target, index]: Link): string {
+  let url = `#${target}=${index}`;
   return url;
 }
 function linkFromHash(hash: string): Link {
   const parts = hash.substring(1).split('=');
-  return { target: parts[0], index: parseInt(parts[1]) };
+  return [parts[0], parseInt(parts[1])];
 }
 function go(link: Link) {
   window.location.hash = urlFromLink(link);
@@ -142,7 +136,7 @@ function renderFunctionBody(module: ParsedModule, func: wasmCode.Function) {
 
   function renderFunc(index: number) {
     return (
-      <Link target={{ target: 'function', index: index }}>
+      <Link target={['function', index]}>
         {module.functionNames.get(index) ?? `function ${index}`}
       </Link>
     );
@@ -226,16 +220,16 @@ class App extends preact.Component<AppProps, AppState> {
   state: AppState = {};
 
   private onHashChange = () => {
-    const link = linkFromHash(document.location.hash);
-    if (link.target === 'section') {
+    const [target, index] = linkFromHash(document.location.hash);
+    if (target === 'section') {
       const section = this.props.module.sections.find(
-        (sec) => sec.index === link.index
+        (sec) => sec.index === index
       );
       if (section) {
         this.setState({ section, func: undefined });
       }
-    } else if (link.target === 'function') {
-      if (link.index <= this.props.module.imports.length) {
+    } else if (target === 'function') {
+      if (index <= this.props.module.imports.length) {
         const section = this.props.module.sections.find(
           (sec) => sec.type === wasm.SectionType.import
         );
@@ -244,7 +238,7 @@ class App extends preact.Component<AppProps, AppState> {
         }
       } else {
         const func =
-          this.props.module.code[link.index - this.props.module.imports.length];
+          this.props.module.code[index - this.props.module.imports.length];
         if (func) {
           this.setState({ section: undefined, func });
         }
@@ -253,10 +247,10 @@ class App extends preact.Component<AppProps, AppState> {
   };
 
   private onSectionClick = (section: wasm.SectionHeader) => {
-    go({ target: 'section', index: section.index });
+    go(['section', section.index]);
   };
   private onFuncClick = (func: Indexed<wasmCode.Function>) => {
-    go({ target: 'function', index: func.index });
+    go(['function', func.index]);
   };
 
   componentDidMount() {
