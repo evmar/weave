@@ -12,6 +12,7 @@ interface ParsedModule {
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
   code: Indexed<wasmCode.Function>[];
+  functionNames: Map<number, string>;
 }
 
 function Imports(props: { children: Indexed<wasm.Import>[] }) {
@@ -66,29 +67,31 @@ function Exports(props: { children: wasm.Export[] }) {
   );
 }
 
-interface FuncsProps {
+interface CodeProps {
   children: Indexed<wasmCode.Function>[];
+  functionNames: Map<number, string>;
   onClick: (func: Indexed<wasmCode.Function>) => void;
 }
-interface FuncsState {
+interface CodeState {
   totalSize: number;
   funcs: Indexed<wasmCode.Function>[];
 }
-class Funcs extends preact.Component<FuncsProps, FuncsState> {
+class Code extends preact.Component<CodeProps, CodeState> {
   state = { totalSize: 0, funcs: [] };
-  static getDerivedStateFromProps(props: FuncsProps): object {
+  static getDerivedStateFromProps(props: CodeProps): object {
     const totalSize = d3.sum(props.children.map((f) => f.size));
     const funcs = d3
       .sort(props.children, (f1, f2) => d3.descending(f1.size, f2.size))
       .slice(0, 100);
     return { totalSize, funcs };
   }
-  render(props: FuncsProps, state: FuncsState) {
+  render(props: CodeProps, state: CodeState) {
     return (
       <table>
         <thead>
           <tr>
             <th className="right">index</th>
+            <th>name</th>
             <th className="right">size</th>
             <th className="right">%</th>
           </tr>
@@ -97,6 +100,9 @@ class Funcs extends preact.Component<FuncsProps, FuncsState> {
           {state.funcs.map((f) => (
             <tr className="pointer" onClick={() => props.onClick(f)}>
               <td className="right">{f.index}</td>
+              <td>
+                <code>{props.functionNames.get(f.index)}</code>
+              </td>
               <td className="right">{d3.format(',')(f.size)}</td>
               <td className="right">
                 {d3.format('.1%')(f.size / state.totalSize)}
@@ -109,17 +115,25 @@ class Funcs extends preact.Component<FuncsProps, FuncsState> {
   }
 }
 
-function* renderInstr(instr: wasmCode.Instruction, indent = 0): Generator<preact.ComponentChild> {
+function* renderInstr(
+  instr: wasmCode.Instruction,
+  indent = 0
+): Generator<preact.ComponentChild> {
   switch (instr.op) {
-  // TODO: custom rendering here.
-  default:
-    const toPrint = [instr.op.toString()];
-    for (const [key, val] of Object.entries(instr)) {
-      if (key === 'op') continue;
-      if (val instanceof Array) continue;
-      toPrint.push(` ${key}=${val}`);
-    }
-    yield <div>{'  '.repeat(indent)}{toPrint.join('')}</div>;
+    // TODO: custom rendering here.
+    default:
+      const toPrint = [instr.op.toString()];
+      for (const [key, val] of Object.entries(instr)) {
+        if (key === 'op') continue;
+        if (val instanceof Array) continue;
+        toPrint.push(` ${key}=${val}`);
+      }
+      yield (
+        <div>
+          {'  '.repeat(indent)}
+          {toPrint.join('')}
+        </div>
+      );
   }
 
   if (
@@ -129,7 +143,12 @@ function* renderInstr(instr: wasmCode.Instruction, indent = 0): Generator<preact
   ) {
     yield* renderInstrs(instr.body, indent + 1);
     if (instr.op === wasmCode.Instr.if && instr.else) {
-      yield <div>{'  '.repeat(indent)}{'else'}</div>;
+      yield (
+        <div>
+          {'  '.repeat(indent)}
+          {'else'}
+        </div>
+      );
       yield* renderInstrs(instr.else, indent + 1);
     }
   }
@@ -140,15 +159,19 @@ function* renderInstrs(instrs: wasmCode.Instruction[], indent = 0) {
   }
 }
 
-function Code({ func }: { func: Indexed<wasmCode.Function> }) {
+function Function({
+  func,
+  name,
+}: {
+  func: Indexed<wasmCode.Function>;
+  name?: string;
+}) {
   return (
     <>
       <b>
-        function {func.index} {func.size}:
+        function {func.index} {name} {func.size}:
       </b>
-      <pre>
-      {Array.from(renderInstrs(func.body))}
-      </pre>
+      <pre>{Array.from(renderInstrs(func.body))}</pre>
     </>
   );
 }
@@ -181,11 +204,23 @@ class App extends preact.Component<AppProps, AppState> {
           extra = <Exports>{module.exports}</Exports>;
           break;
         case wasm.SectionType.code:
-          extra = <Funcs onClick={this.onFuncClick}>{module.code}</Funcs>;
+          extra = (
+            <Code
+              onClick={this.onFuncClick}
+              functionNames={module.functionNames}
+            >
+              {module.code}
+            </Code>
+          );
           break;
       }
     } else if (this.state.func) {
-      extra = <Code func={this.state.func}></Code>;
+      extra = (
+        <Function
+          func={this.state.func}
+          name={module.functionNames.get(this.state.func.index)}
+        ></Function>
+      );
     }
     return (
       <main>
@@ -204,6 +239,7 @@ async function main() {
     imports: [],
     exports: [],
     code: [],
+    functionNames: new Map(),
   };
   for (const section of module.sections) {
     switch (section.type) {
@@ -218,6 +254,11 @@ async function main() {
         break;
       case wasm.SectionType.export:
         module.exports = wasm.readExportSection(wasmModule.getReader(section));
+        for (const exp of module.exports) {
+          if (exp.desc.type == wasm.IndexType.func) {
+            module.functionNames.set(exp.desc.index, exp.name);
+          }
+        }
         break;
       case wasm.SectionType.code:
         module.code = wasmCode
