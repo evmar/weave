@@ -6,7 +6,7 @@ import { h, Fragment } from 'preact';
 
 type Indexed<T> = T & { index: number };
 interface ParsedModule {
-  sections: Indexed<wasm.SectionHeader>[];
+  sections: Indexed<wasm.SectionHeader & { name?: string }>[];
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
   code: Indexed<wasmCode.Function>[];
@@ -89,7 +89,7 @@ class Table extends preact.Component<TableProps> {
 }
 
 interface SectionTableProps {
-  sections: Indexed<wasm.SectionHeader>[];
+  sections: ParsedModule['sections'];
   hovered: number | undefined;
   onHover: (index: number | undefined) => void;
 }
@@ -113,7 +113,7 @@ function SectionTable({ sections, hovered, onHover }: SectionTableProps) {
             onMouseEnter={() => onHover(sec.index)}
             onMouseLeave={() => onHover(undefined)}
           >
-            <td>{sec.type}</td>
+            <td>{sec.name ?? sec.type}</td>
             {/* @ts-ignore */}
             <td align="right">{d3.format(',')(sec.len)}</td>
             {/* @ts-ignore */}
@@ -256,6 +256,10 @@ async function main() {
   };
   for (const section of module.sections) {
     switch (section.type) {
+      case wasm.SectionType.custom:
+        const custom = wasm.readCustomSection(wasmModule.getReader(section));
+        section.name = `custom: '${custom.name}'`;
+        break;
       case wasm.SectionType.import:
         module.imports = wasm
           .readImportSection(wasmModule.getReader(section))

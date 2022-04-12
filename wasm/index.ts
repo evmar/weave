@@ -190,3 +190,15 @@ export function readExportSection(r: Reader): Export[] {
     return { name, desc };
   });
 }
+
+export interface CustomSection {
+  name: string;
+  data: number;
+}
+export function readCustomSection(r: Reader): CustomSection {
+  const name = r.name();
+  const ofs = r.ofs;
+  return { name, data: ofs };
+}
+
+export const x = 3;
