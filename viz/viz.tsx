@@ -59,35 +59,6 @@ function Pie({ sections, hovered, onHover }: PieProps) {
   );
 }
 
-interface TableProps {
-  columns: Array<{ name: string; className?: string }>;
-  rows: preact.ComponentChild[][];
-}
-class Table extends preact.Component<TableProps> {
-  render({ columns, rows }: TableProps) {
-    return (
-      <table cellSpacing="0" cellPadding="0">
-        <thead>
-          <tr>
-            {columns.map(({ name, className }) => (
-              <th className={className}>{name}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr>
-              {row.map((val, i) => (
-                <td className={columns[i].className}>{val}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  }
-}
-
 interface SectionTableProps {
   sections: ParsedModule['sections'];
   hovered: number | undefined;
@@ -100,10 +71,8 @@ function SectionTable({ sections, hovered, onHover }: SectionTableProps) {
       <thead>
         <tr>
           <th>section</th>
-          {/* @ts-ignore */}
-          <th align="right">size</th>
-          {/* @ts-ignore */}
-          <th align="right">%</th>
+          <th className="right">size</th>
+          <th className="right">%</th>
         </tr>
       </thead>
       <tbody id="table">
@@ -114,10 +83,8 @@ function SectionTable({ sections, hovered, onHover }: SectionTableProps) {
             onMouseLeave={() => onHover(undefined)}
           >
             <td>{sec.name ?? sec.type}</td>
-            {/* @ts-ignore */}
-            <td align="right">{d3.format(',')(sec.len)}</td>
-            {/* @ts-ignore */}
-            <td align="right">{d3.format('.1%')(sec.len / totalSize)}</td>
+            <td className="right">{d3.format(',')(sec.len)}</td>
+            <td className="right">{d3.format('.1%')(sec.len / totalSize)}</td>
           </tr>
         ))}
       </tbody>
@@ -128,38 +95,53 @@ function SectionTable({ sections, hovered, onHover }: SectionTableProps) {
 function Imports(props: { children: Indexed<wasm.Import>[] }) {
   const imports = props.children;
   return (
-    <Table
-      columns={[
-        { name: 'index', className: 'right' },
-        { name: 'name', className: 'break-all' },
-        { name: 'desc', className: 'nowrap' },
-      ]}
-      rows={imports
-        .slice(0, 100)
-        .map((imp) => [
-          `${imp.index}`,
-          <code>{`${imp.module}.${imp.name}`}</code>,
-          `${wasm.indexToString(imp.desc)}`,
-        ])}
-    />
+    <table>
+      <thead>
+        <tr>
+          <th className="right">index</th>
+          <th>name</th>
+          <th>desc</th>
+        </tr>
+      </thead>
+      <tbody>
+        {imports.slice(0, 100).map((imp) => (
+          <tr>
+            <td className="right">{imp.index}</td>
+            <td className="break-all">
+              <code>
+                {imp.module}
+                {imp.name}
+              </code>
+            </td>
+            <td className="nowrap">{wasm.indexToString(imp.desc)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
 function Exports(props: { children: wasm.Export[] }) {
   const exports = props.children;
   return (
-    <Table
-      columns={[
-        { name: 'name', className: 'break-all' },
-        { name: 'desc', className: 'nowrap' },
-      ]}
-      rows={exports
-        .slice(0, 100)
-        .map((exp) => [
-          <code>{`${exp.name}`}</code>,
-          `${wasm.indexToString(exp.desc)}`,
-        ])}
-    />
+    <table>
+      <thead>
+        <tr>
+          <th>name</th>
+          <th>desc</th>
+        </tr>
+      </thead>
+      <tbody>
+        {exports.slice(0, 100).map((exp) => (
+          <tr>
+            <td className="break-all">
+              <code>{exp.name}</code>
+            </td>
+            <td className="nowrap">{wasm.indexToString(exp.desc)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 
@@ -181,19 +163,24 @@ class Funcs extends preact.Component<FuncsProps, FuncsState> {
   }
   render(_: FuncsProps, { funcs }: FuncsState) {
     return (
-      <>
-        <b>code</b>
-        {'\n'}
-        <Table
-          columns={[
-            { name: 'index', className: 'right' },
-            { name: 'size', className: 'right' },
-            { name: '%', className: 'right' },
-          ]}
-          rows={funcs.map((f) => [`${f.index}`, `${f.body.length}`])}
-        />
-        <Code func={funcs[0]} />
-      </>
+      <table>
+        <thead>
+          <tr>
+            <th className="right">index</th>
+            <th className="right">size</th>
+            <th className="right">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          {funcs.map((f) => (
+            <tr>
+              <td className="right">{f.index}</td>
+              <td className="right">{f.body.length}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      //<Code func={funcs[0]} />
     );
   }
 }
