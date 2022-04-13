@@ -4,7 +4,7 @@
   "description": "",
   "main": "viz.js",
   "scripts": {
-    "serve": "esbuild --bundle --sourcemap --servedir=. --outfile=bundle.js viz.tsx",
+    "serve": "esbuild --bundle --target=es2020 --sourcemap --servedir=. --outfile=bundle.js viz.tsx",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
