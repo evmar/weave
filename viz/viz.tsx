@@ -133,7 +133,7 @@ class Code extends preact.Component<CodeProps, CodeState> {
 }
 
 function renderFunctionBody(module: ParsedModule, func: wasmCode.Function) {
-  return <pre>{Array.from(renderInstrs(func.body))}</pre>;
+  return <pre style='white-space: pre-wrap'>{Array.from(renderInstrs(func.body))}</pre>;
 
   function renderFunc(index: number) {
     return (
@@ -148,11 +148,15 @@ function renderFunctionBody(module: ParsedModule, func: wasmCode.Function) {
     indent = 0
   ): Generator<preact.ComponentChild> {
     switch (instr.op) {
+      case wasmCode.Instr.block:
+        // Render nothing.
+        break;
       case wasmCode.Instr.call:
         yield (
-          <div>
-            {instr.op} {renderFunc(instr.func)}
-          </div>
+          <>
+            {'  '.repeat(indent)}
+            {instr.op} {renderFunc(instr.func)}{'\n'}
+          </>
         );
         break;
       // TODO: custom rendering here.
@@ -164,10 +168,11 @@ function renderFunctionBody(module: ParsedModule, func: wasmCode.Function) {
           toPrint.push(` ${key}=${val}`);
         }
         yield (
-          <div>
+          <>
             {'  '.repeat(indent)}
             {toPrint.join('')}
-          </div>
+            {'\n'}
+          </>
         );
     }
 

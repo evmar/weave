@@ -10,6 +10,7 @@
       }
       th, td {
         padding: 0.25ex 2ex;
+        vertical-align: baseline;
       }
       .nowrap {
         white-space: nowrap;
@@ -28,6 +29,19 @@
       }
       .pointer {
         cursor: pointer;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #222;
+          color: #ccc;
+        }
+        .hover {
+          background: #444;
+        }
+        a {
+          color: #66f;
+        }
       }
     </style>
   </head>
