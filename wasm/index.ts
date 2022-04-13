@@ -289,26 +289,42 @@ export function readCustomSection(r: Reader): CustomSection {
 
 export interface NameSection {
   moduleName?: string;
-  functionNames?: Array<[number, string]>;
+  functionNames?: Map<number, string>;
+  globalNames?: Map<number, string>;
+  dataNames?: Map<number, string>;
+}
+
+function readNameMap(r: Reader): Map<number, string> {
+  const len = r.readUint();
+  const map = new Map();
+  for (let i = 0; i < len; i++) {
+    map.set(r.readUint(), r.name());
+  }
+  return map;
 }
 
 export function readNameSection(r: Reader): NameSection {
-  let moduleName;
-  let functionNames: Array<[number, string]> | undefined;
+  let sec: NameSection = {};
   while (!r.done()) {
     const b = r.read8();
     const size = r.readUint();
+    // https://github.com/WebAssembly/extended-name-section/blob/main/proposals/extended-name-section/Overview.md
     switch (b) {
       case 0:
-        moduleName = r.name();
+        sec.moduleName = r.name();
         break;
       case 1:
-        functionNames = [];
-        r.vec(() => {
-          const idx = r.readUint();
-          const name = r.name();
-          functionNames!.push([idx, name]);
-        });
+        sec.functionNames = readNameMap(r);
+        break;
+      case 2:
+        console.warn(`unimplemented 'local name' subsection`);
+        r.skip(size);
+        break;
+      case 7:
+        sec.globalNames = readNameMap(r);
+        break;
+      case 9:
+        sec.dataNames = readNameMap(r);
         break;
       default:
         console.warn(`ignoring unknown name subsection id ${b.toString(16)}`);
@@ -316,7 +332,7 @@ export function readNameSection(r: Reader): NameSection {
         break;
     }
   }
-  return { moduleName, functionNames };
+  return sec;
 }
 
 export interface Global {

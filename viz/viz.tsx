@@ -301,7 +301,8 @@ function Global(props: { module: ParsedModule }) {
     <table>
       <thead>
         <tr>
-          <th className='right'>index</th>
+          <th className="right">index</th>
+          <th>name</th>
           <th>type</th>
           <th>init</th>
         </tr>
@@ -310,11 +311,12 @@ function Global(props: { module: ParsedModule }) {
         {props.module.globals.map((global) => {
           return (
             <tr>
-              <td className='right'>{global.index}</td>
+              <td className="right">{global.index}</td>
+              <td className="break-all">
+                <code>{props.module.globalNames.get(global.index)}</code>
+              </td>
               <td>
-                {global.type.mut ? 'var' : 'const'}{' '}
-                {props.module.globalNames.get(global.index)}{' '}
-                {global.type.valType}
+                {global.type.mut ? 'var' : 'const'} {global.type.valType}
               </td>
               <td>
                 <Instructions module={props.module} instrs={global.init} />
@@ -358,8 +360,7 @@ class App extends preact.Component<AppProps, AppState> {
           this.setState({ section, func: undefined });
         }
       } else {
-        const func =
-          this.props.module.code[index - importedCount];
+        const func = this.props.module.code[index - importedCount];
         if (func) {
           this.setState({ section: undefined, func });
         }
@@ -456,6 +457,9 @@ async function main() {
                 }
                 module.functionNames.set(idx, name);
               }
+            }
+            if (names.globalNames) {
+              module.globalNames = names.globalNames;
             }
             break;
           default:
