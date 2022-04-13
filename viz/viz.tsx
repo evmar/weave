@@ -188,6 +188,10 @@ class Instructions extends preact.Component<
     );
   }
 
+  private renderGlobal(index: number) {
+    return this.props.module.globalNames.get(index) ?? `global ${index}`;
+  }
+
   private *renderInstr(
     instr: wasmCode.Instruction,
     indent = 0
@@ -201,7 +205,16 @@ class Instructions extends preact.Component<
           <div>
             {'  '.repeat(indent)}
             {instr.op} {this.renderFunc(instr.func)}
-            {'\n'}
+          </div>
+        );
+        break;
+
+      case wasmCode.Instr.global_get:
+      case wasmCode.Instr.global_set:
+        yield (
+          <div>
+            {'  '.repeat(indent)}
+            {instr.op} {this.renderGlobal(instr.global)}
           </div>
         );
         break;
