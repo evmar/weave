@@ -160,11 +160,11 @@ function renderInstructions(module: ParsedModule, instrs: wasmCode.Instruction[]
         break;
       case wasmCode.Instr.call:
         yield (
-          <>
+          <div>
             {'  '.repeat(indent)}
             {instr.op} {renderFunc(instr.func)}
             {'\n'}
-          </>
+          </div>
         );
         break;
       // TODO: custom rendering here.
@@ -176,11 +176,11 @@ function renderInstructions(module: ParsedModule, instrs: wasmCode.Instruction[]
           toPrint.push(` ${key}=${val}`);
         }
         yield (
-          <>
+          <div>
             {'  '.repeat(indent)}
             {toPrint.join('')}
             {'\n'}
-          </>
+          </div>
         );
     }
 
