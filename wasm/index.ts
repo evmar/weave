@@ -318,3 +318,13 @@ export function readNameSection(r: Reader): NameSection {
   }
   return { moduleName, functionNames };
 }
+
+export interface Global {
+  type: GlobalType;
+  init: code.Instruction[];
+}
+export function readGlobalSection(r: Reader): Global[] {
+  return r.vec(() => {
+    return { type: readGlobalType(r), init: code.readExpr(r) };
+  });
+}

@@ -15,8 +15,10 @@ interface ParsedModule {
   code: Indexed<wasmCode.Function>[];
   names?: wasm.NameSection;
   data: wasm.DataSectionData[];
+  globals: Indexed<wasm.Global>[];
 
   functionNames: Map<number, string>;
+  globalNames: Map<number, string>;
 }
 
 type Link = [target: string, index: number];
@@ -137,19 +139,22 @@ class Code extends preact.Component<CodeProps, CodeState> {
 
 namespace Instructions {
   export interface Props {
-    module: ParsedModule,
+    module: ParsedModule;
     instrs: wasmCode.Instruction[];
   }
   export interface State {
     expanded: boolean;
   }
 }
-class Instructions extends preact.Component<Instructions.Props, Instructions.State> {
-  state = {expanded: false};
+class Instructions extends preact.Component<
+  Instructions.Props,
+  Instructions.State
+> {
+  state = { expanded: false };
 
   private expand = () => {
-    this.setState({expanded: true});
-  }
+    this.setState({ expanded: true });
+  };
 
   render() {
     const lines = [];
@@ -157,7 +162,12 @@ class Instructions extends preact.Component<Instructions.Props, Instructions.Sta
     for (const line of this.renderInstrs(this.props.instrs)) {
       lines.push(line);
       if (lines.length >= 50 && !this.state.expanded) {
-        expand = <div>{'\n'}<button onClick={this.expand}>show all</button></div>;
+        expand = (
+          <div>
+            {'\n'}
+            <button onClick={this.expand}>show all</button>
+          </div>
+        );
         break;
       }
     }
@@ -257,7 +267,7 @@ function Function(props: {
   );
 }
 
-function Data(props: { module: ParsedModule, data: wasm.DataSectionData[] }) {
+function Data(props: { module: ParsedModule; data: wasm.DataSectionData[] }) {
   return (
     <table>
       <thead>
@@ -271,7 +281,44 @@ function Data(props: { module: ParsedModule, data: wasm.DataSectionData[] }) {
           return (
             <tr>
               <td>{data.init.byteLength}</td>
-              <td>{data.memidx === undefined ? 'passive' : <Instructions module={props.module} instrs={data.offset!}/>}</td>
+              <td>
+                {data.memidx === undefined ? (
+                  'passive'
+                ) : (
+                  <Instructions module={props.module} instrs={data.offset!} />
+                )}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+function Global(props: { module: ParsedModule }) {
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th className='right'>index</th>
+          <th>type</th>
+          <th>init</th>
+        </tr>
+      </thead>
+      <tbody>
+        {props.module.globals.map((global) => {
+          return (
+            <tr>
+              <td className='right'>{global.index}</td>
+              <td>
+                {global.type.mut ? 'var' : 'const'}{' '}
+                {props.module.globalNames.get(global.index)}{' '}
+                {global.type.valType}
+              </td>
+              <td>
+                <Instructions module={props.module} instrs={global.init} />
+              </td>
             </tr>
           );
         })}
@@ -300,7 +347,10 @@ class App extends preact.Component<AppProps, AppState> {
         this.setState({ section, func: undefined });
       }
     } else if (target === 'function') {
-      if (index <= this.props.module.imports.length) {
+      const importedCount = this.props.module.imports.filter(
+        (imp) => imp.desc.type === wasm.DescType.typeidx
+      ).length;
+      if (index <= importedCount) {
         const section = this.props.module.sections.find(
           (sec) => sec.type === wasm.SectionType.import
         );
@@ -309,7 +359,7 @@ class App extends preact.Component<AppProps, AppState> {
         }
       } else {
         const func =
-          this.props.module.code[index - this.props.module.imports.length];
+          this.props.module.code[index - importedCount];
         if (func) {
           this.setState({ section: undefined, func });
         }
@@ -348,10 +398,13 @@ class App extends preact.Component<AppProps, AppState> {
             </Code>
           );
           break;
-          case wasm.SectionType.data:
-            extra = <Data module={module} data={module.data}/>;
-            break;
-          default:
+        case wasm.SectionType.data:
+          extra = <Data module={module} data={module.data} />;
+          break;
+        case wasm.SectionType.global:
+          extra = <Global module={module} />;
+          break;
+        default:
           extra = <div>TODO: no viewer implemented for this section</div>;
       }
     } else if (this.state.func) {
@@ -382,7 +435,9 @@ async function main() {
     exports: [],
     code: [],
     data: [],
+    globals: [],
     functionNames: new Map(),
+    globalNames: new Map(),
   };
   (window as any)['module'] = module;
   for (const section of module.sections) {
@@ -428,19 +483,30 @@ async function main() {
           }
         }
         break;
-      case wasm.SectionType.code:
+      case wasm.SectionType.code: {
+        const offset = module.imports.filter(
+          (imp) => imp.desc.type === wasm.DescType.typeidx
+        ).length;
         module.code = wasmCode
           .read(wasmModule.getReader(section))
-          .map((f, i) => ({ ...f, index: i + module.imports.length }));
+          .map((f, i) => ({ ...f, index: i + offset }));
         break;
+      }
       case wasm.SectionType.data:
         module.data = wasm.readDataSection(wasmModule.getReader(section));
         break;
+      case wasm.SectionType.global: {
+        const offset = module.imports.filter(
+          (imp) => imp.desc.type === wasm.DescType.global
+        ).length;
+        module.globals = wasm
+          .readGlobalSection(wasmModule.getReader(section))
+          .map((g, i) => ({ ...g, index: i + offset }));
+        break;
+      }
     }
   }
   preact.render(<App module={module}></App>, document.body);
 }
 
-main().catch((err) => {
-  console.error(err);
-});
+main();
