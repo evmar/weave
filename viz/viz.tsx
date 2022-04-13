@@ -189,7 +189,12 @@ class Instructions extends preact.Component<
   }
 
   private renderGlobal(index: number) {
-    return this.props.module.globalNames.get(index) ?? `global ${index}`;
+    const fallback = `global ${index}`;
+    const name = this.props.module.globalNames.get(index);
+    if (name) {
+      return <span title={fallback}>{name}</span>
+    }
+    return fallback;
   }
 
   private *renderInstr(
@@ -346,7 +351,7 @@ interface AppProps {
   module: ParsedModule;
 }
 interface AppState {
-  section?: wasm.SectionHeader;
+  section?: wasm.SectionHeader & {name?: string};
   func?: Indexed<wasmCode.Function>;
 }
 class App extends preact.Component<AppProps, AppState> {
@@ -418,6 +423,12 @@ class App extends preact.Component<AppProps, AppState> {
         case wasm.SectionType.global:
           extra = <Global module={module} />;
           break;
+        case wasm.SectionType.custom:
+          if (this.state.section.name === 'name') {
+            extra = <div>(gathered name data is displayed inline in other sections)</div>;
+            break;
+          }
+          // fall through
         default:
           extra = <div>TODO: no viewer implemented for this section</div>;
       }
