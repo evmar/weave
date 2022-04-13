@@ -135,22 +135,50 @@ class Code extends preact.Component<CodeProps, CodeState> {
   }
 }
 
-function renderInstructions(module: ParsedModule, instrs: wasmCode.Instruction[]) {
-  return (
-    <pre style="white-space: pre-wrap">
-      {Array.from(renderInstrs(instrs))}
-    </pre>
-  );
+namespace Instructions {
+  export interface Props {
+    module: ParsedModule,
+    instrs: wasmCode.Instruction[];
+  }
+  export interface State {
+    expanded: boolean;
+  }
+}
+class Instructions extends preact.Component<Instructions.Props, Instructions.State> {
+  state = {expanded: false};
 
-  function renderFunc(index: number) {
+  private expand = () => {
+    this.setState({expanded: true});
+  }
+
+  render() {
+    const lines = [];
+    let expand;
+    for (const line of this.renderInstrs(this.props.instrs)) {
+      lines.push(line);
+      if (lines.length >= 50 && !this.state.expanded) {
+        expand = <div>{'\n'}<button onClick={this.expand}>show all</button></div>;
+        break;
+      }
+    }
+
+    return (
+      <pre style="white-space: pre-wrap">
+        {lines}
+        {expand}
+      </pre>
+    );
+  }
+
+  private renderFunc(index: number) {
     return (
       <Link target={['function', index]}>
-        {module.functionNames.get(index) ?? `function ${index}`}
+        {this.props.module.functionNames.get(index) ?? `function ${index}`}
       </Link>
     );
   }
 
-  function* renderInstr(
+  private *renderInstr(
     instr: wasmCode.Instruction,
     indent = 0
   ): Generator<preact.ComponentChild> {
@@ -162,7 +190,7 @@ function renderInstructions(module: ParsedModule, instrs: wasmCode.Instruction[]
         yield (
           <div>
             {'  '.repeat(indent)}
-            {instr.op} {renderFunc(instr.func)}
+            {instr.op} {this.renderFunc(instr.func)}
             {'\n'}
           </div>
         );
@@ -187,7 +215,7 @@ function renderInstructions(module: ParsedModule, instrs: wasmCode.Instruction[]
     // Render bodies of block instructions.
     switch (instr.op) {
       case wasmCode.Instr.if:
-        yield* renderInstrs(instr.body, indent + 1);
+        yield* this.renderInstrs(instr.body, indent + 1);
         if (instr.else) {
           yield (
             <div>
@@ -195,20 +223,21 @@ function renderInstructions(module: ParsedModule, instrs: wasmCode.Instruction[]
               {'else'}
             </div>
           );
-          yield* renderInstrs(instr.else, indent + 1);
+          yield* this.renderInstrs(instr.else, indent + 1);
         }
         break;
       case wasmCode.Instr.block:
-        yield* renderInstrs(instr.body, indent);
+        yield* this.renderInstrs(instr.body, indent);
         break;
       case wasmCode.Instr.loop:
-        yield* renderInstrs(instr.body, indent + 1);
+        yield* this.renderInstrs(instr.body, indent + 1);
         break;
     }
   }
-  function* renderInstrs(instrs: wasmCode.Instruction[], indent = 0) {
+
+  private *renderInstrs(instrs: wasmCode.Instruction[], indent = 0) {
     for (const instr of instrs) {
-      yield* renderInstr(instr, indent);
+      yield* this.renderInstr(instr, indent);
     }
   }
 }
@@ -223,7 +252,7 @@ function Function(props: {
       <b>
         function {props.func.index} {props.name} {props.func.size}:
       </b>
-      {renderInstructions(props.module, props.func.body)}
+      <Instructions module={props.module} instrs={props.func.body} />
     </>
   );
 }
@@ -234,7 +263,7 @@ function Data(props: { module: ParsedModule, data: wasm.DataSectionData[] }) {
       <thead>
         <tr>
           <th>size</th>
-          <th>mode</th>
+          <th>init</th>
         </tr>
       </thead>
       <tbody>
@@ -242,7 +271,7 @@ function Data(props: { module: ParsedModule, data: wasm.DataSectionData[] }) {
           return (
             <tr>
               <td>{data.init.byteLength}</td>
-              <td>{data.memidx === undefined ? 'passive' : renderInstructions(props.module, data.offset!)}</td>
+              <td>{data.memidx === undefined ? 'passive' : <Instructions module={props.module} instrs={data.offset!}/>}</td>
             </tr>
           );
         })}
