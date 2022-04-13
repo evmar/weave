@@ -735,7 +735,7 @@ function readInstrs(r: Reader): [Instruction[], Instr] {
   }
 }
 
-function readExpr(r: Reader) {
+export function readExpr(r: Reader) {
   return readInstrs(r)[0];
 }
 

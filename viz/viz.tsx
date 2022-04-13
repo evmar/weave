@@ -9,10 +9,13 @@ import { Sections } from './sections';
 type Indexed<T> = T & { index: number };
 interface ParsedModule {
   sections: (wasm.SectionHeader & { name?: string })[];
+
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
   code: Indexed<wasmCode.Function>[];
   names?: wasm.NameSection;
+  data: wasm.DataSectionData[];
+
   functionNames: Map<number, string>;
 }
 
@@ -132,8 +135,12 @@ class Code extends preact.Component<CodeProps, CodeState> {
   }
 }
 
-function renderFunctionBody(module: ParsedModule, func: wasmCode.Function) {
-  return <pre style='white-space: pre-wrap'>{Array.from(renderInstrs(func.body))}</pre>;
+function renderInstructions(module: ParsedModule, instrs: wasmCode.Instruction[]) {
+  return (
+    <pre style="white-space: pre-wrap">
+      {Array.from(renderInstrs(instrs))}
+    </pre>
+  );
 
   function renderFunc(index: number) {
     return (
@@ -155,7 +162,8 @@ function renderFunctionBody(module: ParsedModule, func: wasmCode.Function) {
         yield (
           <>
             {'  '.repeat(indent)}
-            {instr.op} {renderFunc(instr.func)}{'\n'}
+            {instr.op} {renderFunc(instr.func)}
+            {'\n'}
           </>
         );
         break;
@@ -215,8 +223,31 @@ function Function(props: {
       <b>
         function {props.func.index} {props.name} {props.func.size}:
       </b>
-      {renderFunctionBody(props.module, props.func)}
+      {renderInstructions(props.module, props.func.body)}
     </>
+  );
+}
+
+function Data(props: { module: ParsedModule, data: wasm.DataSectionData[] }) {
+  return (
+    <table>
+      <thead>
+        <tr>
+          <th>size</th>
+          <th>mode</th>
+        </tr>
+      </thead>
+      <tbody>
+        {props.data.map((data) => {
+          return (
+            <tr>
+              <td>{data.init.byteLength}</td>
+              <td>{data.memidx === undefined ? 'passive' : renderInstructions(props.module, data.offset!)}</td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }
 
@@ -269,7 +300,7 @@ class App extends preact.Component<AppProps, AppState> {
     this.onHashChange();
   }
   render({ module }: AppProps) {
-    let extra;
+    let extra: preact.ComponentChild;
     if (this.state.section) {
       switch (this.state.section.type) {
         case wasm.SectionType.import:
@@ -288,6 +319,11 @@ class App extends preact.Component<AppProps, AppState> {
             </Code>
           );
           break;
+          case wasm.SectionType.data:
+            extra = <Data module={module} data={module.data}/>;
+            break;
+          default:
+          extra = <div>TODO: no viewer implemented for this section</div>;
       }
     } else if (this.state.func) {
       extra = (
@@ -298,6 +334,7 @@ class App extends preact.Component<AppProps, AppState> {
         ></Function>
       );
     }
+
     return (
       <main>
         <Sections sections={module.sections} onClick={this.onSectionClick} />
@@ -315,6 +352,7 @@ async function main() {
     imports: [],
     exports: [],
     code: [],
+    data: [],
     functionNames: new Map(),
   };
   (window as any)['module'] = module;
@@ -365,6 +403,9 @@ async function main() {
         module.code = wasmCode
           .read(wasmModule.getReader(section))
           .map((f, i) => ({ ...f, index: i + module.imports.length }));
+        break;
+      case wasm.SectionType.data:
+        module.data = wasm.readDataSection(wasmModule.getReader(section));
         break;
     }
   }

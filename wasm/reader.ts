@@ -60,6 +60,16 @@ export class Reader {
     this.ofs += len;
   }
 
+  slice(len: number): DataView {
+    const view = new DataView(
+      this.view.buffer,
+      this.view.byteOffset + this.ofs,
+      len
+    );
+    this.ofs += len;
+    return view;
+  }
+
   vec<T>(f: (r: Reader) => T): T[] {
     const len = this.readUint();
     const ts = new Array(len);

@@ -1,3 +1,4 @@
+import * as code from './code';
 import { Reader } from './reader';
 import { FuncType, readFuncType, readValType, Type } from './type';
 
@@ -248,6 +249,32 @@ export function readExportSection(r: Reader): Export[] {
       throw new Error(`unhandled export desc type ${desc8.toString(16)}`);
     }
     return { name, desc: { type, index: r.readUint() } };
+  });
+}
+
+export interface DataSectionData {
+  init: DataView;
+  memidx?: number;
+  offset?: code.Instruction[];
+}
+export function readDataSection(r: Reader): DataSectionData[] {
+  return r.vec(() => {
+    const flags = r.read8();
+    switch (flags) {
+      case 0: {
+        const expr = code.readExpr(r);
+        const len = r.readUint();
+        return { init: r.slice(len), memidx: 0, offset: expr };
+      }
+      case 1: {
+        const len = r.readUint();
+        return { init: r.slice(len) };
+      }
+      default:
+        throw new Error(
+          `unhandled data section data flags ${flags.toString(16)}`
+        );
+    }
   });
 }
 
