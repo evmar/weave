@@ -10,6 +10,7 @@ type Indexed<T> = T & { index: number };
 interface ParsedModule {
   sections: (wasm.SectionHeader & { name?: string })[];
 
+  types: wasm.FuncType[];
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
   code: Indexed<wasmCode.Function>[];
@@ -35,6 +36,30 @@ function go(link: Link) {
 }
 function Link(props: { target: Link; children: preact.ComponentChildren }) {
   return <a href={urlFromLink(props.target)}>{props.children}</a>;
+}
+
+function TypeSection(props: { module: ParsedModule }) {
+  return  <table>
+      <thead>
+        <tr>
+          <th className="right">index</th>
+          <th>type</th>
+        </tr>
+      </thead>
+      <tbody>
+        {props.module.types.map((type, index) => (
+          <tr>
+            <td className="right">{index}</td>
+            <td className="break-all">
+              <code>
+                {wasm.funcTypeToString(type)}
+              </code>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+
 }
 
 function Imports(props: { children: Indexed<wasm.Import>[] }) {
@@ -398,9 +423,13 @@ class App extends preact.Component<AppProps, AppState> {
     this.onHashChange();
   }
   render({ module }: AppProps) {
+    const {section} = this.state;
     let extra: preact.ComponentChild;
-    if (this.state.section) {
-      switch (this.state.section.type) {
+    if (section) {
+      switch (section.type) {
+        case wasm.SectionType.type:
+          extra = <TypeSection module={module}/>;
+          break;
         case wasm.SectionType.import:
           extra = <Imports>{module.imports}</Imports>;
           break;
@@ -424,13 +453,13 @@ class App extends preact.Component<AppProps, AppState> {
           extra = <Global module={module} />;
           break;
         case wasm.SectionType.custom:
-          if (this.state.section.name === 'name') {
+          if (section.name === 'name') {
             extra = <div>(gathered name data is displayed inline in other sections)</div>;
             break;
           }
           // fall through
         default:
-          extra = <div>TODO: no viewer implemented for this section</div>;
+          extra = <div>TODO: no viewer implemented for '{section.type}' section yet</div>;
       }
     } else if (this.state.func) {
       extra = (
@@ -456,6 +485,7 @@ async function main() {
   const wasmModule = wasm.read(new DataView(wasmBytes));
   const module: ParsedModule = {
     sections: wasmModule.sections.map((sec, index) => ({ ...sec, index })),
+    types: [],
     imports: [],
     exports: [],
     code: [],
@@ -467,6 +497,11 @@ async function main() {
   (window as any)['module'] = module;
   for (const section of module.sections) {
     switch (section.type) {
+      case wasm.SectionType.type:
+        module.types = wasm.readTypeSection(wasmModule.getReader(section)).map((t, i) => {
+          return {...t, index: i};
+        });
+        break;
       case wasm.SectionType.custom: {
         const reader = wasmModule.getReader(section);
         const custom = wasm.readCustomSection(reader);

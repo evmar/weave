@@ -2,7 +2,7 @@ import * as code from './code';
 import { Reader } from './reader';
 import { FuncType, readFuncType, readValType, Type } from './type';
 
-export { funcTypeToString } from './type';
+export { FuncType, funcTypeToString } from './type';
 
 export enum SectionType {
   custom = 'custom',
@@ -89,7 +89,7 @@ export function read(view: DataView): Module {
 }
 
 export function readTypeSection(r: Reader): FuncType[] {
-  return r.vec(() => readFuncType(r));
+  return r.vec(readFuncType);
 }
 
 export enum DescType {
