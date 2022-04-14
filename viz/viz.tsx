@@ -38,8 +38,21 @@ function Link(props: { target: Link; children: preact.ComponentChildren }) {
   return <a href={urlFromLink(props.target)}>{props.children}</a>;
 }
 
+function FunctionRef(props: { module: ParsedModule; index: number }) {
+  return (
+    <Link target={['function', props.index]}>
+      {props.module.functionNames.get(props.index) ?? `function ${props.index}`}
+    </Link>
+  );
+}
+
+function FunctionType(props: { type: wasm.FuncType }) {
+  return <code>{wasm.funcTypeToString(props.type)}</code>;
+}
+
 function TypeSection(props: { module: ParsedModule }) {
-  return  <table>
+  return (
+    <table>
       <thead>
         <tr>
           <th className="right">index</th>
@@ -51,19 +64,29 @@ function TypeSection(props: { module: ParsedModule }) {
           <tr>
             <td className="right">{index}</td>
             <td className="break-all">
-              <code>
-                {wasm.funcTypeToString(type)}
-              </code>
+              <FunctionType type={type} />
             </td>
           </tr>
         ))}
       </tbody>
     </table>
-
+  );
 }
 
-function Imports(props: { children: Indexed<wasm.Import>[] }) {
-  const imports = props.children;
+function ImpExpDesc(props: {
+  module: ParsedModule;
+  desc: wasm.Import['desc'] | wasm.Export['desc'];
+}) {
+  switch (props.desc.type) {
+    case wasm.DescType.typeidx:
+      return <FunctionType type={props.module.types[props.desc.index]} />;
+    default:
+      return <>{wasm.descToString(props.desc)}</>;
+  }
+}
+
+function Imports(props: { module: ParsedModule }) {
+  const imports = props.module.imports;
   return (
     <table>
       <thead>
@@ -82,7 +105,9 @@ function Imports(props: { children: Indexed<wasm.Import>[] }) {
                 {imp.module}.{imp.name}
               </code>
             </td>
-            <td className="nowrap">{wasm.descToString(imp.desc)}</td>
+            <td className="nowrap">
+              <ImpExpDesc module={props.module} desc={imp.desc} />
+            </td>
           </tr>
         ))}
       </tbody>
@@ -205,19 +230,11 @@ class Instructions extends preact.Component<
     );
   }
 
-  private renderFunc(index: number) {
-    return (
-      <Link target={['function', index]}>
-        {this.props.module.functionNames.get(index) ?? `function ${index}`}
-      </Link>
-    );
-  }
-
   private renderGlobal(index: number) {
     const fallback = `global ${index}`;
     const name = this.props.module.globalNames.get(index);
     if (name) {
-      return <span title={fallback}>{name}</span>
+      return <span title={fallback}>{name}</span>;
     }
     return fallback;
   }
@@ -234,7 +251,8 @@ class Instructions extends preact.Component<
         yield (
           <div>
             {'  '.repeat(indent)}
-            {instr.op} {this.renderFunc(instr.func)}
+            {instr.op}{' '}
+            <FunctionRef module={this.props.module} index={instr.func} />
           </div>
         );
         break;
@@ -376,7 +394,7 @@ interface AppProps {
   module: ParsedModule;
 }
 interface AppState {
-  section?: wasm.SectionHeader & {name?: string};
+  section?: wasm.SectionHeader & { name?: string };
   func?: Indexed<wasmCode.Function>;
 }
 class App extends preact.Component<AppProps, AppState> {
@@ -423,15 +441,15 @@ class App extends preact.Component<AppProps, AppState> {
     this.onHashChange();
   }
   render({ module }: AppProps) {
-    const {section} = this.state;
+    const { section } = this.state;
     let extra: preact.ComponentChild;
     if (section) {
       switch (section.type) {
         case wasm.SectionType.type:
-          extra = <TypeSection module={module}/>;
+          extra = <TypeSection module={module} />;
           break;
         case wasm.SectionType.import:
-          extra = <Imports>{module.imports}</Imports>;
+          extra = <Imports module={module} />;
           break;
         case wasm.SectionType.export:
           extra = <Exports>{module.exports}</Exports>;
@@ -454,12 +472,20 @@ class App extends preact.Component<AppProps, AppState> {
           break;
         case wasm.SectionType.custom:
           if (section.name === 'name') {
-            extra = <div>(gathered name data is displayed inline in other sections)</div>;
+            extra = (
+              <div>
+                (gathered name data is displayed inline in other sections)
+              </div>
+            );
             break;
           }
-          // fall through
+        // fall through
         default:
-          extra = <div>TODO: no viewer implemented for '{section.type}' section yet</div>;
+          extra = (
+            <div>
+              TODO: no viewer implemented for '{section.type}' section yet
+            </div>
+          );
       }
     } else if (this.state.func) {
       extra = (
@@ -498,9 +524,11 @@ async function main() {
   for (const section of module.sections) {
     switch (section.type) {
       case wasm.SectionType.type:
-        module.types = wasm.readTypeSection(wasmModule.getReader(section)).map((t, i) => {
-          return {...t, index: i};
-        });
+        module.types = wasm
+          .readTypeSection(wasmModule.getReader(section))
+          .map((t, i) => {
+            return { ...t, index: i };
+          });
         break;
       case wasm.SectionType.custom: {
         const reader = wasmModule.getReader(section);
@@ -528,15 +556,18 @@ async function main() {
         break;
       }
       case wasm.SectionType.import:
+        let funcIndex = 0;
         module.imports = wasm
           .readImportSection(wasmModule.getReader(section))
-          .map((imp, i) => ({ ...imp, index: i }));
-        let funcIndex = 0;
-        for (const imp of module.imports) {
-          if (imp.desc.type == wasm.DescType.typeidx) {
-            module.functionNames.set(funcIndex++, imp.name);
-          }
-        }
+          .map((imp) => {
+            switch (imp.desc.type) {
+              case wasm.DescType.typeidx:
+                module.functionNames.set(funcIndex, imp.name);
+                return { ...imp, index: funcIndex++ };
+              default:
+                return { ...imp, index: 'todo' as any };
+            }
+          });
         break;
       case wasm.SectionType.export:
         module.exports = wasm.readExportSection(wasmModule.getReader(section));
