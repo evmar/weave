@@ -12,7 +12,7 @@ interface SectionsPartProps {
 function Pie(props: SectionsPartProps) {
   const width = 200;
   const height = 200;
-  const colors = d3.schemeSpectral[props.sections.length];
+  const colors = props.sections.map((_, i) => d3.interpolateBlues(i / props.sections.length));
   const color = d3.scaleOrdinal(props.sections, colors);
 
   const arcs = d3
