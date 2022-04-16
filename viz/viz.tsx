@@ -4,7 +4,7 @@ import * as preact from 'preact';
 import { h, Fragment } from 'preact';
 
 import { Sections } from './sections';
-import { DataSection } from './data';
+import { DataSection, DataHex } from './data';
 import { Code, Function, Instructions } from './code';
 import { Column, Table } from './table';
 import { Exports, Imports } from './impexp';
@@ -104,6 +104,7 @@ interface AppProps {
 interface AppState {
   section?: wasm.SectionHeader & { name?: string };
   func?: Indexed<wasmCode.Function>;
+  data?: Indexed<wasm.DataSectionData>;
 }
 class App extends preact.Component<AppProps, AppState> {
   state: AppState = {};
@@ -126,14 +127,20 @@ class App extends preact.Component<AppProps, AppState> {
           (sec) => sec.type === wasm.SectionType.import
         );
         if (section) {
-          this.setState({ section, func: undefined });
+          this.setState({ section, func: undefined, data: undefined });
         }
       } else {
         const func = this.props.module.code[index - importedCount];
         if (func) {
-          this.setState({ section: undefined, func });
+          this.setState({ section: undefined, func, data: undefined });
         }
       }
+    } else if (target === 'data') {
+      this.setState({
+        section: undefined,
+        func: undefined,
+        data: this.props.module.data[index],
+      });
     }
   };
 
@@ -142,6 +149,9 @@ class App extends preact.Component<AppProps, AppState> {
   };
   private onFuncClick = (func: Indexed<wasmCode.Function>) => {
     go(['function', func.index]);
+  };
+  private onDataClick = (data: Indexed<wasm.DataSectionData>) => {
+    go(['data', data.index]);
   };
 
   componentDidMount() {
@@ -173,7 +183,13 @@ class App extends preact.Component<AppProps, AppState> {
           );
           break;
         case wasm.SectionType.data:
-          extra = <DataSection module={module} data={module.data} />;
+          extra = (
+            <DataSection
+              module={module}
+              data={module.data}
+              onClick={this.onDataClick}
+            />
+          );
           break;
         case wasm.SectionType.global:
           extra = <Global module={module} />;
@@ -203,6 +219,8 @@ class App extends preact.Component<AppProps, AppState> {
           name={module.functionNames.get(this.state.func.index)}
         ></Function>
       );
+    } else if (this.state.data) {
+      extra = <DataHex module={this.props.module} data={this.state.data} />;
     }
 
     return (
