@@ -4,6 +4,7 @@ import * as preact from 'preact';
 import { h, Fragment } from 'preact';
 import * as hooks from 'preact/hooks';
 import * as d3 from 'd3';
+import { Column, Table } from './table';
 
 export namespace Instructions {
   export interface Props {
@@ -152,56 +153,34 @@ interface CodeProps {
   onClick: (func: Indexed<wasmCode.Function>) => void;
 }
 export function Code(props: CodeProps) {
-  const [expanded, setExpanded] = hooks.useState(false);
-  const [sortBy, setSortBy] = hooks.useState<undefined | 'name' | 'size'>(
-    undefined
-  );
   const totalSize = hooks.useMemo(
     () => d3.sum(props.children.map((f) => f.size)),
     props.children
   );
 
-  const funcs = hooks.useMemo(() => {
-    let funcs = [...props.children];
-    if (sortBy === 'name') {
-      //funcs.sort((a, b) => d3.ascending(a.name, b.name));
-    } else if (sortBy === 'size') {
-      funcs.sort((a, b) => d3.descending(a.size, b.size));
-    }
-    if (!expanded) {
-      funcs = funcs.slice(0, 100);
-    }
-    return funcs;
-  }, [props.children, sortBy, expanded]);
+  const columns: Column<Indexed<wasmCode.Function>>[] = [
+    { name: 'index', className: 'right', sort: null, data: (f) => f.index },
+    {
+      name: 'name',
+      cellClass: 'break-all',
+      data: (f) => <code>{props.functionNames.get(f.index)}</code>,
+    },
+    {
+      name: 'size',
+      className: 'right',
+      sort: (a, b) => d3.descending(a.size, b.size),
+      data: (f) => d3.format(',')(f.size),
+    },
+    {
+      name: '%',
+      className: 'right',
+      data: (f) => d3.format('.1%')(f.size / totalSize),
+    },
+  ];
 
   return (
-    <table cellSpacing='0' cellPadding='0'>
-      <thead>
-        <tr>
-          <th className='right pointer' onClick={() => setSortBy(undefined)}>
-            index
-          </th>
-          <th className='pointer' onClick={() => setSortBy('name')}>
-            name
-          </th>
-          <th className='right pointer' onClick={() => setSortBy('size')}>
-            size
-          </th>
-          <th className='right'>%</th>
-        </tr>
-      </thead>
-      <tbody>
-        {funcs.map((f) => (
-          <tr className='pointer hover' onClick={() => props.onClick(f)}>
-            <td className='right'>{f.index}</td>
-            <td className='break-all'>
-              <code>{props.functionNames.get(f.index)}</code>
-            </td>
-            <td className='right'>{d3.format(',')(f.size)}</td>
-            <td className='right'>{d3.format('.1%')(f.size / totalSize)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <Table columns={columns} onClick={props.onClick}>
+      {props.children}
+    </Table>
   );
 }
