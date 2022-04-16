@@ -1,4 +1,4 @@
-import { FunctionType, Indexed, ParsedModule } from './viz';
+import { FunctionRef, FunctionType, Indexed, ParsedModule } from './viz';
 import * as wasm from 'wasm';
 import { h, Fragment } from 'preact';
 import { Column, Table } from './table';
@@ -10,6 +10,8 @@ function ImpExpDesc(props: {
   switch (props.desc.type) {
     case wasm.DescType.typeidx:
       return <FunctionType type={props.module.types[props.desc.index]} />;
+    case wasm.DescType.funcidx:
+      return <FunctionRef module={props.module} index={props.desc.index} />;
     default:
       return <>{wasm.descToString(props.desc)}</>;
   }
@@ -41,11 +43,7 @@ export function Exports(props: { module: ParsedModule }) {
     {
       name: 'name',
       cellClass: 'break-all',
-      data: (exp) => (
-        <code>
-          {exp.name}
-        </code>
-      ),
+      data: (exp) => <code>{exp.name}</code>,
     },
     {
       name: 'desc',
