@@ -16,7 +16,7 @@ export interface ParsedModule {
   exports: wasm.Export[];
   code: Indexed<wasmCode.Function>[];
   names?: wasm.NameSection;
-  data: wasm.DataSectionData[];
+  data: Indexed<wasm.DataSectionData>[];
   globals: Indexed<wasm.Global>[];
 
   functionNames: Map<number, string>;
@@ -370,7 +370,9 @@ async function main() {
         break;
       }
       case wasm.SectionType.data:
-        module.data = wasm.readDataSection(wasmModule.getReader(section));
+        module.data = wasm
+          .readDataSection(wasmModule.getReader(section))
+          .map((data, index) => ({ ...data, index }));
         break;
       case wasm.SectionType.global: {
         const offset = module.imports.filter(

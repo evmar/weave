@@ -27,7 +27,7 @@ export function Table<T>(props: TableProps<T>) {
       rows.sort(sortBy.sort);
     }
     if (!expanded) {
-      rows = rows.slice(0, 100);
+      rows = rows.slice(0, 50);
     }
     return rows;
   }, [props.children, sortBy, expanded]);
