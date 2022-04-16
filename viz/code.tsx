@@ -1,7 +1,8 @@
-import { FunctionRef, Indexed, ParsedModule } from "./viz";
+import { FunctionRef, Indexed, ParsedModule } from './viz';
 import * as wasmCode from 'wasm/code';
 import * as preact from 'preact';
 import { h, Fragment } from 'preact';
+import * as hooks from 'preact/hooks';
 import * as d3 from 'd3';
 
 export namespace Instructions {
@@ -150,45 +151,57 @@ interface CodeProps {
   functionNames: Map<number, string>;
   onClick: (func: Indexed<wasmCode.Function>) => void;
 }
-interface CodeState {
-  totalSize: number;
-  funcs: Indexed<wasmCode.Function>[];
-}
-export class Code extends preact.Component<CodeProps, CodeState> {
-  state = { totalSize: 0, funcs: [] };
-  static getDerivedStateFromProps(props: CodeProps): object {
-    const totalSize = d3.sum(props.children.map((f) => f.size));
-    const funcs = d3
-      .sort(props.children, (f1, f2) => d3.descending(f1.size, f2.size))
-      .slice(0, 100);
-    return { totalSize, funcs };
-  }
-  render(props: CodeProps, state: CodeState) {
-    return (
-      <table>
-        <thead>
-          <tr>
-            <th className="right">index</th>
-            <th>name</th>
-            <th className="right">size</th>
-            <th className="right">%</th>
+export function Code(props: CodeProps) {
+  const [expanded, setExpanded] = hooks.useState(false);
+  const [sortBy, setSortBy] = hooks.useState<undefined | 'name' | 'size'>(
+    undefined
+  );
+  const totalSize = hooks.useMemo(
+    () => d3.sum(props.children.map((f) => f.size)),
+    props.children
+  );
+
+  const funcs = hooks.useMemo(() => {
+    let funcs = [...props.children];
+    if (sortBy === 'name') {
+      //funcs.sort((a, b) => d3.ascending(a.name, b.name));
+    } else if (sortBy === 'size') {
+      funcs.sort((a, b) => d3.descending(a.size, b.size));
+    }
+    if (!expanded) {
+      funcs = funcs.slice(0, 100);
+    }
+    return funcs;
+  }, [props.children, sortBy, expanded]);
+
+  return (
+    <table cellSpacing="0" cellPadding="0">
+      <thead>
+        <tr>
+          <th className="right pointer" onClick={() => setSortBy(undefined)}>
+            index
+          </th>
+          <th className="pointer" onClick={() => setSortBy('name')}>
+            name
+          </th>
+          <th className="right pointer" onClick={() => setSortBy('size')}>
+            size
+          </th>
+          <th className="right">%</th>
+        </tr>
+      </thead>
+      <tbody>
+        {funcs.map((f) => (
+          <tr className="pointer hover" onClick={() => props.onClick(f)}>
+            <td className="right">{f.index}</td>
+            <td className="break-all">
+              <code>{props.functionNames.get(f.index)}</code>
+            </td>
+            <td className="right">{d3.format(',')(f.size)}</td>
+            <td className="right">{d3.format('.1%')(f.size / totalSize)}</td>
           </tr>
-        </thead>
-        <tbody>
-          {state.funcs.map((f) => (
-            <tr className="pointer" onClick={() => props.onClick(f)}>
-              <td className="right">{f.index}</td>
-              <td className="break-all">
-                <code>{props.functionNames.get(f.index)}</code>
-              </td>
-              <td className="right">{d3.format(',')(f.size)}</td>
-              <td className="right">
-                {d3.format('.1%')(f.size / state.totalSize)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
-  }
+        ))}
+      </tbody>
+    </table>
+  );
 }
