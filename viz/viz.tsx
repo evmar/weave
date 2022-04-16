@@ -6,6 +6,7 @@ import { h, Fragment } from 'preact';
 import { Sections } from './sections';
 import { DataSection } from './data';
 import { Code, Function, Instructions } from './code';
+import { Column, Table } from './table';
 
 export type Indexed<T> = T & { index: number };
 export interface ParsedModule {
@@ -52,26 +53,12 @@ function FunctionType(props: { type: wasm.FuncType }) {
 }
 
 function TypeSection(props: { module: ParsedModule }) {
-  return (
-    <table>
-      <thead>
-        <tr>
-          <th className='right'>index</th>
-          <th>type</th>
-        </tr>
-      </thead>
-      <tbody>
-        {props.module.types.map((type, index) => (
-          <tr>
-            <td className='right'>{index}</td>
-            <td className='break-all'>
-              <FunctionType type={type} />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
+  const columns: Column<wasm.FuncType>[] = [
+    {name: 'index', className: 'right', data: (_, index) => index },
+    {name: 'type', cellClass: 'break-all', data: (type) =>  <FunctionType type={type} /> },
+
+  ];
+  return <Table columns={columns}>{props.module.types}</Table>;
 }
 
 function ImpExpDesc(props: {

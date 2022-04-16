@@ -8,7 +8,7 @@ export interface Column<T> {
   className?: string;
   cellClass?: string;
   sort?: ((a: T, b: T) => number) | null;
-  data: (row: T) => preact.ComponentChild;
+  data: (row: T, index: number) => preact.ComponentChild;
 }
 
 export interface TableProps<T> {
@@ -51,7 +51,7 @@ export function Table<T>(props: TableProps<T>) {
         </tr>
       </thead>
       <tbody>
-        {rows.map((row) => {
+        {rows.map((row, i) => {
           return (
             <tr
               className={props.onClick ? 'hover pointer' : ''}
@@ -60,7 +60,7 @@ export function Table<T>(props: TableProps<T>) {
               {props.columns.map((col) => {
                 return (
                   <td className={col.className + ' ' + col.cellClass}>
-                    {col.data(row)}
+                    {col.data(row, i)}
                   </td>
                 );
               })}
