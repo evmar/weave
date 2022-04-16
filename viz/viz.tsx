@@ -183,7 +183,7 @@ class App extends preact.Component<AppProps, AppState> {
       const importedCount = this.props.module.imports.filter(
         (imp) => imp.desc.type === wasm.DescType.typeidx
       ).length;
-      if (index <= importedCount) {
+      if (index < importedCount) {
         const section = this.props.module.sections.find(
           (sec) => sec.type === wasm.SectionType.import
         );
