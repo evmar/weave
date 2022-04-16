@@ -7,6 +7,7 @@ import { Sections } from './sections';
 import { DataSection } from './data';
 import { Code, Function, Instructions } from './code';
 import { Column, Table } from './table';
+import { Exports, Imports } from './impexp';
 
 export type Indexed<T> = T & { index: number };
 export interface ParsedModule {
@@ -48,7 +49,7 @@ export function FunctionRef(props: { module: ParsedModule; index: number }) {
   );
 }
 
-function FunctionType(props: { type: wasm.FuncType }) {
+export function FunctionType(props: { type: wasm.FuncType }) {
   return <code>{wasm.funcTypeToString(props.type)}</code>;
 }
 
@@ -59,72 +60,6 @@ function TypeSection(props: { module: ParsedModule }) {
 
   ];
   return <Table columns={columns}>{props.module.types}</Table>;
-}
-
-function ImpExpDesc(props: {
-  module: ParsedModule;
-  desc: wasm.Import['desc'] | wasm.Export['desc'];
-}) {
-  switch (props.desc.type) {
-    case wasm.DescType.typeidx:
-      return <FunctionType type={props.module.types[props.desc.index]} />;
-    default:
-      return <>{wasm.descToString(props.desc)}</>;
-  }
-}
-
-function Imports(props: { module: ParsedModule }) {
-  const imports = props.module.imports;
-  return (
-    <table>
-      <thead>
-        <tr>
-          <th className='right'>index</th>
-          <th>name</th>
-          <th>desc</th>
-        </tr>
-      </thead>
-      <tbody>
-        {imports.map((imp) => (
-          <tr>
-            <td className='right'>{imp.index}</td>
-            <td className='break-all'>
-              <code>
-                {imp.module}.{imp.name}
-              </code>
-            </td>
-            <td className='nowrap'>
-              <ImpExpDesc module={props.module} desc={imp.desc} />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
-function Exports(props: { children: wasm.Export[] }) {
-  const exports = props.children;
-  return (
-    <table>
-      <thead>
-        <tr>
-          <th>name</th>
-          <th>desc</th>
-        </tr>
-      </thead>
-      <tbody>
-        {exports.slice(0, 100).map((exp) => (
-          <tr>
-            <td className='break-all'>
-              <code>{exp.name}</code>
-            </td>
-            <td className='nowrap'>{wasm.descToString(exp.desc)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
 }
 
 function Global(props: { module: ParsedModule }) {
