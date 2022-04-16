@@ -11,7 +11,7 @@ function ImpExpDesc(props: {
     case wasm.DescType.typeidx:
       return <FunctionType type={props.module.types[props.desc.index]} />;
     default:
-      return <>wasm.descToString(props.desc)</>;
+      return <>{wasm.descToString(props.desc)}</>;
   }
 }
 
