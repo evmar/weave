@@ -1,8 +1,9 @@
 import * as wasm from 'wasm';
-import { Instructions, ParsedModule } from "./viz";
+import { ParsedModule } from "./viz";
 import * as preact from 'preact';
 import { h, Fragment } from 'preact';
 import * as hooks from 'preact/hooks';
+import { Instructions } from './code';
 
 export function DataSection(props: { module: ParsedModule; data: wasm.DataSectionData[] }) {
   const [sortBy, setSortBy] = hooks.useState<undefined|'size'>(undefined);
