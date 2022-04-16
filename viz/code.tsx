@@ -41,7 +41,7 @@ export class Instructions extends preact.Component<
     }
 
     return (
-      <pre style="white-space: pre-wrap">
+      <pre style='white-space: pre-wrap'>
         {lines}
         {expand}
       </pre>
@@ -175,30 +175,30 @@ export function Code(props: CodeProps) {
   }, [props.children, sortBy, expanded]);
 
   return (
-    <table cellSpacing="0" cellPadding="0">
+    <table cellSpacing='0' cellPadding='0'>
       <thead>
         <tr>
-          <th className="right pointer" onClick={() => setSortBy(undefined)}>
+          <th className='right pointer' onClick={() => setSortBy(undefined)}>
             index
           </th>
-          <th className="pointer" onClick={() => setSortBy('name')}>
+          <th className='pointer' onClick={() => setSortBy('name')}>
             name
           </th>
-          <th className="right pointer" onClick={() => setSortBy('size')}>
+          <th className='right pointer' onClick={() => setSortBy('size')}>
             size
           </th>
-          <th className="right">%</th>
+          <th className='right'>%</th>
         </tr>
       </thead>
       <tbody>
         {funcs.map((f) => (
-          <tr className="pointer hover" onClick={() => props.onClick(f)}>
-            <td className="right">{f.index}</td>
-            <td className="break-all">
+          <tr className='pointer hover' onClick={() => props.onClick(f)}>
+            <td className='right'>{f.index}</td>
+            <td className='break-all'>
               <code>{props.functionNames.get(f.index)}</code>
             </td>
-            <td className="right">{d3.format(',')(f.size)}</td>
-            <td className="right">{d3.format('.1%')(f.size / totalSize)}</td>
+            <td className='right'>{d3.format(',')(f.size)}</td>
+            <td className='right'>{d3.format('.1%')(f.size / totalSize)}</td>
           </tr>
         ))}
       </tbody>

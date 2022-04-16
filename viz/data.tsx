@@ -24,13 +24,13 @@ export function DataSection(props: {
   }, [sortBy, expanded]);
 
   return (
-    <table cellSpacing="0" cellPadding="0">
+    <table cellSpacing='0' cellPadding='0'>
       <thead>
         <tr>
-          <th className="pointer right" onClick={() => setSortBy(undefined)}>
+          <th className='pointer right' onClick={() => setSortBy(undefined)}>
             index
           </th>
-          <th className="pointer right" onClick={() => setSortBy('size')}>
+          <th className='pointer right' onClick={() => setSortBy('size')}>
             size{sortBy === 'size' && ' \u2193'}
           </th>
           <th>init</th>
@@ -39,9 +39,9 @@ export function DataSection(props: {
       <tbody>
         {data.map((data) => {
           return (
-            <tr className="pointer hover">
-              <td className="right">{data.index}</td>
-              <td className="right">{data.init.byteLength}</td>
+            <tr className='pointer hover'>
+              <td className='right'>{data.index}</td>
+              <td className='right'>{data.init.byteLength}</td>
               <td>
                 {data.memidx === undefined ? (
                   'passive'

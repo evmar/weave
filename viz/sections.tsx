@@ -33,8 +33,8 @@ function Pie(props: SectionsPartProps) {
       viewBox={[-width / 2, -height / 2, width, height].join(' ')}
     >
       <g
-        strokeLinejoin="round"
-        strokeWidth="2"
+        strokeLinejoin='round'
+        strokeWidth='2'
         ref={(g) =>
           d3
             .select(g)
@@ -58,15 +58,15 @@ function Pie(props: SectionsPartProps) {
 function SectionTable(props: SectionsPartProps) {
   const totalSize = d3.sum(props.sections.map((sec) => sec.len));
   return (
-    <table style="flex:1" cellSpacing="0" cellPadding="0">
+    <table style='flex:1' cellSpacing='0' cellPadding='0'>
       <thead>
         <tr>
           <th>section</th>
-          <th className="right">size</th>
-          <th className="right">%</th>
+          <th className='right'>size</th>
+          <th className='right'>%</th>
         </tr>
       </thead>
-      <tbody id="table">
+      <tbody id='table'>
         {props.sections.map((sec) => (
           <tr
             className={
@@ -77,8 +77,8 @@ function SectionTable(props: SectionsPartProps) {
             onClick={() => props.onClick(sec)}
           >
             <td>{sec.name ?? sec.type}</td>
-            <td className="right">{d3.format(',')(sec.len)}</td>
-            <td className="right">{d3.format('.1%')(sec.len / totalSize)}</td>
+            <td className='right'>{d3.format(',')(sec.len)}</td>
+            <td className='right'>{d3.format('.1%')(sec.len / totalSize)}</td>
           </tr>
         ))}
       </tbody>
@@ -99,7 +99,7 @@ export class Sections extends preact.Component<SectionsProps, SectionsState> {
   };
   render(props: SectionsProps, state: SectionsState) {
     return (
-      <div style="display: flex">
+      <div style='display: flex'>
         <Pie {...props} {...state} onHover={this.onSectionHover} />
         <SectionTable {...props} {...state} onHover={this.onSectionHover} />
       </div>

@@ -56,15 +56,15 @@ function TypeSection(props: { module: ParsedModule }) {
     <table>
       <thead>
         <tr>
-          <th className="right">index</th>
+          <th className='right'>index</th>
           <th>type</th>
         </tr>
       </thead>
       <tbody>
         {props.module.types.map((type, index) => (
           <tr>
-            <td className="right">{index}</td>
-            <td className="break-all">
+            <td className='right'>{index}</td>
+            <td className='break-all'>
               <FunctionType type={type} />
             </td>
           </tr>
@@ -92,7 +92,7 @@ function Imports(props: { module: ParsedModule }) {
     <table>
       <thead>
         <tr>
-          <th className="right">index</th>
+          <th className='right'>index</th>
           <th>name</th>
           <th>desc</th>
         </tr>
@@ -100,13 +100,13 @@ function Imports(props: { module: ParsedModule }) {
       <tbody>
         {imports.map((imp) => (
           <tr>
-            <td className="right">{imp.index}</td>
-            <td className="break-all">
+            <td className='right'>{imp.index}</td>
+            <td className='break-all'>
               <code>
                 {imp.module}.{imp.name}
               </code>
             </td>
-            <td className="nowrap">
+            <td className='nowrap'>
               <ImpExpDesc module={props.module} desc={imp.desc} />
             </td>
           </tr>
@@ -129,10 +129,10 @@ function Exports(props: { children: wasm.Export[] }) {
       <tbody>
         {exports.slice(0, 100).map((exp) => (
           <tr>
-            <td className="break-all">
+            <td className='break-all'>
               <code>{exp.name}</code>
             </td>
-            <td className="nowrap">{wasm.descToString(exp.desc)}</td>
+            <td className='nowrap'>{wasm.descToString(exp.desc)}</td>
           </tr>
         ))}
       </tbody>
@@ -145,7 +145,7 @@ function Global(props: { module: ParsedModule }) {
     <table>
       <thead>
         <tr>
-          <th className="right">index</th>
+          <th className='right'>index</th>
           <th>name</th>
           <th>type</th>
           <th>init</th>
@@ -155,8 +155,8 @@ function Global(props: { module: ParsedModule }) {
         {props.module.globals.map((global) => {
           return (
             <tr>
-              <td className="right">{global.index}</td>
-              <td className="break-all">
+              <td className='right'>{global.index}</td>
+              <td className='break-all'>
                 <code>{props.module.globalNames.get(global.index)}</code>
               </td>
               <td>
