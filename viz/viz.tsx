@@ -5,9 +5,10 @@ import { h, Fragment } from 'preact';
 import * as d3 from 'd3';
 
 import { Sections } from './sections';
+import { DataSection } from './data';
 
 type Indexed<T> = T & { index: number };
-interface ParsedModule {
+export interface ParsedModule {
   sections: (wasm.SectionHeader & { name?: string })[];
 
   types: wasm.FuncType[];
@@ -187,7 +188,7 @@ class Code extends preact.Component<CodeProps, CodeState> {
   }
 }
 
-namespace Instructions {
+export namespace Instructions {
   export interface Props {
     module: ParsedModule;
     instrs: wasmCode.Instruction[];
@@ -196,7 +197,7 @@ namespace Instructions {
     expanded: boolean;
   }
 }
-class Instructions extends preact.Component<
+export class Instructions extends preact.Component<
   Instructions.Props,
   Instructions.State
 > {
@@ -328,35 +329,6 @@ function Function(props: {
   );
 }
 
-function Data(props: { module: ParsedModule; data: wasm.DataSectionData[] }) {
-  return (
-    <table>
-      <thead>
-        <tr>
-          <th>size</th>
-          <th>init</th>
-        </tr>
-      </thead>
-      <tbody>
-        {props.data.map((data) => {
-          return (
-            <tr>
-              <td>{data.init.byteLength}</td>
-              <td>
-                {data.memidx === undefined ? (
-                  'passive'
-                ) : (
-                  <Instructions module={props.module} instrs={data.offset!} />
-                )}
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  );
-}
-
 function Global(props: { module: ParsedModule }) {
   return (
     <table>
@@ -465,7 +437,7 @@ class App extends preact.Component<AppProps, AppState> {
           );
           break;
         case wasm.SectionType.data:
-          extra = <Data module={module} data={module.data} />;
+          extra = <DataSection module={module} data={module.data} />;
           break;
         case wasm.SectionType.global:
           extra = <Global module={module} />;

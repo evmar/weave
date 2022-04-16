@@ -67,7 +67,7 @@ function SectionTable(props: SectionsPartProps) {
       <tbody id="table">
         {props.sections.map((sec) => (
           <tr
-            className={'pointer ' + (sec === props.hovered ? 'hover' : '')}
+            className={'pointer hover ' + (sec === props.hovered ? 'highlight' : '')}
             onMouseEnter={() => props.onHover(sec)}
             onMouseLeave={() => props.onHover(undefined)}
             onClick={() => props.onClick(sec)}
