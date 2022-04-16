@@ -55,9 +55,12 @@ export function FunctionType(props: { type: wasm.FuncType }) {
 
 function TypeSection(props: { module: ParsedModule }) {
   const columns: Column<wasm.FuncType>[] = [
-    {name: 'index', className: 'right', data: (_, index) => index },
-    {name: 'type', cellClass: 'break-all', data: (type) =>  <FunctionType type={type} /> },
-
+    { name: 'index', className: 'right', data: (_, index) => index },
+    {
+      name: 'type',
+      cellClass: 'break-all',
+      data: (type) => <FunctionType type={type} />,
+    },
   ];
   return <Table columns={columns}>{props.module.types}</Table>;
 }
@@ -157,7 +160,7 @@ class App extends preact.Component<AppProps, AppState> {
           extra = <Imports module={module} />;
           break;
         case wasm.SectionType.export:
-          extra = <Exports>{module.exports}</Exports>;
+          extra = <Exports module={module} />;
           break;
         case wasm.SectionType.code:
           extra = (
