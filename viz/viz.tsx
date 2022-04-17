@@ -104,6 +104,29 @@ function Global(props: { module: ParsedModule }) {
   );
 }
 
+function FunctionSection(props: { module: ParsedModule }) {
+  interface Row {
+    index: number;
+    typeidx: number;
+  }
+  const columns: Column<Row>[] = [
+    { name: 'index', className: 'right', data: (row) => row.index },
+    {
+      name: 'type',
+      data: (row) => (
+        <code>{wasm.funcTypeToString(props.module.types[row.typeidx])}</code>
+      ),
+    },
+  ];
+  return (
+    <Table columns={columns}>
+      {props.module.functions.map(
+        (func, index): Row => ({ index, typeidx: func.typeidx })
+      )}
+    </Table>
+  );
+}
+
 interface AppProps {
   module: ParsedModule;
 }
@@ -174,6 +197,9 @@ class App extends preact.Component<AppProps, AppState> {
           break;
         case wasm.SectionType.import:
           extra = <Imports module={module} />;
+          break;
+        case wasm.SectionType.function:
+          extra = <FunctionSection module={module} />;
           break;
         case wasm.SectionType.export:
           extra = <Exports module={module} />;
