@@ -44,14 +44,34 @@ function linkFromHash(hash: string): Link {
 function go(link: Link) {
   window.location.hash = urlFromLink(link);
 }
-function Link(props: { target: Link; children: preact.ComponentChildren }) {
-  return <a href={urlFromLink(props.target)}>{props.children}</a>;
+function Link(props: {
+  target: Link;
+  title?: string;
+  children: preact.ComponentChildren;
+}) {
+  return (
+    <a title={props.title} href={urlFromLink(props.target)}>
+      {props.children}
+    </a>
+  );
 }
 
 export function FunctionRef(props: { module: ParsedModule; index: number }) {
   return (
-    <Link target={['function', props.index]}>
+    <Link title={`function ${props.index}`} target={['function', props.index]}>
       {props.module.functionNames.get(props.index) ?? `function ${props.index}`}
+    </Link>
+  );
+}
+
+export function GlobalRef(props: { module: ParsedModule; index: number }) {
+  const sec = props.module.sections.find(
+    (sec) => sec.type === wasm.SectionType.global
+  )!;
+
+  return (
+    <Link title={`global ${props.index}`} target={['section', sec.index]}>
+      {props.module.globalNames.get(props.index) ?? `global ${props.index}`}
     </Link>
   );
 }
@@ -76,7 +96,7 @@ function TypeSection(props: { module: ParsedModule }) {
   );
 }
 
-function InlineEdit(props: {
+export function InlineEdit(props: {
   onEdit: (newText: string) => void;
   children: string;
 }) {

@@ -1,4 +1,11 @@
-import { Function, FunctionRef, Indexed, ParsedModule } from './viz';
+import {
+  Function,
+  FunctionRef,
+  GlobalRef,
+  Indexed,
+  InlineEdit,
+  ParsedModule,
+} from './viz';
 import * as wasmCode from 'wasm/code';
 import * as preact from 'preact';
 import { h, Fragment } from 'preact';
@@ -51,15 +58,6 @@ export class Instructions extends preact.Component<
     );
   }
 
-  private renderGlobal(index: number) {
-    const fallback = `global ${index}`;
-    const name = this.props.module.globalNames.get(index);
-    if (name) {
-      return <span title={fallback}>{name}</span>;
-    }
-    return fallback;
-  }
-
   private *renderInstr(
     instr: wasmCode.Instruction,
     indent = 0
@@ -83,7 +81,8 @@ export class Instructions extends preact.Component<
         yield (
           <div>
             {'  '.repeat(indent)}
-            {instr.op} {this.renderGlobal(instr.global)}
+            {instr.op}{' '}
+            <GlobalRef module={this.props.module} index={instr.global} />
           </div>
         );
         break;
