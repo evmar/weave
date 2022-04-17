@@ -8,16 +8,16 @@ export interface Column<T> {
   className?: string;
   cellClass?: string;
   sort?: ((a: T, b: T) => number) | null;
-  data: (row: T, index: number) => preact.ComponentChild;
+  data: (row: T) => preact.ComponentChild;
 }
 
-export interface TableProps<T> {
+export interface TableProps<T extends { index: number }> {
   columns: Column<T>[];
   children: T[];
   onClick?: (row: T) => void;
 }
 
-export function Table<T>(props: TableProps<T>) {
+export function Table<T extends { index: number }>(props: TableProps<T>) {
   const [sortBy, setSortBy] = hooks.useState<undefined | Column<T>>(undefined);
   const [expanded, setExpanded] = hooks.useState(false);
 
@@ -51,16 +51,17 @@ export function Table<T>(props: TableProps<T>) {
         </tr>
       </thead>
       <tbody>
-        {rows.map((row, i) => {
+        {rows.map((row) => {
           return (
             <tr
+              key={row.index}
               className={props.onClick ? 'hover pointer' : ''}
               onClick={props.onClick && (() => props.onClick!(row))}
             >
               {props.columns.map((col) => {
                 return (
                   <td className={col.className + ' ' + col.cellClass}>
-                    {col.data(row, i)}
+                    {col.data(row)}
                   </td>
                 );
               })}

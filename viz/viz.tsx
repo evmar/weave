@@ -61,15 +61,19 @@ export function FunctionType(props: { type: wasm.FuncType }) {
 }
 
 function TypeSection(props: { module: ParsedModule }) {
-  const columns: Column<wasm.FuncType>[] = [
-    { name: 'index', className: 'right', data: (_, index) => index },
+  const columns: Column<Indexed<wasm.FuncType>>[] = [
+    { name: 'index', className: 'right', data: (row) => row.index },
     {
       name: 'type',
       cellClass: 'break-all',
       data: (type) => <FunctionType type={type} />,
     },
   ];
-  return <Table columns={columns}>{props.module.types}</Table>;
+  return (
+    <Table columns={columns}>
+      {props.module.types.map((t, i) => ({ ...t, index: i }))}
+    </Table>
+  );
 }
 
 function InlineEdit(props: {
@@ -246,6 +250,7 @@ class App extends preact.Component<AppProps, AppState> {
         case wasm.SectionType.code:
           extra = (
             <Code
+              key='code'
               onClick={this.onFuncClick}
               functionNames={module.functionNames}
             >
