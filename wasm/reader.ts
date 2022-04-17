@@ -1,3 +1,6 @@
+
+const textDecoder = new TextDecoder();
+
 /** Tracks a read position within a DataView. */
 export class Reader {
   ofs: number = 0;
@@ -81,7 +84,7 @@ export class Reader {
 
   name(): string {
     const len = this.readUint();
-    const str = new TextDecoder().decode(
+    const str = textDecoder.decode(
       new DataView(this.view.buffer, this.view.byteOffset + this.ofs, len)
     );
     this.ofs += len;
