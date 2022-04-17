@@ -141,17 +141,18 @@ export function Function(props: {
   const funcBody = wasmCode.readFunction(
     new Reader(new DataView(props.module.bytes, props.func.ofs, props.func.len))
   );
+  const type = props.module.types[props.func.typeidx];
   return (
-    <div>
-      <b>
-        {props.name} (function {props.func.index})
-      </b>
+    <section>
+      <h2>function {props.func.index}: {props.name}</h2>
       <div>
-        type: {funcTypeToString(props.module.types[props.func.typeidx])}
+        params: ({type.params.map(p => p).join(', ')})
       </div>
+      {type.result.length > 0 && <div>
+        result: ({type.result.map(p => p).join(', ')})</div>}
       <div>locals: {funcBody.locals.join(' ')}</div>
       <Instructions module={props.module} instrs={funcBody.body} />
-    </div>
+    </section>
   );
 }
 
