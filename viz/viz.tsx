@@ -105,12 +105,8 @@ function Global(props: { module: ParsedModule }) {
 }
 
 function FunctionSection(props: { module: ParsedModule }) {
-  interface Row {
-    index: number;
-    typeidx: number;
-  }
-  const columns: Column<Row>[] = [
-    { name: 'index', className: 'right', data: (row) => row.index },
+  const columns: Column<Indexed<Function>>[] = [
+    { name: 'func', className: 'right', data: (row) => row.index },
     {
       name: 'type',
       data: (row) => (
@@ -120,9 +116,7 @@ function FunctionSection(props: { module: ParsedModule }) {
   ];
   return (
     <Table columns={columns}>
-      {props.module.functions.map(
-        (func, index): Row => ({ index, typeidx: func.typeidx })
-      )}
+      {props.module.functions}
     </Table>
   );
 }
