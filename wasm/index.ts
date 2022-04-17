@@ -344,3 +344,7 @@ export function readGlobalSection(r: Reader): Global[] {
     return { type: readGlobalType(r), init: code.readExpr(r) };
   });
 }
+
+export function readFunctionSection(r: Reader): number[] {
+  return r.vec(() => r.readUint());
+}

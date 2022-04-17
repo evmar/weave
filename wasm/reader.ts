@@ -1,4 +1,3 @@
-
 const textDecoder = new TextDecoder();
 
 /** Tracks a read position within a DataView. */

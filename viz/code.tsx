@@ -1,4 +1,4 @@
-import { FunctionRef, Indexed, ParsedModule } from './viz';
+import { Function, FunctionRef, Indexed, ParsedModule } from './viz';
 import * as wasmCode from 'wasm/code';
 import * as preact from 'preact';
 import { h, Fragment } from 'preact';
@@ -6,6 +6,7 @@ import * as hooks from 'preact/hooks';
 import * as d3 from 'd3';
 import { Column, Table } from './table';
 import { Reader } from 'wasm/reader';
+import { funcTypeToString } from 'wasm';
 
 export namespace Instructions {
   export interface Props {
@@ -135,21 +136,22 @@ export class Instructions extends preact.Component<
 
 export function Function(props: {
   module: ParsedModule;
-  header: Indexed<wasmCode.FunctionHeader>;
+  func: Indexed<Function>;
   name?: string;
 }) {
-  const func = wasmCode.readFunction(
-    new Reader(
-      new DataView(props.module.bytes, props.header.ofs, props.header.len)
-    )
+  const funcBody = wasmCode.readFunction(
+    new Reader(new DataView(props.module.bytes, props.func.ofs, props.func.len))
   );
   return (
     <div>
       <b>
-        function {props.header.index}: {props.name}
+        {props.name} (function {props.func.index})
       </b>
-      <div>locals: {func.locals.join(' ')}</div>
-      <Instructions module={props.module} instrs={func.body} />
+      <div>
+        type: {funcTypeToString(props.module.types[props.func.typeidx])}
+      </div>
+      <div>locals: {funcBody.locals.join(' ')}</div>
+      <Instructions module={props.module} instrs={funcBody.body} />
     </div>
   );
 }

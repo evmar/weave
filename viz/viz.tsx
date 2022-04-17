@@ -10,6 +10,11 @@ import { Column, Table } from './table';
 import { Exports, Imports } from './impexp';
 
 export type Indexed<T> = T & { index: number };
+export interface Function {
+  typeidx: number;
+  ofs: number;
+  len: number;
+}
 export interface ParsedModule {
   bytes: ArrayBuffer;
   sections: (wasm.SectionHeader & { name?: string })[];
@@ -17,7 +22,7 @@ export interface ParsedModule {
   types: wasm.FuncType[];
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
-  code: Indexed<wasmCode.FunctionHeader>[];
+  functions: Indexed<Function>[];
   names?: wasm.NameSection;
   data: Indexed<wasm.DataSectionData>[];
   globals: Indexed<wasm.Global>[];
@@ -104,7 +109,7 @@ interface AppProps {
 }
 interface AppState {
   section?: wasm.SectionHeader & { name?: string };
-  func?: Indexed<wasmCode.FunctionHeader>;
+  func?: Indexed<Function>;
   data?: Indexed<wasm.DataSectionData>;
 }
 class App extends preact.Component<AppProps, AppState> {
@@ -131,7 +136,7 @@ class App extends preact.Component<AppProps, AppState> {
           this.setState({ section, func: undefined, data: undefined });
         }
       } else {
-        const func = this.props.module.code[index - importedCount];
+        const func = this.props.module.functions[index - importedCount];
         if (func) {
           this.setState({ section: undefined, func, data: undefined });
         }
@@ -179,7 +184,7 @@ class App extends preact.Component<AppProps, AppState> {
               onClick={this.onFuncClick}
               functionNames={module.functionNames}
             >
-              {module.code}
+              {module.functions}
             </Code>
           );
           break;
@@ -216,7 +221,7 @@ class App extends preact.Component<AppProps, AppState> {
       extra = (
         <Function
           module={this.props.module}
-          header={this.state.func}
+          func={this.state.func}
           name={module.functionNames.get(this.state.func.index)}
         ></Function>
       );
@@ -242,13 +247,15 @@ async function main() {
     types: [],
     imports: [],
     exports: [],
-    code: [],
+    functions: [],
     data: [],
     globals: [],
     functionNames: new Map(),
     globalNames: new Map(),
   };
   (window as any)['module'] = module;
+
+  let importedFunctionCount = 0;
   for (const section of module.sections) {
     switch (section.type) {
       case wasm.SectionType.type:
@@ -284,17 +291,28 @@ async function main() {
         break;
       }
       case wasm.SectionType.import:
-        let funcIndex = 0;
         module.imports = wasm
           .readImportSection(wasmModule.getReader(section))
           .map((imp) => {
             switch (imp.desc.type) {
               case wasm.DescType.typeidx:
-                module.functionNames.set(funcIndex, imp.name);
-                return { ...imp, index: funcIndex++ };
+                module.functionNames.set(importedFunctionCount, imp.name);
+                return { ...imp, index: importedFunctionCount++ };
               default:
                 return { ...imp, index: 'todo' as any };
             }
+          });
+        break;
+      case wasm.SectionType.function:
+        module.functions = wasm
+          .readFunctionSection(wasmModule.getReader(section))
+          .map((typeidx, i) => {
+            return {
+              index: importedFunctionCount + i,
+              typeidx,
+              ofs: 0,
+              len: 0,
+            };
           });
         break;
       case wasm.SectionType.export:
@@ -306,12 +324,10 @@ async function main() {
         }
         break;
       case wasm.SectionType.code: {
-        const offset = module.imports.filter(
-          (imp) => imp.desc.type === wasm.DescType.typeidx
-        ).length;
-        module.code = wasmCode
-          .read(wasmModule.getReader(section))
-          .map((f, i) => ({ ...f, index: i + offset }));
+        wasmCode.read(wasmModule.getReader(section)).forEach((func, i) => {
+          module.functions[i].ofs = func.ofs;
+          module.functions[i].len = func.len;
+        });
         break;
       }
       case wasm.SectionType.data:
