@@ -144,12 +144,13 @@ export function Function(props: {
     )
   );
   return (
-    <>
+    <div>
       <b>
-        function {props.header.index} {props.name} {props.header.len}:
+        function {props.header.index}: {props.name}
       </b>
+      <div>locals: {func.locals.join(' ')}</div>
       <Instructions module={props.module} instrs={func.body} />
-    </>
+    </div>
   );
 }
 
