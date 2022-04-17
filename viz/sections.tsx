@@ -2,6 +2,7 @@ import * as wasm from 'wasm';
 import * as d3 from 'd3';
 import { h } from 'preact';
 import * as preact from 'preact';
+import { ParsedModule, Screen } from './viz';
 
 interface SectionsPartProps {
   sections: (wasm.SectionHeader & { name?: string })[];
@@ -87,6 +88,7 @@ function SectionTable(props: SectionsPartProps) {
 }
 
 interface SectionsProps {
+  module: ParsedModule;
   sections: (wasm.SectionHeader & { name?: string })[];
   onClick: (sec: wasm.SectionHeader) => void;
 }
@@ -99,10 +101,12 @@ export class Sections extends preact.Component<SectionsProps, SectionsState> {
   };
   render(props: SectionsProps, state: SectionsState) {
     return (
-      <div style='display: flex'>
-        <Pie {...props} {...state} onHover={this.onSectionHover} />
-        <SectionTable {...props} {...state} onHover={this.onSectionHover} />
-      </div>
+      <Screen module={props.module} title='section overview'>
+        <div style='display: flex; align-items: center'>
+          <Pie {...props} {...state} onHover={this.onSectionHover} />
+          <SectionTable {...props} {...state} onHover={this.onSectionHover} />
+        </div>
+      </Screen>
     );
   }
 }

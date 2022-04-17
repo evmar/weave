@@ -1,4 +1,10 @@
-import { FunctionRef, FunctionType, Indexed, ParsedModule } from './viz';
+import {
+  Screen,
+  FunctionRef,
+  FunctionType,
+  Indexed,
+  ParsedModule,
+} from './viz';
 import * as wasm from 'wasm';
 import { h, Fragment } from 'preact';
 import { Column, Table } from './table';
@@ -35,7 +41,11 @@ export function Imports(props: { module: ParsedModule }) {
       data: (imp) => <ImpExpDesc module={props.module} desc={imp.desc} />,
     },
   ];
-  return <Table columns={columns}>{props.module.imports}</Table>;
+  return (
+    <Screen module={props.module} title='"import" section'>
+      <Table columns={columns}>{props.module.imports}</Table>
+    </Screen>
+  );
 }
 
 export function Exports(props: { module: ParsedModule }) {
@@ -51,5 +61,9 @@ export function Exports(props: { module: ParsedModule }) {
       data: (imp) => <ImpExpDesc module={props.module} desc={imp.desc} />,
     },
   ];
-  return <Table columns={columns}>{props.module.exports}</Table>;
+  return (
+    <Screen module={props.module} title='"export" section'>
+      <Table columns={columns}>{props.module.exports}</Table>
+    </Screen>
+  );
 }

@@ -11,13 +11,13 @@ export interface Column<T> {
   data: (row: T) => preact.ComponentChild;
 }
 
-export interface TableProps<T extends { index: number }> {
+export interface TableProps<T> {
   columns: Column<T>[];
   children: T[];
   onClick?: (row: T) => void;
 }
 
-export function Table<T extends { index: number }>(props: TableProps<T>) {
+export function Table<T>(props: TableProps<T>) {
   const [sortBy, setSortBy] = hooks.useState<undefined | Column<T>>(undefined);
   const [expanded, setExpanded] = hooks.useState(false);
 
@@ -54,7 +54,6 @@ export function Table<T extends { index: number }>(props: TableProps<T>) {
         {rows.map((row) => {
           return (
             <tr
-              key={row.index}
               className={props.onClick ? 'hover pointer' : ''}
               onClick={props.onClick && (() => props.onClick!(row))}
             >

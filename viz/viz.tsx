@@ -79,6 +79,24 @@ export function GlobalRef(props: { module: ParsedModule; index: number }) {
   );
 }
 
+export function Screen(props: {
+  module: ParsedModule;
+  title: string;
+  children: preact.ComponentChildren;
+}) {
+  return (
+    <>
+      <header>
+        weave &gt; <a href='#'>{props.module.name}</a> &gt;
+      </header>
+      <main>
+        <h2>{props.title}</h2>
+        {props.children}
+      </main>
+    </>
+  );
+}
+
 export function FunctionType(props: { type: wasm.FuncType }) {
   return <code>{wasm.funcTypeToString(props.type)}</code>;
 }
@@ -93,9 +111,12 @@ function TypeSection(props: { module: ParsedModule }) {
     },
   ];
   return (
-    <Table columns={columns}>
-      {props.module.types.map((t, i) => ({ ...t, index: i }))}
-    </Table>
+    <Screen module={props.module} title='"type" section'>
+      <p>One entry per distinct function type used in the module.</p>
+      <Table columns={columns}>
+        {props.module.types.map((t, i) => ({ ...t, index: i }))}
+      </Table>
+    </Screen>
   );
 }
 
@@ -309,7 +330,8 @@ class App extends preact.Component<AppProps, AppState> {
         default:
           return (
             <div>
-              TODO: no viewer implemented for '{this.state.section.type}' section yet
+              TODO: no viewer implemented for '{this.state.section.type}'
+              section yet
             </div>
           );
       }
@@ -325,7 +347,11 @@ class App extends preact.Component<AppProps, AppState> {
       return <DataHex module={this.props.module} data={this.state.data} />;
     } else {
       return (
-        <Sections sections={module.sections} onClick={this.onSectionClick} />
+        <Sections
+          module={this.props.module}
+          sections={module.sections}
+          onClick={this.onSectionClick}
+        />
       );
     }
   }
