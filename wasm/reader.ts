@@ -2,7 +2,7 @@
 export class Reader {
   ofs: number = 0;
 
-  constructor(private view: DataView) {}
+  constructor(readonly view: DataView) {}
 
   done(): boolean {
     return this.ofs == this.view.byteLength;

@@ -297,8 +297,12 @@ interface InstructionWithoutFields {
 }
 export type Instruction = InstructionWithoutFields | InstructionWithFields;
 
+export interface FunctionHeader {
+  ofs: number;
+  len: number;
+}
+
 export interface Function {
-  size: number;
   locals: Type[];
   body: Instruction[];
 }
@@ -739,7 +743,7 @@ export function readExpr(r: Reader) {
   return readInstrs(r)[0];
 }
 
-function readFunc(r: Reader, size: number): Function {
+export function readFunction(r: Reader): Function {
   const locals: Type[] = [];
   const len = r.readUint();
   for (let i = 0; i < len; i++) {
@@ -750,13 +754,15 @@ function readFunc(r: Reader, size: number): Function {
     }
   }
   const body = readExpr(r);
-  return { size, locals, body };
+  return { locals, body };
 }
 
-export function read(r: Reader): Function[] {
+export function read(r: Reader): FunctionHeader[] {
   const funcs = r.vec(() => {
     const size = r.readUint();
-    return readFunc(r, size);
+    const header = { ofs: r.view.byteOffset + r.ofs, len: size };
+    r.skip(size);
+    return header;
   });
   return funcs;
 }

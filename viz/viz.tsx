@@ -11,12 +11,13 @@ import { Exports, Imports } from './impexp';
 
 export type Indexed<T> = T & { index: number };
 export interface ParsedModule {
+  bytes: ArrayBuffer;
   sections: (wasm.SectionHeader & { name?: string })[];
 
   types: wasm.FuncType[];
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
-  code: Indexed<wasmCode.Function>[];
+  code: Indexed<wasmCode.FunctionHeader>[];
   names?: wasm.NameSection;
   data: Indexed<wasm.DataSectionData>[];
   globals: Indexed<wasm.Global>[];
@@ -103,7 +104,7 @@ interface AppProps {
 }
 interface AppState {
   section?: wasm.SectionHeader & { name?: string };
-  func?: Indexed<wasmCode.Function>;
+  func?: Indexed<wasmCode.FunctionHeader>;
   data?: Indexed<wasm.DataSectionData>;
 }
 class App extends preact.Component<AppProps, AppState> {
@@ -147,7 +148,7 @@ class App extends preact.Component<AppProps, AppState> {
   private onSectionClick = (section: wasm.SectionHeader) => {
     go(['section', section.index]);
   };
-  private onFuncClick = (func: Indexed<wasmCode.Function>) => {
+  private onFuncClick = (func: Indexed<wasmCode.FunctionHeader>) => {
     go(['function', func.index]);
   };
   private onDataClick = (data: Indexed<wasm.DataSectionData>) => {
@@ -215,7 +216,7 @@ class App extends preact.Component<AppProps, AppState> {
       extra = (
         <Function
           module={this.props.module}
-          func={this.state.func}
+          header={this.state.func}
           name={module.functionNames.get(this.state.func.index)}
         ></Function>
       );
@@ -236,6 +237,7 @@ async function main() {
   const wasmBytes = await (await fetch('t.wasm')).arrayBuffer();
   const wasmModule = wasm.read(new DataView(wasmBytes));
   const module: ParsedModule = {
+    bytes: wasmBytes,
     sections: wasmModule.sections.map((sec, index) => ({ ...sec, index })),
     types: [],
     imports: [],

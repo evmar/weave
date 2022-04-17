@@ -5,6 +5,7 @@ import { h, Fragment } from 'preact';
 import * as hooks from 'preact/hooks';
 import * as d3 from 'd3';
 import { Column, Table } from './table';
+import { Reader } from 'wasm/reader';
 
 export namespace Instructions {
   export interface Props {
@@ -134,31 +135,36 @@ export class Instructions extends preact.Component<
 
 export function Function(props: {
   module: ParsedModule;
-  func: Indexed<wasmCode.Function>;
+  header: Indexed<wasmCode.FunctionHeader>;
   name?: string;
 }) {
+  const func = wasmCode.readFunction(
+    new Reader(
+      new DataView(props.module.bytes, props.header.ofs, props.header.len)
+    )
+  );
   return (
     <>
       <b>
-        function {props.func.index} {props.name} {props.func.size}:
+        function {props.header.index} {props.name} {props.header.len}:
       </b>
-      <Instructions module={props.module} instrs={props.func.body} />
+      <Instructions module={props.module} instrs={func.body} />
     </>
   );
 }
 
 interface CodeProps {
-  children: Indexed<wasmCode.Function>[];
+  children: Indexed<wasmCode.FunctionHeader>[];
   functionNames: Map<number, string>;
-  onClick: (func: Indexed<wasmCode.Function>) => void;
+  onClick: (func: Indexed<wasmCode.FunctionHeader>) => void;
 }
 export function Code(props: CodeProps) {
   const totalSize = hooks.useMemo(
-    () => d3.sum(props.children.map((f) => f.size)),
+    () => d3.sum(props.children.map((f) => f.len)),
     props.children
   );
 
-  const columns: Column<Indexed<wasmCode.Function>>[] = [
+  const columns: Column<Indexed<wasmCode.FunctionHeader>>[] = [
     { name: 'index', className: 'right', sort: null, data: (f) => f.index },
     {
       name: 'name',
@@ -168,13 +174,13 @@ export function Code(props: CodeProps) {
     {
       name: 'size',
       className: 'right',
-      sort: (a, b) => d3.descending(a.size, b.size),
-      data: (f) => d3.format(',')(f.size),
+      sort: (a, b) => d3.descending(a.len, b.len),
+      data: (f) => d3.format(',')(f.len),
     },
     {
       name: '%',
       className: 'right',
-      data: (f) => d3.format('.1%')(f.size / totalSize),
+      data: (f) => d3.format('.1%')(f.len / totalSize),
     },
   ];
 
