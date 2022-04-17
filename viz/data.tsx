@@ -1,5 +1,5 @@
 import * as wasm from 'wasm';
-import { Indexed, ParsedModule } from './viz';
+import { Indexed, ParsedModule, Screen } from './viz';
 import { h } from 'preact';
 import * as hooks from 'preact/hooks';
 import { Instructions } from './code';
@@ -34,9 +34,12 @@ export function DataSection(props: {
   ];
 
   return (
-    <Table columns={columns} onClick={props.onClick}>
-      {props.data}
-    </Table>
+    <Screen module={props.module} title='"data" section'>
+      <p>Initialization-time data.</p>
+      <Table columns={columns} onClick={props.onClick}>
+        {props.data}
+      </Table>
+    </Screen>
   );
 }
 
@@ -91,7 +94,7 @@ export function DataHex(props: {
   }
 
   return (
-    <div>
+    <Screen module={props.module} title='data viewer'>
       <div>
         <b>data[{props.data.index}]</b>:{' '}
         {d3.format(',')(props.data.init.byteLength)} bytes
@@ -101,6 +104,6 @@ export function DataHex(props: {
         <Instructions module={props.module} instrs={props.data.offset!} />
       </div>
       <pre>{rows}</pre>
-    </div>
+    </Screen>
   );
 }

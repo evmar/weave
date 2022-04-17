@@ -6,7 +6,7 @@ import * as hooks from 'preact/hooks';
 
 import { Sections } from './sections';
 import { DataSection, DataHex } from './data';
-import { Code, Function, Instructions } from './code';
+import { CodeSection, Function, Instructions } from './code';
 import { Column, Table } from './table';
 import { Exports, Imports } from './impexp';
 
@@ -159,49 +159,55 @@ export function InlineEdit(props: {
   }
 }
 
-function Global(props: { module: ParsedModule }) {
+function GlobalSection(props: { module: ParsedModule }) {
   const [edited, setEdited] = hooks.useState(0);
 
   return (
-    <table>
-      <thead>
-        <tr>
-          <th className='right'>index</th>
-          <th>name</th>
-          <th>type</th>
-          <th>init</th>
-        </tr>
-      </thead>
-      <tbody>
-        {props.module.globals.map((global) => {
-          return (
-            <tr>
-              <td className='right'>{global.index}</td>
-              <td className='break-all'>
-                <InlineEdit
-                  onEdit={(name) => {
-                    props.module.globalNames.set(global.index, name);
-                    setEdited(edited + 1);
-                  }}
-                >
-                  {props.module.globalNames.get(global.index) ?? ''}
-                </InlineEdit>
-              </td>
-              <td>
-                {global.type.mut ? 'var' : 'const'} {global.type.valType}
-              </td>
-              <td>
-                <Instructions module={props.module} instrs={global.init} />
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <Screen module={props.module} title='"globals" section'>
+      <p>Global variables, accessible to both the host environment and Wasm.</p>
+      <table>
+        <thead>
+          <tr>
+            <th className='right'>index</th>
+            <th>name</th>
+            <th>type</th>
+            <th>init</th>
+          </tr>
+        </thead>
+        <tbody>
+          {props.module.globals.map((global) => {
+            return (
+              <tr>
+                <td className='right'>{global.index}</td>
+                <td className='break-all'>
+                  <InlineEdit
+                    onEdit={(name) => {
+                      props.module.globalNames.set(global.index, name);
+                      setEdited(edited + 1);
+                    }}
+                  >
+                    {props.module.globalNames.get(global.index) ?? ''}
+                  </InlineEdit>
+                </td>
+                <td>
+                  {global.type.mut ? 'var' : 'const'} {global.type.valType}
+                </td>
+                <td>
+                  <Instructions module={props.module} instrs={global.init} />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </Screen>
   );
 }
 
-function FunctionSection(props: { module: ParsedModule }) {
+function FunctionSection(props: {
+  module: ParsedModule;
+  onClick: (index: number) => void;
+}) {
   const columns: Column<Indexed<Function>>[] = [
     { name: 'func', className: 'right', data: (row) => row.index },
     {
@@ -211,7 +217,14 @@ function FunctionSection(props: { module: ParsedModule }) {
       ),
     },
   ];
-  return <Table columns={columns}>{props.module.functions}</Table>;
+  return (
+    <Screen module={props.module} title='"function" section'>
+      <p>Associates functions with their types.</p>
+      <Table columns={columns} onClick={(row) => props.onClick(row.index)}>
+        {props.module.functions}
+      </Table>
+    </Screen>
+  );
 }
 
 interface AppProps {
@@ -268,8 +281,8 @@ class App extends preact.Component<AppProps, AppState> {
   private onSectionClick = (section: wasm.SectionHeader) => {
     go(['section', section.index]);
   };
-  private onFuncClick = (func: Indexed<wasmCode.FunctionHeader>) => {
-    go(['function', func.index]);
+  private onFuncClick = (index: number) => {
+    go(['function', index]);
   };
   private onDataClick = (data: Indexed<wasm.DataSectionData>) => {
     go(['data', data.index]);
@@ -284,27 +297,24 @@ class App extends preact.Component<AppProps, AppState> {
       switch (this.state.section.type) {
         case wasm.SectionType.type:
           return <TypeSection module={module} />;
-          break;
         case wasm.SectionType.import:
           return <Imports module={module} />;
-          break;
         case wasm.SectionType.function:
-          return <FunctionSection module={module} />;
-          break;
+          return <FunctionSection module={module} onClick={this.onFuncClick} />;
+        case wasm.SectionType.global:
+          return <GlobalSection module={module} />;
         case wasm.SectionType.export:
           return <Exports module={module} />;
-          break;
         case wasm.SectionType.code:
           return (
-            <Code
-              key='code'
+            <CodeSection
+              module={module}
               onClick={this.onFuncClick}
               functionNames={module.functionNames}
             >
               {module.functions}
-            </Code>
+            </CodeSection>
           );
-          break;
         case wasm.SectionType.data:
           return (
             <DataSection
@@ -313,10 +323,6 @@ class App extends preact.Component<AppProps, AppState> {
               onClick={this.onDataClick}
             />
           );
-          break;
-        case wasm.SectionType.global:
-          return <Global module={module} />;
-          break;
         case wasm.SectionType.custom:
           if (this.state.section.name === 'name') {
             return (
@@ -324,7 +330,6 @@ class App extends preact.Component<AppProps, AppState> {
                 (gathered name data is displayed inline in other sections)
               </div>
             );
-            break;
           }
         // fall through
         default:

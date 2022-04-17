@@ -3,7 +3,7 @@ import {
   FunctionRef,
   GlobalRef,
   Indexed,
-  InlineEdit,
+  Screen,
   ParsedModule,
 } from './viz';
 import * as wasmCode from 'wasm/code';
@@ -158,11 +158,12 @@ export function Function(props: {
 }
 
 interface CodeProps {
+  module: ParsedModule;
   children: Indexed<wasmCode.FunctionHeader>[];
   functionNames: Map<number, string>;
-  onClick: (func: Indexed<wasmCode.FunctionHeader>) => void;
+  onClick: (func: number) => void;
 }
-export function Code(props: CodeProps) {
+export function CodeSection(props: CodeProps) {
   const totalSize = hooks.useMemo(
     () => d3.sum(props.children.map((f) => f.len)),
     props.children
@@ -189,8 +190,11 @@ export function Code(props: CodeProps) {
   ];
 
   return (
-    <Table columns={columns} onClick={props.onClick}>
-      {props.children}
-    </Table>
+    <Screen module={props.module} title='"code" section'>
+      <p>Function bodies.</p>
+      <Table columns={columns} onClick={(func) => props.onClick(func.index)}>
+        {props.children}
+      </Table>
+    </Screen>
   );
 }
