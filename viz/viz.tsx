@@ -2,6 +2,7 @@ import * as wasm from 'wasm';
 import * as wasmCode from 'wasm/code';
 import * as preact from 'preact';
 import { h, Fragment } from 'preact';
+import * as hooks from 'preact/hooks';
 
 import { Sections } from './sections';
 import { DataSection, DataHex } from './data';
@@ -71,7 +72,48 @@ function TypeSection(props: { module: ParsedModule }) {
   return <Table columns={columns}>{props.module.types}</Table>;
 }
 
+function InlineEdit(props: {
+  onEdit: (newText: string) => void;
+  children: string;
+}) {
+  const [editing, setEditing] = hooks.useState(false);
+  const input = hooks.useRef<HTMLInputElement>(null);
+  hooks.useEffect(() => {
+    if (editing) input.current!.focus();
+  }, [editing]);
+  const commit = (ev: Event) => {
+    if (!input.current) return;
+    props.onEdit(input.current?.value ?? '');
+    setEditing(false);
+    ev.preventDefault();
+    return false;
+  };
+
+  if (editing) {
+    return (
+      <form onSubmit={commit}>
+        <input
+          ref={input}
+          size={1}
+          type='text'
+          className='inline'
+          onfocusout={commit}
+          value={props.children}
+        />
+      </form>
+    );
+  } else {
+    return (
+      <span onClick={() => setEditing(true)}>
+        {props.children} <button className='edit'>{'\u270e'}</button>
+      </span>
+    );
+  }
+}
+
 function Global(props: { module: ParsedModule }) {
+  const [edited, setEdited] = hooks.useState(0);
+
   return (
     <table>
       <thead>
@@ -88,7 +130,14 @@ function Global(props: { module: ParsedModule }) {
             <tr>
               <td className='right'>{global.index}</td>
               <td className='break-all'>
-                <code>{props.module.globalNames.get(global.index)}</code>
+                <InlineEdit
+                  onEdit={(name) => {
+                    props.module.globalNames.set(global.index, name);
+                    setEdited(edited + 1);
+                  }}
+                >
+                  {props.module.globalNames.get(global.index) ?? ''}
+                </InlineEdit>
               </td>
               <td>
                 {global.type.mut ? 'var' : 'const'} {global.type.valType}
@@ -114,11 +163,7 @@ function FunctionSection(props: { module: ParsedModule }) {
       ),
     },
   ];
-  return (
-    <Table columns={columns}>
-      {props.module.functions}
-    </Table>
-  );
+  return <Table columns={columns}>{props.module.functions}</Table>;
 }
 
 interface AppProps {
