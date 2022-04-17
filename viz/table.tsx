@@ -68,9 +68,13 @@ export function Table<T>(props: TableProps<T>) {
           );
         })}
         {rows.length < props.children.length && (
-          <button onClick={() => setExpanded(true)}>
-            show {props.children.length - rows.length} more
-          </button>
+          <tr>
+            <td colSpan={props.columns.length}>
+              <button onClick={() => setExpanded(true)}>
+                show {props.children.length - rows.length} more
+              </button>
+            </td>
+          </tr>
         )}
       </tbody>
     </table>
