@@ -17,6 +17,7 @@ export interface Function {
   len: number;
 }
 export interface ParsedModule {
+  name: string;
   bytes: ArrayBuffer;
   sections: (wasm.SectionHeader & { name?: string })[];
 
@@ -37,8 +38,10 @@ function urlFromLink([target, index]: Link): string {
   let url = `#${target}=${index}`;
   return url;
 }
-function linkFromHash(hash: string): Link {
-  const parts = hash.substring(1).split('=');
+function linkFromHash(hash: string): Link | null {
+  hash = hash.substring(1);
+  if (!hash) return null;
+  const parts = hash.split('=');
   return [parts[0], parseInt(parts[1])];
 }
 function go(link: Link) {
@@ -202,7 +205,12 @@ class App extends preact.Component<AppProps, AppState> {
   state: AppState = {};
 
   private onHashChange = () => {
-    const [target, index] = linkFromHash(document.location.hash);
+    const link = linkFromHash(document.location.hash);
+    if (!link) {
+      this.setState({ section: undefined, func: undefined, data: undefined });
+      return;
+    }
+    const [target, index] = link;
     if (target === 'section') {
       const section = this.props.module.sections.find(
         (sec) => sec.index === index
@@ -251,24 +259,22 @@ class App extends preact.Component<AppProps, AppState> {
     this.onHashChange();
   }
   render({ module }: AppProps) {
-    const { section } = this.state;
-    let extra: preact.ComponentChild;
-    if (section) {
-      switch (section.type) {
+    if (this.state.section) {
+      switch (this.state.section.type) {
         case wasm.SectionType.type:
-          extra = <TypeSection module={module} />;
+          return <TypeSection module={module} />;
           break;
         case wasm.SectionType.import:
-          extra = <Imports module={module} />;
+          return <Imports module={module} />;
           break;
         case wasm.SectionType.function:
-          extra = <FunctionSection module={module} />;
+          return <FunctionSection module={module} />;
           break;
         case wasm.SectionType.export:
-          extra = <Exports module={module} />;
+          return <Exports module={module} />;
           break;
         case wasm.SectionType.code:
-          extra = (
+          return (
             <Code
               key='code'
               onClick={this.onFuncClick}
@@ -279,7 +285,7 @@ class App extends preact.Component<AppProps, AppState> {
           );
           break;
         case wasm.SectionType.data:
-          extra = (
+          return (
             <DataSection
               module={module}
               data={module.data}
@@ -288,11 +294,11 @@ class App extends preact.Component<AppProps, AppState> {
           );
           break;
         case wasm.SectionType.global:
-          extra = <Global module={module} />;
+          return <Global module={module} />;
           break;
         case wasm.SectionType.custom:
-          if (section.name === 'name') {
-            extra = (
+          if (this.state.section.name === 'name') {
+            return (
               <div>
                 (gathered name data is displayed inline in other sections)
               </div>
@@ -301,14 +307,14 @@ class App extends preact.Component<AppProps, AppState> {
           }
         // fall through
         default:
-          extra = (
+          return (
             <div>
-              TODO: no viewer implemented for '{section.type}' section yet
+              TODO: no viewer implemented for '{this.state.section.type}' section yet
             </div>
           );
       }
     } else if (this.state.func) {
-      extra = (
+      return (
         <Function
           module={this.props.module}
           func={this.state.func}
@@ -316,22 +322,21 @@ class App extends preact.Component<AppProps, AppState> {
         ></Function>
       );
     } else if (this.state.data) {
-      extra = <DataHex module={this.props.module} data={this.state.data} />;
-    }
-
-    return (
-      <main>
+      return <DataHex module={this.props.module} data={this.state.data} />;
+    } else {
+      return (
         <Sections sections={module.sections} onClick={this.onSectionClick} />
-        {extra}
-      </main>
-    );
+      );
+    }
   }
 }
 
 async function main() {
+  const name = 't.wasm';
   const wasmBytes = await (await fetch('t.wasm')).arrayBuffer();
   const wasmModule = wasm.read(new DataView(wasmBytes));
   const module: ParsedModule = {
+    name,
     bytes: wasmBytes,
     sections: wasmModule.sections.map((sec, index) => ({ ...sec, index })),
     types: [],

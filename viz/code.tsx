@@ -144,12 +144,13 @@ export function Function(props: {
   const type = props.module.types[props.func.typeidx];
   return (
     <section>
-      <h2>function {props.func.index}: {props.name}</h2>
-      <div>
-        params: ({type.params.map(p => p).join(', ')})
-      </div>
-      {type.result.length > 0 && <div>
-        result: ({type.result.map(p => p).join(', ')})</div>}
+      <h2>
+        function {props.func.index}: {props.name}
+      </h2>
+      <div>params: ({type.params.map((p) => p).join(', ')})</div>
+      {type.result.length > 0 && (
+        <div>result: ({type.result.map((p) => p).join(', ')})</div>
+      )}
       <div>locals: {funcBody.locals.join(' ')}</div>
       <Instructions module={props.module} instrs={funcBody.body} />
     </section>
