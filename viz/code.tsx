@@ -5,6 +5,7 @@ import {
   Indexed,
   Screen,
   ParsedModule,
+  InlineEdit,
 } from './viz';
 import * as wasmCode from 'wasm/code';
 import * as preact from 'preact';
@@ -15,9 +16,18 @@ import { Column, Table } from './table';
 import { Reader } from 'wasm/reader';
 import { funcTypeToString } from 'wasm';
 
+function LocalRef(props: { names?: Map<number, string>, index: number }) {
+  const name = props.names?.get(props.index);
+  if (name) {
+    return <span title={`locals[${props.index}]`}>${name}</span>;
+  }
+  return <span>locals[{props.index}]</span>;
+}
+
 export namespace Instructions {
   export interface Props {
     module: ParsedModule;
+    localNames?: Map<number, string>;
     instrs: wasmCode.Instruction[];
   }
   export interface State {
@@ -86,7 +96,18 @@ export class Instructions extends preact.Component<
           </div>
         );
         break;
-      // TODO: custom rendering here.
+
+      case wasmCode.Instr.local_get:
+      case wasmCode.Instr.local_set:
+      case wasmCode.Instr.local_tee:
+        yield (
+          <div>
+            {'  '.repeat(indent)}
+            {instr.op}{' '}
+            <LocalRef names={this.props.localNames} index={instr.local} />
+          </div>
+        );
+        break;
       default:
         const toPrint = [instr.op.toString()];
         for (const [key, val] of Object.entries(instr)) {
@@ -142,6 +163,22 @@ export function Function(props: {
     new Reader(new DataView(props.module.bytes, props.func.ofs, props.func.len))
   );
   const type = props.module.types[props.func.typeidx];
+  const [localNames, setLocalNames] = hooks.useState<Map<number, string>>(() => {
+    const localNames = new Map();
+    let index = 0;
+    for (const param of type.params) {
+      localNames.set(index, `p${index}`);
+      index++;
+    }
+    for (const local of funcBody.locals) {
+      localNames.set(index, `l${index}`);
+      index++;
+    }
+    return localNames;
+  });
+  const nameLocal = (index: number, name: string) => {
+    setLocalNames(new Map(localNames.set(index, name)));
+  };
   return (
     <section>
       <h2>
@@ -151,8 +188,10 @@ export function Function(props: {
       {type.result.length > 0 && (
         <div>result: ({type.result.map((p) => p).join(', ')})</div>
       )}
-      <div>locals: {funcBody.locals.join(' ')}</div>
-      <Instructions module={props.module} instrs={funcBody.body} />
+      <div>locals: {funcBody.locals.map((type, i) => (
+        <div>{type} <InlineEdit onEdit={(name) => nameLocal(i, name)}>{localNames.get(i) ?? ''}</InlineEdit></div>
+      ))}</div>
+      <Instructions module={props.module} localNames={localNames} instrs={funcBody.body} />
     </section>
   );
 }
