@@ -16,7 +16,7 @@ import { Column, Table } from './table';
 import { Reader } from 'wasm/reader';
 import { funcTypeToString } from 'wasm';
 
-function LocalRef(props: { names?: Map<number, string>, index: number }) {
+function LocalRef(props: { names?: Map<number, string>; index: number }) {
   const name = props.names?.get(props.index);
   if (name) {
     return <span title={`locals[${props.index}]`}>${name}</span>;
@@ -61,10 +61,10 @@ export class Instructions extends preact.Component<
     }
 
     return (
-      <pre style='white-space: pre-wrap'>
-        {lines}
+      <>
+        <pre style='white-space: pre-wrap'>{lines}</pre>
         {expand}
-      </pre>
+      </>
     );
   }
 
@@ -163,19 +163,21 @@ export function Function(props: {
     new Reader(new DataView(props.module.bytes, props.func.ofs, props.func.len))
   );
   const type = props.module.types[props.func.typeidx];
-  const [localNames, setLocalNames] = hooks.useState<Map<number, string>>(() => {
-    const localNames = new Map();
-    let index = 0;
-    for (const param of type.params) {
-      localNames.set(index, `p${index}`);
-      index++;
+  const [localNames, setLocalNames] = hooks.useState<Map<number, string>>(
+    () => {
+      const localNames = new Map();
+      let index = 0;
+      for (const param of type.params) {
+        localNames.set(index, `p${index}`);
+        index++;
+      }
+      for (const local of funcBody.locals) {
+        localNames.set(index, `l${index}`);
+        index++;
+      }
+      return localNames;
     }
-    for (const local of funcBody.locals) {
-      localNames.set(index, `l${index}`);
-      index++;
-    }
-    return localNames;
-  });
+  );
   const nameLocal = (index: number, name: string) => {
     setLocalNames(new Map(localNames.set(index, name)));
   };
@@ -188,10 +190,22 @@ export function Function(props: {
       {type.result.length > 0 && (
         <div>result: ({type.result.map((p) => p).join(', ')})</div>
       )}
-      <div>locals: {funcBody.locals.map((type, i) => (
-        <div>{type} <InlineEdit onEdit={(name) => nameLocal(i, name)}>{localNames.get(i) ?? ''}</InlineEdit></div>
-      ))}</div>
-      <Instructions module={props.module} localNames={localNames} instrs={funcBody.body} />
+      <div>
+        locals:{' '}
+        {funcBody.locals.map((type, i) => (
+          <div>
+            {type}{' '}
+            <InlineEdit onEdit={(name) => nameLocal(i, name)}>
+              {localNames.get(i) ?? ''}
+            </InlineEdit>
+          </div>
+        ))}
+      </div>
+      <Instructions
+        module={props.module}
+        localNames={localNames}
+        instrs={funcBody.body}
+      />
     </section>
   );
 }
