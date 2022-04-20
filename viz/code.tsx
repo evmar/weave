@@ -221,8 +221,11 @@ export function Function(props: {
       <div>
         locals:{' '}
         {[...type.params, ...funcBody.locals].map((type, i) => (
-          <div onMouseOver={() => setHighlight({ type: 'local', index: i })}>
-            {type}{' '}
+          <div
+            className='flex-container'
+            onMouseOver={() => setHighlight({ type: 'local', index: i })}
+          >
+            {type}&nbsp;
             <InlineEdit onEdit={(name) => nameLocal(i, name)}>
               {localNames.get(i) ?? ''}
             </InlineEdit>

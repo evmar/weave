@@ -54,12 +54,20 @@
       .pointer {
         cursor: pointer;
       }
-      .inline {
+      form.inline-edit {
+        flex: 1;
+      }
+      input.inline-edit {
+        font-size: 90%;
         width: 100%;
       }
-      .edit {
+      button.inline-edit {
         padding: 0 2px;
         font-size: 80%;
+      }
+      .flex-container {
+        align-items: baseline;
+        display: flex;
       }
 
       @media (prefers-color-scheme: dark) {

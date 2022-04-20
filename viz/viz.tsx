@@ -139,12 +139,12 @@ export function InlineEdit(props: {
 
   if (editing) {
     return (
-      <form onSubmit={commit}>
+      <form className='inline-edit' onSubmit={commit}>
         <input
           ref={input}
           size={1}
           type='text'
-          className='inline'
+          className='inline-edit'
           onfocusout={commit}
           value={props.children}
         />
@@ -153,7 +153,7 @@ export function InlineEdit(props: {
   } else {
     return (
       <span onClick={() => setEditing(true)}>
-        {props.children} <button className='edit'>{'\u270e'}</button>
+        {props.children} <button className='inline-edit'>{'\u270e'}</button>
       </span>
     );
   }
@@ -179,7 +179,7 @@ function GlobalSection(props: { module: ParsedModule }) {
             return (
               <tr>
                 <td className='right'>{global.index}</td>
-                <td className='break-all'>
+                <td className='break-all flex-container'>
                   <InlineEdit
                     onEdit={(name) => {
                       props.module.globalNames.set(global.index, name);
