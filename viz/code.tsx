@@ -182,10 +182,8 @@ export function Function(props: {
     setLocalNames(new Map(localNames.set(index, name)));
   };
   return (
-    <section>
-      <h2>
-        function {props.func.index}: {props.name}
-      </h2>
+    <Screen module={props.module} title={`function ${props.func.index}`}>
+      <div>name: {props.name}</div>
       <div>params: ({type.params.map((p) => p).join(', ')})</div>
       {type.result.length > 0 && (
         <div>result: ({type.result.map((p) => p).join(', ')})</div>
@@ -206,7 +204,7 @@ export function Function(props: {
         localNames={localNames}
         instrs={funcBody.body}
       />
-    </section>
+    </Screen>
   );
 }
 
