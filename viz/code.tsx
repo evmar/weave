@@ -16,12 +16,25 @@ import { Column, Table } from './table';
 import { Reader } from 'wasm/reader';
 import { funcTypeToString } from 'wasm';
 
-function LocalRef(props: { names?: Map<number, string>; index: number }) {
+interface Highlight {
+  type: 'local';
+  index: number;
+}
+
+function LocalRef(props: {
+  className?: string;
+  names?: Map<number, string>;
+  index: number;
+}) {
   const name = props.names?.get(props.index);
   if (name) {
-    return <span title={`locals[${props.index}]`}>${name}</span>;
+    return (
+      <span className={props.className} title={`locals[${props.index}]`}>
+        ${name}
+      </span>
+    );
   }
-  return <span>locals[{props.index}]</span>;
+  return <span className={props.className}>locals[{props.index}]</span>;
 }
 
 export namespace Instructions {
@@ -29,6 +42,7 @@ export namespace Instructions {
     module: ParsedModule;
     localNames?: Map<number, string>;
     instrs: wasmCode.Instruction[];
+    highlight?: Highlight;
   }
   export interface State {
     expanded: boolean;
@@ -99,15 +113,28 @@ export class Instructions extends preact.Component<
 
       case wasmCode.Instr.local_get:
       case wasmCode.Instr.local_set:
-      case wasmCode.Instr.local_tee:
+      case wasmCode.Instr.local_tee: {
+        let className: string | undefined;
+        if (
+          this.props.highlight &&
+          this.props.highlight.type === 'local' &&
+          this.props.highlight.index === instr.local
+        ) {
+          className = 'highlight';
+        }
         yield (
           <div>
             {'  '.repeat(indent)}
             {instr.op}{' '}
-            <LocalRef names={this.props.localNames} index={instr.local} />
+            <LocalRef
+              className={className}
+              names={this.props.localNames}
+              index={instr.local}
+            />
           </div>
         );
         break;
+      }
       default:
         const toPrint = [instr.op.toString()];
         for (const [key, val] of Object.entries(instr)) {
@@ -181,6 +208,9 @@ export function Function(props: {
   const nameLocal = (index: number, name: string) => {
     setLocalNames(new Map(localNames.set(index, name)));
   };
+  const [highlight, setHighlight] = hooks.useState<Highlight | undefined>(
+    undefined
+  );
   return (
     <Screen module={props.module} title={`function ${props.func.index}`}>
       <div>name: {props.name}</div>
@@ -191,7 +221,7 @@ export function Function(props: {
       <div>
         locals:{' '}
         {[...type.params, ...funcBody.locals].map((type, i) => (
-          <div>
+          <div onMouseOver={() => setHighlight({ type: 'local', index: i })}>
             {type}{' '}
             <InlineEdit onEdit={(name) => nameLocal(i, name)}>
               {localNames.get(i) ?? ''}
@@ -203,6 +233,7 @@ export function Function(props: {
         module={props.module}
         localNames={localNames}
         instrs={funcBody.body}
+        highlight={highlight}
       />
     </Screen>
   );
