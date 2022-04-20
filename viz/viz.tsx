@@ -324,6 +324,8 @@ class App extends preact.Component<AppProps, AppState> {
             />
           );
         case wasm.SectionType.custom:
+          // Note: be sure to add key= here if we end up rendering multiple custom sections
+          // using the same component.
           if (this.state.section.name === 'name') {
             return (
               <div>
@@ -350,7 +352,13 @@ class App extends preact.Component<AppProps, AppState> {
         ></Function>
       );
     } else if (this.state.data) {
-      return <DataHex module={this.props.module} data={this.state.data} />;
+      return (
+        <DataHex
+          key={this.state.data.index}
+          module={this.props.module}
+          data={this.state.data}
+        />
+      );
     } else {
       return (
         <Sections
