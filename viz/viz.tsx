@@ -343,6 +343,7 @@ class App extends preact.Component<AppProps, AppState> {
     } else if (this.state.func) {
       return (
         <Function
+          key={this.state.func.index}
           module={this.props.module}
           func={this.state.func}
           name={module.functionNames.get(this.state.func.index)}
