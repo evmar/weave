@@ -190,7 +190,7 @@ export function Function(props: {
       )}
       <div>
         locals:{' '}
-        {funcBody.locals.map((type, i) => (
+        {[...type.params, ...funcBody.locals].map((type, i) => (
           <div>
             {type}{' '}
             <InlineEdit onEdit={(name) => nameLocal(i, name)}>
