@@ -195,11 +195,11 @@ export function Function(props: {
       const localNames = new Map();
       let index = 0;
       for (const param of type.params) {
-        localNames.set(index, `p${index}`);
+        localNames.set(index, `param${index}`);
         index++;
       }
       for (const local of funcBody.locals) {
-        localNames.set(index, `l${index}`);
+        localNames.set(index, `local${index}`);
         index++;
       }
       return localNames;
