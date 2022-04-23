@@ -412,15 +412,9 @@ async function main() {
   (window as any)['module'] = module;
 
   let importedFunctionCount = 0;
+  let importedGlobalCount = 0;
   for (const section of module.sections) {
     switch (section.kind) {
-      case wasm.SectionKind.type:
-        module.types = wasm
-          .readTypeSection(wasm.getSectionReader(wasmBytes, section))
-          .map((t, i) => {
-            return { ...t, index: i };
-          });
-        break;
       case wasm.SectionKind.custom: {
         const reader = wasm.getSectionReader(wasmBytes, section);
         const custom = wasm.readCustomSection(reader);
@@ -446,6 +440,13 @@ async function main() {
         }
         break;
       }
+      case wasm.SectionKind.type:
+        module.types = wasm
+          .readTypeSection(wasm.getSectionReader(wasmBytes, section))
+          .map((t, i) => {
+            return { ...t, index: i };
+          });
+        break;
       case wasm.SectionKind.import:
         module.imports = wasm
           .readImportSection(wasm.getSectionReader(wasmBytes, section))
@@ -454,6 +455,9 @@ async function main() {
               case wasm.DescKind.typeidx:
                 module.functionNames.set(importedFunctionCount, imp.name);
                 return { ...imp, index: importedFunctionCount++ };
+              case wasm.DescKind.global:
+                importedGlobalCount++;
+              // TODO don't fall through
               default:
                 return { ...imp, index: 'todo' as any };
             }
@@ -476,35 +480,34 @@ async function main() {
           .readTableSection(wasm.getSectionReader(wasmBytes, section))
           .map((table, i) => ({ ...table, index: i }));
         break;
+      case wasm.SectionKind.global: 
+        module.globals = wasm
+          .readGlobalSection(wasm.getSectionReader(wasmBytes, section))
+          .map((global, i) => ({ ...global, index: importedGlobalCount + i }));
+        break;
       case wasm.SectionKind.export:
-        module.exports = wasm.readExportSection(wasm.getSectionReader(wasmBytes, section));
+        module.exports = wasm.readExportSection(
+          wasm.getSectionReader(wasmBytes, section)
+        );
         for (const exp of module.exports) {
           if (exp.desc.kind == wasm.DescKind.funcidx) {
             module.functionNames.set(exp.desc.index, exp.name);
           }
         }
         break;
-      case wasm.SectionKind.code: {
-        wasmCode.read(wasm.getSectionReader(wasmBytes, section)).forEach((func, i) => {
-          module.functions[i].ofs = func.ofs;
-          module.functions[i].len = func.len;
-        });
+      case wasm.SectionKind.code:
+        wasmCode
+          .read(wasm.getSectionReader(wasmBytes, section))
+          .forEach((func, i) => {
+            module.functions[i].ofs = func.ofs;
+            module.functions[i].len = func.len;
+          });
         break;
-      }
       case wasm.SectionKind.data:
         module.data = wasm
           .readDataSection(wasm.getSectionReader(wasmBytes, section))
           .map((data, index) => ({ ...data, index }));
         break;
-      case wasm.SectionKind.global: {
-        const offset = module.imports.filter(
-          (imp) => imp.desc.kind === wasm.DescKind.global
-        ).length;
-        module.globals = wasm
-          .readGlobalSection(wasm.getSectionReader(wasmBytes, section))
-          .map((g, i) => ({ ...g, index: i + offset }));
-        break;
-      }
     }
   }
   preact.render(<App module={module}></App>, document.body);
