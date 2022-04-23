@@ -12,19 +12,19 @@ function main(args: string[]) {
   const module = wasm.read(new DataView(buf));
   let funcIndex = 0;
   for (const sec of module.sections) {
-    console.log(`# section: ${sec.type} (${sec.len} bytes)`);
-    switch (sec.type) {
-      case wasm.SectionType.type: {
+    console.log(`# section: ${sec.kind} (${sec.len} bytes)`);
+    switch (sec.kind) {
+      case wasm.SectionKind.type: {
         const types = wasm.readTypeSection(module.getReader(sec));
         for (let i = 0; i < types.length; i++) {
           console.log(`  ${i}: ${wasm.funcTypeToString(types[i])}`);
         }
         break;
       }
-      case wasm.SectionType.import:
+      case wasm.SectionKind.import:
         for (const imp of wasm.readImportSection(module.getReader(sec))) {
-          switch (imp.desc.type) {
-            case wasm.DescType.type:
+          switch (imp.desc.kind) {
+            case wasm.DescKind.typeidx:
               console.log(`  func ${funcIndex++}: ${wasm.importToString(imp)}`);
               break;
             default:
@@ -32,12 +32,12 @@ function main(args: string[]) {
           }
         }
         break;
-      case wasm.SectionType.export:
+      case wasm.SectionKind.export:
         for (const exp of wasm.readExportSection(module.getReader(sec))) {
           console.log(`  ${wasm.exportToString(exp)}`);
         }
         break;
-      case wasm.SectionType.code:
+      case wasm.SectionKind.code:
         for (const func of code.read(module.getReader(sec))) {
           console.log(`  func ${funcIndex++}`);
           if (func.locals.length > 0) {

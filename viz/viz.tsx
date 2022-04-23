@@ -70,7 +70,7 @@ export function FunctionRef(props: { module: ParsedModule; index: number }) {
 
 export function GlobalRef(props: { module: ParsedModule; index: number }) {
   const sec = props.module.sections.find(
-    (sec) => sec.type === wasm.SectionType.global
+    (sec) => sec.kind === wasm.SectionKind.global
   )!;
 
   return (
@@ -272,11 +272,11 @@ class App extends preact.Component<AppProps, AppState> {
       }
     } else if (target === 'function') {
       const importedCount = this.props.module.imports.filter(
-        (imp) => imp.desc.type === wasm.DescType.typeidx
+        (imp) => imp.desc.kind === wasm.DescKind.typeidx
       ).length;
       if (index < importedCount) {
         const section = this.props.module.sections.find(
-          (sec) => sec.type === wasm.SectionType.import
+          (sec) => sec.kind === wasm.SectionKind.import
         );
         if (section) {
           this.setState({ section, func: undefined, data: undefined });
@@ -312,20 +312,20 @@ class App extends preact.Component<AppProps, AppState> {
   }
   render({ module }: AppProps) {
     if (this.state.section) {
-      switch (this.state.section.type) {
-        case wasm.SectionType.type:
+      switch (this.state.section.kind) {
+        case wasm.SectionKind.type:
           return <TypeSection module={module} />;
-        case wasm.SectionType.import:
+        case wasm.SectionKind.import:
           return <Imports module={module} />;
-        case wasm.SectionType.function:
+        case wasm.SectionKind.function:
           return <FunctionSection module={module} onClick={this.onFuncClick} />;
-        case wasm.SectionType.table:
+        case wasm.SectionKind.table:
           return <TableSection module={module} />;
-        case wasm.SectionType.global:
+        case wasm.SectionKind.global:
           return <GlobalSection module={module} />;
-        case wasm.SectionType.export:
+        case wasm.SectionKind.export:
           return <Exports module={module} />;
-        case wasm.SectionType.code:
+        case wasm.SectionKind.code:
           return (
             <CodeSection
               module={module}
@@ -335,7 +335,7 @@ class App extends preact.Component<AppProps, AppState> {
               {module.functions}
             </CodeSection>
           );
-        case wasm.SectionType.data:
+        case wasm.SectionKind.data:
           return (
             <DataSection
               module={module}
@@ -343,7 +343,7 @@ class App extends preact.Component<AppProps, AppState> {
               onClick={this.onDataClick}
             />
           );
-        case wasm.SectionType.custom:
+        case wasm.SectionKind.custom:
           // Note: be sure to add key= here if we end up rendering multiple custom sections
           // using the same component.
           if (this.state.section.name === 'name') {
@@ -357,7 +357,7 @@ class App extends preact.Component<AppProps, AppState> {
         default:
           return (
             <div>
-              TODO: no viewer implemented for '{this.state.section.type}'
+              TODO: no viewer implemented for '{this.state.section.kind}'
               section yet
             </div>
           );
@@ -413,15 +413,15 @@ async function main() {
 
   let importedFunctionCount = 0;
   for (const section of module.sections) {
-    switch (section.type) {
-      case wasm.SectionType.type:
+    switch (section.kind) {
+      case wasm.SectionKind.type:
         module.types = wasm
           .readTypeSection(wasmModule.getReader(section))
           .map((t, i) => {
             return { ...t, index: i };
           });
         break;
-      case wasm.SectionType.custom: {
+      case wasm.SectionKind.custom: {
         const reader = wasmModule.getReader(section);
         const custom = wasm.readCustomSection(reader);
         switch (custom.name) {
@@ -446,12 +446,12 @@ async function main() {
         }
         break;
       }
-      case wasm.SectionType.import:
+      case wasm.SectionKind.import:
         module.imports = wasm
           .readImportSection(wasmModule.getReader(section))
           .map((imp) => {
-            switch (imp.desc.type) {
-              case wasm.DescType.typeidx:
+            switch (imp.desc.kind) {
+              case wasm.DescKind.typeidx:
                 module.functionNames.set(importedFunctionCount, imp.name);
                 return { ...imp, index: importedFunctionCount++ };
               default:
@@ -459,7 +459,7 @@ async function main() {
             }
           });
         break;
-      case wasm.SectionType.function:
+      case wasm.SectionKind.function:
         module.functions = wasm
           .readFunctionSection(wasmModule.getReader(section))
           .map((typeidx, i) => {
@@ -471,34 +471,34 @@ async function main() {
             };
           });
         break;
-      case wasm.SectionType.table:
+      case wasm.SectionKind.table:
         module.tables = wasm
           .readTableSection(wasmModule.getReader(section))
           .map((table, i) => ({ ...table, index: i }));
         break;
-      case wasm.SectionType.export:
+      case wasm.SectionKind.export:
         module.exports = wasm.readExportSection(wasmModule.getReader(section));
         for (const exp of module.exports) {
-          if (exp.desc.type == wasm.DescType.funcidx) {
+          if (exp.desc.kind == wasm.DescKind.funcidx) {
             module.functionNames.set(exp.desc.index, exp.name);
           }
         }
         break;
-      case wasm.SectionType.code: {
+      case wasm.SectionKind.code: {
         wasmCode.read(wasmModule.getReader(section)).forEach((func, i) => {
           module.functions[i].ofs = func.ofs;
           module.functions[i].len = func.len;
         });
         break;
       }
-      case wasm.SectionType.data:
+      case wasm.SectionKind.data:
         module.data = wasm
           .readDataSection(wasmModule.getReader(section))
           .map((data, index) => ({ ...data, index }));
         break;
-      case wasm.SectionType.global: {
+      case wasm.SectionKind.global: {
         const offset = module.imports.filter(
-          (imp) => imp.desc.type === wasm.DescType.global
+          (imp) => imp.desc.kind === wasm.DescKind.global
         ).length;
         module.globals = wasm
           .readGlobalSection(wasmModule.getReader(section))

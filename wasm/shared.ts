@@ -3,7 +3,7 @@
 import { Reader } from './reader';
 import { readValType, Type } from './type';
 
-export enum DescType {
+export enum DescKind {
   table = 'table',
   mem = 'mem',
   global = 'global',
@@ -16,43 +16,43 @@ export enum DescType {
 }
 
 export interface DescTable {
-  type: DescType.table;
+  kind: DescKind.table;
   table: TableType;
 }
 
 export interface DescMem {
-  type: DescType.mem;
+  kind: DescKind.mem;
   limits: Limits;
 }
 
 export interface DescGlobal {
-  type: DescType.global;
+  kind: DescKind.global;
   globalType: GlobalType;
 }
 
 export interface DescIndex<T> {
-  type: T;
+  kind: T;
   index: number;
 }
-type DescIndexTypes =
-  | DescIndex<DescType.funcidx>
-  | DescIndex<DescType.typeidx>
-  | DescIndex<DescType.tableidx>
-  | DescIndex<DescType.memidx>
-  | DescIndex<DescType.globalidx>;
+type DescIndexKinds =
+  | DescIndex<DescKind.funcidx>
+  | DescIndex<DescKind.typeidx>
+  | DescIndex<DescKind.tableidx>
+  | DescIndex<DescKind.memidx>
+  | DescIndex<DescKind.globalidx>;
 
 export function descToString(
-  desc: DescTable | DescMem | DescGlobal | DescIndexTypes
+  desc: DescTable | DescMem | DescGlobal | DescIndexKinds
 ): string {
-  switch (desc.type) {
-    case DescType.table:
+  switch (desc.kind) {
+    case DescKind.table:
       return `table ${desc.table}`;
-    case DescType.mem:
+    case DescKind.mem:
       return `mem ${limitsToString(desc.limits)}`;
-    case DescType.global:
+    case DescKind.global:
       return `mem ${desc}`;
     default:
-      return `${desc.type} index ${desc.index}`;
+      return `${desc.kind} index ${desc.index}`;
   }
 }
 

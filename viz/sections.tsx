@@ -77,7 +77,7 @@ function SectionTable(props: SectionsPartProps) {
             onMouseLeave={() => props.onHover(undefined)}
             onClick={() => props.onClick(sec)}
           >
-            <td>{sec.name ?? sec.type}</td>
+            <td>{sec.name ?? sec.kind}</td>
             <td className='right'>{d3.format(',')(sec.len)}</td>
             <td className='right'>{d3.format('.1%')(sec.len / totalSize)}</td>
           </tr>

@@ -1,12 +1,13 @@
 export * from './sections';
 export * from './shared';
 export * from './type';
+export { Reader } from './reader';
 import { Reader } from './reader';
-import { SectionType } from './sections';
+import { SectionKind } from './sections';
 
 export interface SectionHeader {
   index: number;
-  type: SectionType;
+  kind: SectionKind;
   ofs: number;
   len: number;
 }
@@ -39,22 +40,22 @@ class Parser {
     const len = this.r.readUint();
     const ofs = this.r.ofs;
     this.r.skip(len);
-    const type = [
-      SectionType.custom,
-      SectionType.type,
-      SectionType.import,
-      SectionType.function,
-      SectionType.table,
-      SectionType.memory,
-      SectionType.global,
-      SectionType.export,
-      SectionType.start,
-      SectionType.element,
-      SectionType.code,
-      SectionType.data,
-      SectionType.data_count,
+    const kind = [
+      SectionKind.custom,
+      SectionKind.type,
+      SectionKind.import,
+      SectionKind.function,
+      SectionKind.table,
+      SectionKind.memory,
+      SectionKind.global,
+      SectionKind.export,
+      SectionKind.start,
+      SectionKind.element,
+      SectionKind.code,
+      SectionKind.data,
+      SectionKind.data_count,
     ][id];
-    return { index, type, ofs, len };
+    return { index, kind, ofs, len };
   }
 
   read(): Module {

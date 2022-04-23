@@ -6,7 +6,7 @@ import {
   DescMem,
   DescTable,
   descToString,
-  DescType,
+  DescKind,
   GlobalType,
   readGlobalType,
   readLimits,
@@ -15,7 +15,7 @@ import {
 } from './shared';
 import { FuncType, readFuncType } from './type';
 
-export enum SectionType {
+export enum SectionKind {
   custom = 'custom',
   type = 'type',
   import = 'import',
@@ -96,7 +96,7 @@ export function readTypeSection(r: Reader): FuncType[] {
 export interface Import {
   module: string;
   name: string;
-  desc: DescIndex<DescType.typeidx> | DescTable | DescMem | DescGlobal;
+  desc: DescIndex<DescKind.typeidx> | DescTable | DescMem | DescGlobal;
 }
 
 export function importToString(imp: Import): string {
@@ -111,16 +111,16 @@ export function readImportSection(r: Reader): Import[] {
     let desc: Import['desc'];
     switch (desc8) {
       case 0:
-        desc = { type: DescType.typeidx, index: r.readUint() };
+        desc = { kind: DescKind.typeidx, index: r.readUint() };
         break;
       case 1:
-        desc = { type: DescType.table, table: readTable(r) };
+        desc = { kind: DescKind.table, table: readTable(r) };
         break;
       case 2:
-        desc = { type: DescType.mem, limits: readLimits(r) };
+        desc = { kind: DescKind.mem, limits: readLimits(r) };
         break;
       case 3:
-        desc = { type: DescType.global, globalType: readGlobalType(r) };
+        desc = { kind: DescKind.global, globalType: readGlobalType(r) };
         break;
       default:
         throw new Error(`unhandled import desc type ${desc8.toString(16)}`);
@@ -150,10 +150,10 @@ export function readGlobalSection(r: Reader): Global[] {
 export interface Export {
   name: string;
   desc:
-    | DescIndex<DescType.funcidx>
-    | DescIndex<DescType.tableidx>
-    | DescIndex<DescType.memidx>
-    | DescIndex<DescType.globalidx>;
+    | DescIndex<DescKind.funcidx>
+    | DescIndex<DescKind.tableidx>
+    | DescIndex<DescKind.memidx>
+    | DescIndex<DescKind.globalidx>;
 }
 export function exportToString(exp: Export): string {
   return `${exp.name} (${descToString(exp.desc)})`;
@@ -163,18 +163,18 @@ export function readExportSection(r: Reader): Export[] {
     const name = r.name();
     const desc8 = r.read8();
     let desc: Export['desc'];
-    const type = (
+    const kind = (
       [
-        DescType.funcidx,
-        DescType.tableidx,
-        DescType.memidx,
-        DescType.globalidx,
+        DescKind.funcidx,
+        DescKind.tableidx,
+        DescKind.memidx,
+        DescKind.globalidx,
       ] as const
     )[desc8];
-    if (!type) {
+    if (!kind) {
       throw new Error(`unhandled export desc type ${desc8.toString(16)}`);
     }
-    return { name, desc: { type, index: r.readUint() } };
+    return { name, desc: { kind, index: r.readUint() } };
   });
 }
 

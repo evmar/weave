@@ -17,7 +17,7 @@ import { Reader } from 'wasm/reader';
 import { funcTypeToString } from 'wasm';
 
 interface Highlight {
-  type: 'local';
+  kind: 'local';
   index: number;
 }
 
@@ -117,7 +117,7 @@ export class Instructions extends preact.Component<
         let className: string | undefined;
         if (
           this.props.highlight &&
-          this.props.highlight.type === 'local' &&
+          this.props.highlight.kind === 'local' &&
           this.props.highlight.index === instr.local
         ) {
           className = 'highlight';
@@ -231,7 +231,7 @@ export function Function(props: {
         {funcType.params.map((type, index) => (
           <EditableLocal
             name={localNames.get(index) ?? ''}
-            onHover={() => setHighlight({ type: 'local', index })}
+            onHover={() => setHighlight({ kind: 'local', index })}
             onEdit={(name) => nameLocal(index, name)}
           />
         ))}
@@ -247,7 +247,7 @@ export function Function(props: {
           return (
             <EditableLocal
               name={localNames.get(index) ?? ''}
-              onHover={() => setHighlight({ type: 'local', index })}
+              onHover={() => setHighlight({ kind: 'local', index })}
               onEdit={(name) => nameLocal(index, name)}
             />
           );

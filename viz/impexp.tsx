@@ -14,15 +14,15 @@ function ImpExpDesc(props: {
   desc: wasm.Import['desc'] | wasm.Export['desc'];
   index?: number;
 }) {
-  switch (props.desc.type) {
-    case wasm.DescType.typeidx:
+  switch (props.desc.kind) {
+    case wasm.DescKind.typeidx:
       return (
         <div>
           function {props.index}:{' '}
           <FunctionType type={props.module.types[props.desc.index]} />
         </div>
       );
-    case wasm.DescType.funcidx:
+    case wasm.DescKind.funcidx:
       return (
         <div>
           function {props.desc.index}:{' '}
