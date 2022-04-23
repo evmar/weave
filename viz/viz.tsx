@@ -25,6 +25,7 @@ export interface ParsedModule {
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
   functions: Indexed<Function>[];
+  tables: Indexed<wasm.TableType>[];
   names?: wasm.NameSection;
   data: Indexed<wasm.DataSectionData>[];
   globals: Indexed<wasm.Global>[];
@@ -227,6 +228,23 @@ function FunctionSection(props: {
   );
 }
 
+function TableSection(props: { module: ParsedModule }) {
+  const columns: Column<Indexed<wasm.TableType>>[] = [
+    { name: 'index', className: 'right', data: (table) => table.index },
+    { name: 'limits', data: (table) => wasm.limitsToString(table.limits) },
+    { name: 'type', data: (table) => table.element },
+  ];
+  return (
+    <Screen module={props.module} title='"table" section'>
+      <p>
+        Collections of opaque references. (Wasm 1.0 only allowed a single
+        table.)
+      </p>
+      <Table columns={columns}>{props.module.tables}</Table>
+    </Screen>
+  );
+}
+
 interface AppProps {
   module: ParsedModule;
 }
@@ -301,6 +319,8 @@ class App extends preact.Component<AppProps, AppState> {
           return <Imports module={module} />;
         case wasm.SectionType.function:
           return <FunctionSection module={module} onClick={this.onFuncClick} />;
+        case wasm.SectionType.table:
+          return <TableSection module={module} />;
         case wasm.SectionType.global:
           return <GlobalSection module={module} />;
         case wasm.SectionType.export:
@@ -381,6 +401,7 @@ async function main() {
     sections: wasmModule.sections.map((sec, index) => ({ ...sec, index })),
     types: [],
     imports: [],
+    tables: [],
     exports: [],
     functions: [],
     data: [],
@@ -449,6 +470,11 @@ async function main() {
               len: 0,
             };
           });
+        break;
+      case wasm.SectionType.table:
+        module.tables = wasm
+          .readTableSection(wasmModule.getReader(section))
+          .map((table, i) => ({ ...table, index: i }));
         break;
       case wasm.SectionType.export:
         module.exports = wasm.readExportSection(wasmModule.getReader(section));

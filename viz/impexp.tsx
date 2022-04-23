@@ -12,13 +12,23 @@ import { Column, Table } from './table';
 function ImpExpDesc(props: {
   module: ParsedModule;
   desc: wasm.Import['desc'] | wasm.Export['desc'];
-  index?: number,
+  index?: number;
 }) {
   switch (props.desc.type) {
     case wasm.DescType.typeidx:
-      return <div>function {props.index}: <FunctionType type={props.module.types[props.desc.index]} /></div>;
+      return (
+        <div>
+          function {props.index}:{' '}
+          <FunctionType type={props.module.types[props.desc.index]} />
+        </div>
+      );
     case wasm.DescType.funcidx:
-      return <div>function {props.desc.index}: <FunctionRef module={props.module} index={props.desc.index} /></div>;
+      return (
+        <div>
+          function {props.desc.index}:{' '}
+          <FunctionRef module={props.module} index={props.desc.index} />
+        </div>
+      );
     default:
       return <div>{wasm.descToString(props.desc)}</div>;
   }
@@ -38,7 +48,9 @@ export function Imports(props: { module: ParsedModule }) {
     {
       name: 'desc',
       cellClass: 'nowrap',
-      data: (imp) => <ImpExpDesc module={props.module} index={imp.index} desc={imp.desc} />,
+      data: (imp) => (
+        <ImpExpDesc module={props.module} index={imp.index} desc={imp.desc} />
+      ),
     },
   ];
   return (

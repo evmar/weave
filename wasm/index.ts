@@ -120,12 +120,16 @@ export interface DescGlobal {
   globalType: GlobalType;
 }
 
+export function limitsToString(limits: Limits) {
+  return `min=${limits.minimum} max=${limits.maximum ?? 'none'}`;
+}
+
 export function descToString(desc: Import['desc'] | Export['desc']): string {
   switch (desc.type) {
     case DescType.table:
       return `table ${desc.table}`;
     case DescType.mem:
-      return `mem min=${desc.limits.minimum} max=${desc.limits.maximum ?? 'none'}`;
+      return `mem ${limitsToString(desc.limits)}`;
     case DescType.global:
       return `mem ${desc}`;
     default:
@@ -219,6 +223,10 @@ export function readImportSection(r: Reader): Import[] {
     }
     return { module, name, desc };
   });
+}
+
+export function readTableSection(r: Reader): TableType[] {
+  return r.vec(() => readTable(r));
 }
 
 export interface Export {

@@ -99,7 +99,8 @@ export function DataHex(props: {
         <b>size</b>: {d3.format(',')(props.data.init.byteLength)} bytes
       </div>
       <div>
-        <b>init</b>: <Instructions module={props.module} instrs={props.data.offset!} />
+        <b>init</b>:{' '}
+        <Instructions module={props.module} instrs={props.data.offset!} />
       </div>
       <pre>{rows}</pre>
     </Screen>
