@@ -94,14 +94,12 @@ export function DataHex(props: {
   }
 
   return (
-    <Screen module={props.module} title='data viewer'>
+    <Screen module={props.module} title={`data[${props.data.index}]`}>
       <div>
-        <b>data[{props.data.index}]</b>:{' '}
-        {d3.format(',')(props.data.init.byteLength)} bytes
+        <b>size</b>: {d3.format(',')(props.data.init.byteLength)} bytes
       </div>
       <div>
-        <b>init</b>:{' '}
-        <Instructions module={props.module} instrs={props.data.offset!} />
+        <b>init</b>: <Instructions module={props.module} instrs={props.data.offset!} />
       </div>
       <pre>{rows}</pre>
     </Screen>

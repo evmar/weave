@@ -125,7 +125,7 @@ export function descToString(desc: Import['desc'] | Export['desc']): string {
     case DescType.table:
       return `table ${desc.table}`;
     case DescType.mem:
-      return `mem ${desc.limits}`;
+      return `mem min=${desc.limits.minimum} max=${desc.limits.maximum ?? 'none'}`;
     case DescType.global:
       return `mem ${desc}`;
     default:
