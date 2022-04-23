@@ -181,6 +181,18 @@ export class Instructions extends preact.Component<
   }
 }
 
+function EditableLocal(props: {
+  name: string;
+  onHover: () => void;
+  onEdit: (newText: string) => void;
+}) {
+  return (
+    <span className='flex-container' onMouseOver={props.onHover}>
+      <InlineEdit onEdit={props.onEdit}>{props.name}</InlineEdit>
+    </span>
+  );
+}
+
 export function Function(props: {
   module: ParsedModule;
   func: Indexed<Function>;
@@ -189,12 +201,12 @@ export function Function(props: {
   const funcBody = wasmCode.readFunction(
     new Reader(new DataView(props.module.bytes, props.func.ofs, props.func.len))
   );
-  const type = props.module.types[props.func.typeidx];
+  const funcType = props.module.types[props.func.typeidx];
   const [localNames, setLocalNames] = hooks.useState<Map<number, string>>(
     () => {
       const localNames = new Map();
       let index = 0;
-      for (const param of type.params) {
+      for (const param of funcType.params) {
         localNames.set(index, `param${index}`);
         index++;
       }
@@ -214,23 +226,32 @@ export function Function(props: {
   return (
     <Screen module={props.module} title={`function ${props.func.index}`}>
       <div>name: {props.name}</div>
-      <div>params: ({type.params.map((p) => p).join(', ')})</div>
-      {type.result.length > 0 && (
-        <div>result: ({type.result.map((p) => p).join(', ')})</div>
+      <div>
+        params: (
+        {funcType.params.map((type, index) => (
+          <EditableLocal
+            name={localNames.get(index) ?? ''}
+            onHover={() => setHighlight({ type: 'local', index })}
+            onEdit={(name) => nameLocal(index, name)}
+          />
+        ))}
+        )
+      </div>
+      {funcType.result.length > 0 && (
+        <div>result: ({funcType.result.map((p) => p).join(', ')})</div>
       )}
       <div>
         locals:{' '}
-        {[...type.params, ...funcBody.locals].map((type, i) => (
-          <div
-            className='flex-container'
-            onMouseOver={() => setHighlight({ type: 'local', index: i })}
-          >
-            {type}&nbsp;
-            <InlineEdit onEdit={(name) => nameLocal(i, name)}>
-              {localNames.get(i) ?? ''}
-            </InlineEdit>
-          </div>
-        ))}
+        {funcBody.locals.map((type, i) => {
+          const index = i + funcType.params.length;
+          return (
+            <EditableLocal
+              name={localNames.get(index) ?? ''}
+              onHover={() => setHighlight({ type: 'local', index })}
+              onEdit={(name) => nameLocal(index, name)}
+            />
+          );
+        })}
       </div>
       <Instructions
         module={props.module}
