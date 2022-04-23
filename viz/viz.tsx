@@ -394,11 +394,11 @@ class App extends preact.Component<AppProps, AppState> {
 async function main() {
   const name = 't.wasm';
   const wasmBytes = await (await fetch('t.wasm')).arrayBuffer();
-  const wasmModule = wasm.read(new DataView(wasmBytes));
+  const sections = wasm.read(wasmBytes);
   const module: ParsedModule = {
     name,
     bytes: wasmBytes,
-    sections: wasmModule.sections.map((sec, index) => ({ ...sec, index })),
+    sections: sections.map((sec, index) => ({ ...sec, index })),
     types: [],
     imports: [],
     tables: [],
@@ -416,13 +416,13 @@ async function main() {
     switch (section.kind) {
       case wasm.SectionKind.type:
         module.types = wasm
-          .readTypeSection(wasmModule.getReader(section))
+          .readTypeSection(wasm.getSectionReader(wasmBytes, section))
           .map((t, i) => {
             return { ...t, index: i };
           });
         break;
       case wasm.SectionKind.custom: {
-        const reader = wasmModule.getReader(section);
+        const reader = wasm.getSectionReader(wasmBytes, section);
         const custom = wasm.readCustomSection(reader);
         switch (custom.name) {
           case 'name':
@@ -448,7 +448,7 @@ async function main() {
       }
       case wasm.SectionKind.import:
         module.imports = wasm
-          .readImportSection(wasmModule.getReader(section))
+          .readImportSection(wasm.getSectionReader(wasmBytes, section))
           .map((imp) => {
             switch (imp.desc.kind) {
               case wasm.DescKind.typeidx:
@@ -461,7 +461,7 @@ async function main() {
         break;
       case wasm.SectionKind.function:
         module.functions = wasm
-          .readFunctionSection(wasmModule.getReader(section))
+          .readFunctionSection(wasm.getSectionReader(wasmBytes, section))
           .map((typeidx, i) => {
             return {
               index: importedFunctionCount + i,
@@ -473,11 +473,11 @@ async function main() {
         break;
       case wasm.SectionKind.table:
         module.tables = wasm
-          .readTableSection(wasmModule.getReader(section))
+          .readTableSection(wasm.getSectionReader(wasmBytes, section))
           .map((table, i) => ({ ...table, index: i }));
         break;
       case wasm.SectionKind.export:
-        module.exports = wasm.readExportSection(wasmModule.getReader(section));
+        module.exports = wasm.readExportSection(wasm.getSectionReader(wasmBytes, section));
         for (const exp of module.exports) {
           if (exp.desc.kind == wasm.DescKind.funcidx) {
             module.functionNames.set(exp.desc.index, exp.name);
@@ -485,7 +485,7 @@ async function main() {
         }
         break;
       case wasm.SectionKind.code: {
-        wasmCode.read(wasmModule.getReader(section)).forEach((func, i) => {
+        wasmCode.read(wasm.getSectionReader(wasmBytes, section)).forEach((func, i) => {
           module.functions[i].ofs = func.ofs;
           module.functions[i].len = func.len;
         });
@@ -493,7 +493,7 @@ async function main() {
       }
       case wasm.SectionKind.data:
         module.data = wasm
-          .readDataSection(wasmModule.getReader(section))
+          .readDataSection(wasm.getSectionReader(wasmBytes, section))
           .map((data, index) => ({ ...data, index }));
         break;
       case wasm.SectionKind.global: {
@@ -501,7 +501,7 @@ async function main() {
           (imp) => imp.desc.kind === wasm.DescKind.global
         ).length;
         module.globals = wasm
-          .readGlobalSection(wasmModule.getReader(section))
+          .readGlobalSection(wasm.getSectionReader(wasmBytes, section))
           .map((g, i) => ({ ...g, index: i + offset }));
         break;
       }
