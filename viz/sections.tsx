@@ -101,7 +101,7 @@ export class Sections extends preact.Component<SectionsProps, SectionsState> {
   };
   render(props: SectionsProps, state: SectionsState) {
     return (
-      <Screen module={props.module} title='section overview'>
+      <Screen module={props.module} title='sections'>
         <div style='display: flex; align-items: center; gap: 2ex'>
           <Pie {...props} {...state} onHover={this.onSectionHover} />
           <SectionTable {...props} {...state} onHover={this.onSectionHover} />

@@ -88,10 +88,9 @@ export function Screen(props: {
   return (
     <>
       <header>
-        weave &gt; <a href='#'>{props.module.name}</a> &gt;
+        <h1><a href='#'>weave</a> &gt; {props.title}</h1>
       </header>
       <main>
-        <h2>{props.title}</h2>
         {props.children}
       </main>
     </>
