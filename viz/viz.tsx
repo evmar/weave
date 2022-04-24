@@ -88,11 +88,11 @@ export function Screen(props: {
   return (
     <>
       <header>
-        <h1><a href='#'>weave</a> &gt; {props.title}</h1>
+        <h1>
+          <a href='#'>weave</a> &gt; {props.title}
+        </h1>
       </header>
-      <main>
-        {props.children}
-      </main>
+      <main>{props.children}</main>
     </>
   );
 }
@@ -479,7 +479,7 @@ async function main() {
           .readTableSection(wasm.getSectionReader(wasmBytes, section))
           .map((table, i) => ({ ...table, index: i }));
         break;
-      case wasm.SectionKind.global: 
+      case wasm.SectionKind.global:
         module.globals = wasm
           .readGlobalSection(wasm.getSectionReader(wasmBytes, section))
           .map((global, i) => ({ ...global, index: importedGlobalCount + i }));
