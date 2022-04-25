@@ -17,7 +17,6 @@ export interface Function {
   len: number;
 }
 export interface ParsedModule {
-  name: string;
   bytes: ArrayBuffer;
   sections: (wasm.SectionHeader & { name?: string })[];
 
@@ -390,12 +389,9 @@ class App extends preact.Component<AppProps, AppState> {
   }
 }
 
-async function main() {
-  const name = 't.wasm';
-  const wasmBytes = await (await fetch('t.wasm')).arrayBuffer();
+function load(wasmBytes: ArrayBuffer) {
   const sections = wasm.read(wasmBytes);
   const module: ParsedModule = {
-    name,
     bytes: wasmBytes,
     sections: sections.map((sec, index) => ({ ...sec, index })),
     types: [],
@@ -510,6 +506,45 @@ async function main() {
     }
   }
   preact.render(<App module={module}></App>, document.body);
+}
+
+/**
+ * Allow drag'n'drop of a wasm file to load it.
+ * This function took me an hour of fiddling with the DOM API to figure out.
+ * The two key tricks are preventDefault on dragover and checking relatedTarget
+ * on dragleave.
+ */
+function addDragHandlers() {
+  window.ondragenter = (ev) => {
+    document.body.style.opacity = '0.5';
+    ev.preventDefault();
+  };
+  window.ondragleave = (ev) => {
+    if (ev.relatedTarget) {
+      // https://stackoverflow.com/questions/3144881/how-do-i-detect-a-html5-drag-event-entering-and-leaving-the-window-like-gmail-d
+      return;
+    }
+    document.body.style.opacity = '';
+    ev.preventDefault();
+  };
+  window.ondragover = (ev) => {
+    ev.preventDefault();
+  };
+  window.ondrop = async (ev) => {
+    document.body.style.opacity = '';
+    if (ev.dataTransfer?.items.length !== 1) return;
+    const file = ev.dataTransfer.items[0].getAsFile();
+    if (!file) return;
+    ev.preventDefault();
+    load(await file.arrayBuffer());
+  };
+}
+
+async function main() {
+  const name = 't.wasm';
+  const wasmBytes = await (await fetch('t.wasm')).arrayBuffer();
+  load(wasmBytes);
+  addDragHandlers();
 }
 
 main();
