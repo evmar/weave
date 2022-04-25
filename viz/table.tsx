@@ -1,7 +1,6 @@
-import { sort } from 'd3';
 import * as preact from 'preact';
 import { h } from 'preact';
-import * as hooks from 'preact/hooks';
+import { memo } from './memo';
 
 export interface Column<T> {
   name: string;
@@ -11,18 +10,33 @@ export interface Column<T> {
   data: (row: T) => preact.ComponentChild;
 }
 
-export interface TableProps<T> {
+interface Props<T> {
   columns: Column<T>[];
-  children: T[];
   onClick?: (row: T) => void;
+  children: T[];
 }
 
-export function Table<T>(props: TableProps<T>) {
-  const [sortBy, setSortBy] = hooks.useState<undefined | Column<T>>(undefined);
-  const [expanded, setExpanded] = hooks.useState(false);
+interface State<T> {
+  sortBy?: Column<T>;
+  expanded: boolean;
+}
 
-  const rows = hooks.useMemo(() => {
-    let rows = [...props.children];
+export class Table<T> extends preact.Component<Props<T>, State<T>> {
+  state: State<T> = { expanded: false };
+
+  shouldComponentUpdate(
+    nextProps: Readonly<Props<T>>,
+    nextState: Readonly<State<T>>
+  ): boolean {
+    return this.props !== nextProps || this.state !== nextState;
+  }
+
+  rows = memo(function (
+    sortBy: Column<T> | undefined,
+    expanded: boolean,
+    rows: T[]
+  ) {
+    rows = [...rows];
     if (sortBy && sortBy.sort) {
       rows.sort(sortBy.sort);
     }
@@ -30,53 +44,64 @@ export function Table<T>(props: TableProps<T>) {
       rows = rows.slice(0, 50);
     }
     return rows;
-  }, [props.children, sortBy, expanded]);
+  });
 
-  return (
-    <table cellSpacing='0' cellPadding='0'>
-      <thead>
-        <tr>
-          {props.columns.map((col) => {
-            const canSort = col.sort !== undefined;
+  render() {
+    const rows = this.rows(
+      this.state.sortBy,
+      this.state.expanded,
+      this.props.children
+    );
+    return (
+      <table cellSpacing='0' cellPadding='0'>
+        <thead>
+          <tr>
+            {this.props.columns.map((col) => {
+              const canSort = col.sort !== undefined;
+              return (
+                <th
+                  className={
+                    (col.className ?? '') + (canSort ? ' pointer' : '')
+                  }
+                  onClick={
+                    canSort ? () => this.setState({ sortBy: col }) : undefined
+                  }
+                >
+                  {col.name}
+                  {this.state.sortBy === col && ' \u2193'}
+                </th>
+              );
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => {
             return (
-              <th
-                className={(col.className ?? '') + (canSort ? ' pointer' : '')}
-                onClick={canSort ? () => setSortBy(col) : undefined}
+              <tr
+                className={this.props.onClick ? 'hover pointer' : ''}
+                onClick={this.props.onClick && (() => this.props.onClick!(row))}
               >
-                {col.name}
-                {sortBy === col && ' \u2193'}
-              </th>
+                {this.props.columns.map((col) => {
+                  return (
+                    <td className={col.className + ' ' + col.cellClass}>
+                      {col.data(row)}
+                    </td>
+                  );
+                })}
+              </tr>
             );
           })}
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => {
-          return (
-            <tr
-              className={props.onClick ? 'hover pointer' : ''}
-              onClick={props.onClick && (() => props.onClick!(row))}
-            >
-              {props.columns.map((col) => {
-                return (
-                  <td className={col.className + ' ' + col.cellClass}>
-                    {col.data(row)}
-                  </td>
-                );
-              })}
+          {rows.length < this.props.children.length && (
+            <tr>
+              <td colSpan={this.props.columns.length}>
+                <button onClick={() => this.setState({ expanded: true })}>
+                  show {this.props.children.length - rows.length} more
+                </button>
+              </td>
             </tr>
-          );
-        })}
-        {rows.length < props.children.length && (
-          <tr>
-            <td colSpan={props.columns.length}>
-              <button onClick={() => setExpanded(true)}>
-                show {props.children.length - rows.length} more
-              </button>
-            </td>
-          </tr>
-        )}
-      </tbody>
-    </table>
-  );
+          )}
+        </tbody>
+      </table>
+    );
+  }
 }
