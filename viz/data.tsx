@@ -106,13 +106,18 @@ export function DataHex(props: {
 }) {
   return (
     <Screen module={props.module} title={`data[${props.data.index}]`}>
-      <div>
-        <b>size</b>: {d3.format(',')(props.data.init.byteLength)} bytes
-      </div>
-      <div>
-        <b>init</b>:{' '}
-        <Instructions module={props.module} instrs={props.data.offset!} />
-      </div>
+      <table>
+        <tr>
+          <th className='right'>size</th>
+          <td>{d3.format(',')(props.data.init.byteLength)} bytes</td>
+        </tr>
+        <tr>
+          <th className='right'>init</th>
+          <td>
+            <Instructions module={props.module} instrs={props.data.offset!} />
+          </td>
+        </tr>
+      </table>
       <HexView data={props.data.init} />
     </Screen>
   );

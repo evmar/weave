@@ -225,34 +225,55 @@ export function Function(props: {
   );
   return (
     <Screen module={props.module} title={`function ${props.func.index}`}>
-      <div>name: {props.name}</div>
-      <div>
-        params: (
-        {funcType.params.map((type, index) => (
-          <EditableLocal
-            name={localNames.get(index) ?? ''}
-            onHover={() => setHighlight({ kind: 'local', index })}
-            onEdit={(name) => nameLocal(index, name)}
-          />
-        ))}
-        )
-      </div>
-      {funcType.result.length > 0 && (
-        <div>result: ({funcType.result.map((p) => p).join(', ')})</div>
-      )}
-      <div>
-        locals:{' '}
-        {funcBody.locals.map((type, i) => {
-          const index = i + funcType.params.length;
-          return (
-            <EditableLocal
-              name={localNames.get(index) ?? ''}
-              onHover={() => setHighlight({ kind: 'local', index })}
-              onEdit={(name) => nameLocal(index, name)}
-            />
-          );
-        })}
-      </div>
+      <table>
+        <tr>
+          <th className='right'>name</th>
+          <td>{props.name}</td>
+        </tr>
+        {funcType.params.length > 0 && (
+          <tr>
+            <th className='right'>params</th>
+            <td>
+              {funcType.params.map((type, index) => (
+                <div>
+                  {type}{' '}
+                  <EditableLocal
+                    name={localNames.get(index) ?? ''}
+                    onHover={() => setHighlight({ kind: 'local', index })}
+                    onEdit={(name) => nameLocal(index, name)}
+                  />
+                </div>
+              ))}
+            </td>
+          </tr>
+        )}
+        {funcType.result.length > 0 && (
+          <tr>
+            <th className='right'>result</th>
+            <td>{funcType.result.map((p) => p).join(', ')}</td>
+          </tr>
+        )}
+        {funcBody.locals.length > 0 && (
+          <tr>
+            <th className='right'>locals</th>
+            <td>
+              {funcBody.locals.map((type, i) => {
+                const index = i + funcType.params.length;
+                return (
+                  <div>
+                    {type}{' '}
+                    <EditableLocal
+                      name={localNames.get(index) ?? ''}
+                      onHover={() => setHighlight({ kind: 'local', index })}
+                      onEdit={(name) => nameLocal(index, name)}
+                    />
+                  </div>
+                );
+              })}
+            </td>
+          </tr>
+        )}
+      </table>
       <Instructions
         module={props.module}
         localNames={localNames}
