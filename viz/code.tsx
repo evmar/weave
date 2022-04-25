@@ -235,8 +235,8 @@ export function Function(props: {
             <th className='right'>params</th>
             <td>
               {funcType.params.map((type, index) => (
-                <div>
-                  {type}{' '}
+                <div class='flex-container'>
+                  {type}&nbsp;
                   <EditableLocal
                     name={localNames.get(index) ?? ''}
                     onHover={() => setHighlight({ kind: 'local', index })}
@@ -260,8 +260,8 @@ export function Function(props: {
               {funcBody.locals.map((type, i) => {
                 const index = i + funcType.params.length;
                 return (
-                  <div>
-                    {type}{' '}
+                  <div class='flex-container'>
+                    {type}&nbsp;
                     <EditableLocal
                       name={localNames.get(index) ?? ''}
                       onHover={() => setHighlight({ kind: 'local', index })}
