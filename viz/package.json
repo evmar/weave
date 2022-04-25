@@ -5,6 +5,7 @@
   "main": "viz.js",
   "scripts": {
     "serve": "esbuild --bundle --target=es2020 --sourcemap --serve=:7761 --servedir=. --outfile=bundle.js viz.tsx",
+    "bundle": "esbuild --bundle --target=es2020 --sourcemap --outfile=bundle.js viz.tsx",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
