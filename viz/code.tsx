@@ -16,33 +16,31 @@ import { Column, Table } from './table';
 import { Reader } from 'wasm/reader';
 import { funcTypeToString } from 'wasm';
 
-interface Highlight {
-  kind: 'local';
-  index: number;
-}
-
-function LocalRef(props: {
-  className?: string;
-  names?: Map<number, string>;
-  index: number;
+function XRef(props: {
+  id: string;
+  names?: Map<string, string>;
+  highlight?: string;
+  onHighlight: (id: string) => void;
 }) {
-  const name = props.names?.get(props.index);
-  if (name) {
-    return (
-      <span className={props.className} title={`locals[${props.index}]`}>
-        ${name}
-      </span>
-    );
-  }
-  return <span className={props.className}>locals[{props.index}]</span>;
+  const name = props.names?.get(props.id) ?? props.id;
+  return (
+    <span
+      className={props.highlight === props.id ? 'highlight' : undefined}
+      title={props.id}
+      onMouseEnter={() => props.onHighlight(props.id)}
+    >
+      {name}
+    </span>
+  );
 }
 
 export namespace Instructions {
   export interface Props {
     module: ParsedModule;
-    localNames?: Map<number, string>;
+    localNames?: Map<string, string>;
     instrs: wasmCode.Instruction[];
-    highlight?: Highlight;
+    highlight?: string;
+    onHighlight: (id: string) => void;
   }
   export interface State {
     expanded: boolean;
@@ -54,6 +52,9 @@ export class Instructions extends preact.Component<
 > {
   state = { expanded: false };
 
+  labelStack: number[] = [];
+  nextLabel = 0;
+
   private expand = () => {
     this.setState({ expanded: true });
   };
@@ -61,6 +62,9 @@ export class Instructions extends preact.Component<
   render() {
     const lines = [];
     let expand;
+    this.labelStack = [];
+    this.nextLabel = 0;
+    this.addLabel();
     for (const line of this.renderInstrs(this.props.instrs)) {
       lines.push(line);
       if (lines.length >= 50 && !this.state.expanded) {
@@ -82,14 +86,49 @@ export class Instructions extends preact.Component<
     );
   }
 
+  private addLabel(): number {
+    const label = this.nextLabel++;
+    this.labelStack.push(label);
+    return label;
+  }
+
+  private renderLabel(label: number): preact.ComponentChild {
+    return (
+      <XRef
+        id={`label${label}`}
+        highlight={this.props.highlight}
+        onHighlight={this.props.onHighlight}
+      />
+    );
+  }
+
   private *renderInstr(
     instr: wasmCode.Instruction,
     indent = 0
   ): Generator<preact.ComponentChild> {
     switch (instr.op) {
-      case wasmCode.Instr.block:
-        // Render nothing.
+      case wasmCode.Instr.block: {
+        const label = this.addLabel();
+        yield* this.renderInstrs(instr.body, indent);
+        yield this.renderLabel(label);
+        this.labelStack.pop();
         break;
+      }
+
+      case wasmCode.Instr.loop: {
+        const label = this.addLabel();
+        yield (
+          <div>
+            {'  '.repeat(indent)}
+            loop
+          </div>
+        );
+        yield* this.renderInstrs(instr.body, indent + 1);
+        yield this.renderLabel(label);
+        this.labelStack.pop();
+        break;
+      }
+
       case wasmCode.Instr.call:
         yield (
           <div>
@@ -113,28 +152,57 @@ export class Instructions extends preact.Component<
 
       case wasmCode.Instr.local_get:
       case wasmCode.Instr.local_set:
-      case wasmCode.Instr.local_tee: {
-        let className: string | undefined;
-        if (
-          this.props.highlight &&
-          this.props.highlight.kind === 'local' &&
-          this.props.highlight.index === instr.local
-        ) {
-          className = 'highlight';
-        }
+      case wasmCode.Instr.local_tee:
         yield (
           <div>
             {'  '.repeat(indent)}
             {instr.op}{' '}
-            <LocalRef
-              className={className}
+            <XRef
+              id={`local${instr.local}`}
               names={this.props.localNames}
-              index={instr.local}
+              highlight={this.props.highlight}
+              onHighlight={this.props.onHighlight}
             />
           </div>
         );
         break;
+
+      case wasmCode.Instr.br:
+      case wasmCode.Instr.br_if: {
+        const target = instr.label;
+        yield (
+          <div>
+            {'  '.repeat(indent)}
+            {instr.op}{' '}
+            {this.renderLabel(
+              this.labelStack[this.labelStack.length - target - 1]
+            )}
+            (target {target})
+          </div>
+        );
+        break;
       }
+      case wasmCode.Instr.br_table:
+        yield (
+          <div>
+            {'  '.repeat(indent)}
+            {instr.op}{' '}
+            {instr.labels.map((target, i) => {
+              const label = this.renderLabel(
+                this.labelStack[this.labelStack.length - target - 1]
+              );
+              return (
+                <span>
+                  {i}=&gt;{label}{' '}
+                </span>
+              );
+            })}{' '}
+            else=&gt;
+            {this.labelStack[this.labelStack.length - instr.default - 1]}
+          </div>
+        );
+        break;
+
       default:
         const toPrint = [instr.op.toString()];
         for (const [key, val] of Object.entries(instr)) {
@@ -164,12 +232,6 @@ export class Instructions extends preact.Component<
           );
           yield* this.renderInstrs(instr.else, indent + 1);
         }
-        break;
-      case wasmCode.Instr.block:
-        yield* this.renderInstrs(instr.body, indent);
-        break;
-      case wasmCode.Instr.loop:
-        yield* this.renderInstrs(instr.body, indent + 1);
         break;
     }
   }
@@ -202,25 +264,25 @@ export function Function(props: {
     new Reader(new DataView(props.module.bytes, props.func.ofs, props.func.len))
   );
   const funcType = props.module.types[props.func.typeidx];
-  const [localNames, setLocalNames] = hooks.useState<Map<number, string>>(
+  const [localNames, setLocalNames] = hooks.useState<Map<string, string>>(
     () => {
-      const localNames = new Map();
+      const localNames = new Map<string, string>();
       let index = 0;
       for (const param of funcType.params) {
-        localNames.set(index, `param${index}`);
+        localNames.set(`local${index}`, `param${index}`);
         index++;
       }
       for (const local of funcBody.locals) {
-        localNames.set(index, `local${index}`);
+        localNames.set(`local${index}`, `local${index}`);
         index++;
       }
       return localNames;
     }
   );
-  const nameLocal = (index: number, name: string) => {
-    setLocalNames(new Map(localNames.set(index, name)));
+  const nameLocal = (id: string, name: string) => {
+    setLocalNames(new Map(localNames.set(id, name)));
   };
-  const [highlight, setHighlight] = hooks.useState<Highlight | undefined>(
+  const [highlight, setHighlight] = hooks.useState<string | undefined>(
     undefined
   );
   return (
@@ -234,16 +296,19 @@ export function Function(props: {
           <tr>
             <th className='right'>params</th>
             <td>
-              {funcType.params.map((type, index) => (
-                <div class='flex-container'>
-                  {type}&nbsp;
-                  <EditableLocal
-                    name={localNames.get(index) ?? ''}
-                    onHover={() => setHighlight({ kind: 'local', index })}
-                    onEdit={(name) => nameLocal(index, name)}
-                  />
-                </div>
-              ))}
+              {funcType.params.map((type, index) => {
+                const id = `local${index}`;
+                return (
+                  <div class='flex-container'>
+                    {type}&nbsp;
+                    <EditableLocal
+                      name={localNames.get(id) ?? ''}
+                      onHover={() => setHighlight(id)}
+                      onEdit={(name) => nameLocal(id, name)}
+                    />
+                  </div>
+                );
+              })}
             </td>
           </tr>
         )}
@@ -259,13 +324,14 @@ export function Function(props: {
             <td>
               {funcBody.locals.map((type, i) => {
                 const index = i + funcType.params.length;
+                const id = `local${index}`;
                 return (
                   <div class='flex-container'>
                     {type}&nbsp;
                     <EditableLocal
-                      name={localNames.get(index) ?? ''}
-                      onHover={() => setHighlight({ kind: 'local', index })}
-                      onEdit={(name) => nameLocal(index, name)}
+                      name={localNames.get(id) ?? ''}
+                      onHover={() => setHighlight(id)}
+                      onEdit={(name) => nameLocal(id, name)}
                     />
                   </div>
                 );
@@ -279,6 +345,7 @@ export function Function(props: {
         localNames={localNames}
         instrs={funcBody.body}
         highlight={highlight}
+        onHighlight={setHighlight}
       />
     </Screen>
   );
