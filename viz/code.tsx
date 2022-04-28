@@ -80,7 +80,7 @@ export class Instructions extends preact.Component<
 
     return (
       <>
-        <pre style='white-space: pre-wrap'>{lines}</pre>
+        <pre class='code'>{lines}</pre>
         {expand}
       </>
     );
@@ -110,7 +110,7 @@ export class Instructions extends preact.Component<
       case wasmCode.Instr.block: {
         const label = this.addLabel();
         yield* this.renderInstrs(instr.body, indent);
-        yield this.renderLabel(label);
+        yield <div class='label'>{this.renderLabel(label)}:</div>;
         this.labelStack.pop();
         break;
       }
@@ -156,7 +156,7 @@ export class Instructions extends preact.Component<
         yield (
           <div>
             {'  '.repeat(indent)}
-            {instr.op}{' '}
+            {instr.op} $
             <XRef
               id={`local${instr.local}`}
               names={this.props.localNames}
@@ -177,7 +177,6 @@ export class Instructions extends preact.Component<
             {this.renderLabel(
               this.labelStack[this.labelStack.length - target - 1]
             )}
-            (target {target})
           </div>
         );
         break;
@@ -198,7 +197,9 @@ export class Instructions extends preact.Component<
               );
             })}{' '}
             else=&gt;
-            {this.labelStack[this.labelStack.length - instr.default - 1]}
+            {this.renderLabel(
+              this.labelStack[this.labelStack.length - instr.default - 1]
+            )}
           </div>
         );
         break;
