@@ -20,12 +20,12 @@ export interface ParsedModule {
   bytes: ArrayBuffer;
   sections: (wasm.SectionHeader & { name?: string })[];
 
+  names?: wasm.NameSection;
   types: wasm.FuncType[];
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
   functions: Indexed<Function>[];
   tables: Indexed<wasm.TableType>[];
-  names?: wasm.NameSection;
   data: Indexed<wasm.DataSectionData>[];
   globals: Indexed<wasm.Global>[];
 
@@ -98,6 +98,39 @@ export function Screen(props: {
 
 export function FunctionType(props: { type: wasm.FuncType }) {
   return <code>{wasm.funcTypeToString(props.type)}</code>;
+}
+
+function NamesSection(props: { module: ParsedModule }) {
+  const sec = props.module.names!;
+  return (
+    <Screen module={props.module} title='"name" section'>
+      <p>
+        Names for objects found in the file, typically for debugging purposes.
+      </p>
+      <table>
+        <tr>
+          <th className='right'>module name</th>
+          <td>{sec.moduleName ?? <i>none</i>}</td>
+        </tr>
+        <tr>
+          <th className='right'>local names</th>
+          <td>{sec.localNames ? sec.localNames.size : <i>none</i>}</td>
+        </tr>
+        <tr>
+          <th className='right'>function names</th>
+          <td>{sec.functionNames ? sec.functionNames.size : <i>none</i>}</td>
+        </tr>
+        <tr>
+          <th className='right'>global names</th>
+          <td>{sec.globalNames ? sec.globalNames.size : <i>none</i>}</td>
+        </tr>
+        <tr>
+          <th className='right'>data names</th>
+          <td>{sec.dataNames ? sec.dataNames.size : <i>none</i>}</td>
+        </tr>
+      </table>
+    </Screen>
+  );
 }
 
 function TypeSection(props: { module: ParsedModule }) {
@@ -345,11 +378,7 @@ class App extends preact.Component<AppProps, AppState> {
           // Note: be sure to add key= here if we end up rendering multiple custom sections
           // using the same component.
           if (this.state.section.name === 'name') {
-            return (
-              <div>
-                (gathered name data is displayed inline in other sections)
-              </div>
-            );
+            return <NamesSection module={module} />;
           }
         // fall through
         default:
@@ -417,6 +446,7 @@ function load(wasmBytes: ArrayBuffer) {
           case 'name':
             section.name = 'name';
             const names = wasm.readNameSection(reader);
+            module.names = names;
             if (names.functionNames) {
               for (const [idx, name] of names.functionNames) {
                 if (module.functionNames.has(idx)) {

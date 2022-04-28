@@ -44,6 +44,7 @@ export function readCustomSection(r: Reader): CustomSection {
 export interface NameSection {
   moduleName?: string;
   functionNames?: Map<number, string>;
+  localNames?: Map<number, Map<number, string>>;
   globalNames?: Map<number, string>;
   dataNames?: Map<number, string>;
 }
@@ -53,6 +54,17 @@ function readNameMap(r: Reader): Map<number, string> {
   const map = new Map();
   for (let i = 0; i < len; i++) {
     map.set(r.readUint(), r.name());
+  }
+  return map;
+}
+
+function readIndirectNameMap(r: Reader): Map<number, Map<number, string>> {
+  const len = r.readUint();
+  const map = new Map<number, Map<number, string>>();
+  for (let i = 0; i < len; i++) {
+    const idx = r.readUint();
+    const submap = readNameMap(r);
+    map.set(idx, submap);
   }
   return map;
 }
@@ -71,8 +83,7 @@ export function readNameSection(r: Reader): NameSection {
         sec.functionNames = readNameMap(r);
         break;
       case 2:
-        console.warn(`unimplemented 'local name' subsection`);
-        r.skip(size);
+        sec.localNames = readIndirectNameMap(r);
         break;
       case 7:
         sec.globalNames = readNameMap(r);
