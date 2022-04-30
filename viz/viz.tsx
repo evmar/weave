@@ -33,7 +33,7 @@ export interface ParsedModule {
   globalNames: Map<number, string>;
 }
 
-type Link = [target: string, index: number];
+type Link = [target: 'section' | 'function' | 'data', index: number];
 function urlFromLink([target, index]: Link): string {
   let url = `#${target}=${index}`;
   return url;
@@ -42,12 +42,16 @@ function linkFromHash(hash: string): Link | null {
   hash = hash.substring(1);
   if (!hash) return null;
   const parts = hash.split('=');
-  return [parts[0], parseInt(parts[1])];
+  const target = parts[0];
+  if (target !== 'section' && target !== 'function' && target !== 'data') {
+    return null;
+  }
+  return [target, parseInt(parts[1])];
 }
 function go(link: Link) {
   window.location.hash = urlFromLink(link);
 }
-function Link(props: {
+export function Link(props: {
   target: Link;
   title?: string;
   children: preact.ComponentChildren;

@@ -4,6 +4,7 @@ import {
   FunctionType,
   Indexed,
   ParsedModule,
+  Link,
 } from './viz';
 import * as wasm from 'wasm';
 import { h, Fragment } from 'preact';
@@ -29,6 +30,16 @@ function ImpExpDesc(props: {
           <FunctionRef module={props.module} index={props.desc.index} />
         </div>
       );
+    case wasm.DescKind.tableidx: {
+      const sec = props.module.sections.findIndex(
+        (sec) => sec.kind === wasm.SectionKind.table
+      )!;
+      return (
+        <div>
+          <Link target={['section', sec]}>table {props.desc.index}</Link>
+        </div>
+      );
+    }
     default:
       return <div>{wasm.descToString(props.desc)}</div>;
   }
