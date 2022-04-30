@@ -12,6 +12,7 @@ import {
   readLimits,
   readTable,
   TableType,
+  Limits,
 } from './shared';
 import { FuncType, readFuncType, readValType, Type } from './type';
 
@@ -161,6 +162,10 @@ export function readFunctionSection(r: Reader): number[] {
 
 export function readTableSection(r: Reader): TableType[] {
   return r.vec(() => readTable(r));
+}
+
+export function readMemorySection(r: Reader): Limits[] {
+  return r.vec(() => readLimits(r));
 }
 
 export interface Global {

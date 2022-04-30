@@ -30,6 +30,7 @@ export interface ParsedModule {
   elements: Indexed<wasm.Element>[];
   data: Indexed<wasm.DataSectionData>[];
   globals: Indexed<wasm.Global>[];
+  memories: Indexed<wasm.Limits>[];
 
   functionNames: Map<number, string>;
   globalNames: Map<number, string>;
@@ -222,6 +223,19 @@ export function InlineEdit(props: {
       </span>
     );
   }
+}
+
+function MemorySection(props: { module: ParsedModule }) {
+  const columns: Column<Indexed<wasm.Limits>>[] = [
+    { name: 'index', className: 'right', data: (limits) => limits.index },
+    { name: 'limits', data: (limits) => wasm.limitsToString(limits) },
+  ];
+  return (
+    <Screen module={props.module} title='"memory" section'>
+      <p>Definition of memory. Currently limited to one entry.</p>
+      <Table columns={columns}>{props.module.memories}</Table>
+    </Screen>
+  );
 }
 
 function GlobalSection(props: { module: ParsedModule }) {
@@ -421,6 +435,8 @@ class App extends preact.Component<AppProps, AppState> {
           return <TableSection module={module} />;
         case wasm.SectionKind.global:
           return <GlobalSection module={module} />;
+        case wasm.SectionKind.memory:
+          return <MemorySection module={module} />;
         case wasm.SectionKind.export:
           return <Exports module={module} />;
         case wasm.SectionKind.element:
@@ -502,6 +518,7 @@ function load(wasmBytes: ArrayBuffer) {
     data: [],
     elements: [],
     globals: [],
+    memories: [],
     functionNames: new Map(),
     globalNames: new Map(),
   };
@@ -585,6 +602,11 @@ function load(wasmBytes: ArrayBuffer) {
         module.globals = wasm
           .readGlobalSection(wasm.getSectionReader(wasmBytes, section))
           .map((global, i) => ({ ...global, index: importedGlobalCount + i }));
+        break;
+      case wasm.SectionKind.memory:
+        module.memories = wasm
+          .readMemorySection(wasm.getSectionReader(wasmBytes, section))
+          .map((memory, i) => ({ ...memory, index: i }));
         break;
       case wasm.SectionKind.export:
         module.exports = wasm.readExportSection(
