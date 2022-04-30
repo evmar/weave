@@ -127,8 +127,8 @@ export class Instructions extends preact.Component<
             loop
           </div>
         );
-        yield* this.renderInstrs(instr.body, indent + 1);
         yield this.labelTarget(label);
+        yield* this.renderInstrs(instr.body, indent + 1);
         this.labelStack.pop();
         break;
       }
@@ -142,10 +142,7 @@ export class Instructions extends preact.Component<
           </div>
         );
         yield* this.renderInstrs(instr.body, indent + 1);
-        yield this.labelTarget(label);
-        this.labelStack.pop();
         if (instr.else) {
-          const label = this.addLabel();
           yield (
             <div>
               {'  '.repeat(indent)}
@@ -153,9 +150,9 @@ export class Instructions extends preact.Component<
             </div>
           );
           yield* this.renderInstrs(instr.else, indent + 1);
-          yield this.labelTarget(label);
-          this.labelStack.pop();
         }
+        yield this.labelTarget(label);
+        this.labelStack.pop();
         break;
       }
 
