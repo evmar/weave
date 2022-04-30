@@ -20,14 +20,14 @@ function XRef(props: {
   id: string;
   names?: Map<string, string>;
   highlight?: string;
-  onHighlight: (id: string) => void;
+  onHighlight?: (id: string) => void;
 }) {
   const name = props.names?.get(props.id) ?? props.id;
   return (
     <span
       className={props.highlight === props.id ? 'highlight' : undefined}
       title={props.id}
-      onMouseEnter={() => props.onHighlight(props.id)}
+      onMouseEnter={() => props.onHighlight?.(props.id)}
     >
       {name}
     </span>
@@ -40,7 +40,7 @@ export namespace Instructions {
     localNames?: Map<string, string>;
     instrs: wasmCode.Instruction[];
     highlight?: string;
-    onHighlight: (id: string) => void;
+    onHighlight?: (id: string) => void;
   }
   export interface State {
     expanded: boolean;
