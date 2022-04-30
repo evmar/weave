@@ -18,11 +18,11 @@ interface Props<T> {
 
 interface State<T> {
   sortBy?: Column<T>;
-  expanded: boolean;
+  limit: number;
 }
 
 export class Table<T> extends preact.Component<Props<T>, State<T>> {
-  state: State<T> = { expanded: false };
+  state: State<T> = { limit: 100 };
 
   shouldComponentUpdate(
     nextProps: Readonly<Props<T>>,
@@ -33,15 +33,15 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
 
   rows = memo(function (
     sortBy: Column<T> | undefined,
-    expanded: boolean,
+    limit: number,
     rows: T[]
   ) {
     rows = [...rows];
     if (sortBy && sortBy.sort) {
       rows.sort(sortBy.sort);
     }
-    if (!expanded) {
-      rows = rows.slice(0, 50);
+    if (limit < rows.length) {
+      rows = rows.slice(0, limit);
     }
     return rows;
   });
@@ -49,7 +49,7 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
   render() {
     const rows = this.rows(
       this.state.sortBy,
-      this.state.expanded,
+      this.state.limit,
       this.props.children
     );
     return (
@@ -94,8 +94,17 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
           {rows.length < this.props.children.length && (
             <tr>
               <td colSpan={this.props.columns.length}>
-                <button onClick={() => this.setState({ expanded: true })}>
-                  show {this.props.children.length - rows.length} more
+                <button
+                  onClick={() =>
+                    this.setState({ limit: this.state.limit + 1000 })
+                  }
+                >
+                  show{' '}
+                  {Math.min(
+                    1000,
+                    this.props.children.length - this.rows.length
+                  )}{' '}
+                  more
                 </button>
               </td>
             </tr>
