@@ -52,6 +52,9 @@ export class Instructions extends preact.Component<
 > {
   state = { expanded: false };
 
+  /** Maps label number => ref count of label. */
+  labelRefCounts: number[] = [];
+  /** Stack of label numbers based on nesting. */
   labelStack: number[] = [];
   nextLabel = 0;
 
@@ -89,10 +92,14 @@ export class Instructions extends preact.Component<
   private addLabel(): number {
     const label = this.nextLabel++;
     this.labelStack.push(label);
+    this.labelRefCounts[label] = 0;
     return label;
   }
 
-  private labelRef(label: number): preact.ComponentChild {
+  /** Returns a reference to a label, as found in a `br` etc. instruction. */
+  private labelRef(stackIndex: number): preact.ComponentChild {
+    const label = this.labelStack[this.labelStack.length - stackIndex - 1];
+    this.labelRefCounts[label]++;
     return (
       <XRef
         id={`label${label}`}
@@ -103,7 +110,17 @@ export class Instructions extends preact.Component<
   }
 
   private labelTarget(label: number): preact.ComponentChild {
-    return <div class='label'>{this.labelRef(label)}:</div>;
+    // TODO: hide label if refCount == 0.
+    return (
+      <div class='label'>
+        <XRef
+          id={`label${label}`}
+          highlight={this.props.highlight}
+          onHighlight={this.props.onHighlight}
+        />
+        :
+      </div>
+    );
   }
 
   private *renderInstr(
@@ -180,11 +197,8 @@ export class Instructions extends preact.Component<
       case wasmCode.Instr.br_if: {
         const target = instr.label;
         yield (
-          <div style={`padding-left: ${indent*2}ch`}>
-            {instr.op}{' '}
-            {this.labelRef(
-              this.labelStack[this.labelStack.length - target - 1]
-            )}
+          <div style={`padding-left: ${indent * 2}ch`}>
+            {instr.op} {this.labelRef(target)}
           </div>
         );
         break;
@@ -194,9 +208,7 @@ export class Instructions extends preact.Component<
           <div style={`padding-left: ${indent * 2}ch`}>
             {instr.op}{' '}
             {instr.labels.map((target, i) => {
-              const label = this.labelRef(
-                this.labelStack[this.labelStack.length - target - 1]
-              );
+              const label = this.labelRef(target);
               return (
                 <span>
                   {i}=&gt;{label}{' '}
@@ -204,9 +216,7 @@ export class Instructions extends preact.Component<
               );
             })}{' '}
             else=&gt;
-            {this.labelRef(
-              this.labelStack[this.labelStack.length - instr.default - 1]
-            )}
+            {this.labelRef(instr.default)}
           </div>
         );
         break;
