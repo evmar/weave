@@ -100,6 +100,21 @@ export function readNameSection(r: Reader): NameSection {
   return sec;
 }
 
+// https://github.com/WebAssembly/tool-conventions/blob/main/ProducersSection.md
+export interface ProducersField {
+  name: string;
+  values: Array<[string, string]>;
+}
+export function readProducersSection(r: Reader): ProducersField[] {
+  return r.vec(() => {
+    const name = r.name();
+    const values: [string, string][] = r.vec(() => {
+      return [r.name(), r.name()];
+    });
+    return { name, values };
+  });
+}
+
 export function readTypeSection(r: Reader): FuncType[] {
   return r.vec(readFuncType);
 }

@@ -21,6 +21,7 @@ export interface ParsedModule {
   sections: (wasm.SectionHeader & { name?: string })[];
 
   names?: wasm.NameSection;
+  producers?: wasm.ProducersField[];
   types: wasm.FuncType[];
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
@@ -133,6 +134,33 @@ function NamesSection(props: { module: ParsedModule }) {
           <th className='right'>data names</th>
           <td>{sec.dataNames ? sec.dataNames.size : <i>none</i>}</td>
         </tr>
+      </table>
+    </Screen>
+  );
+}
+
+function ProducersSection(props: { module: ParsedModule }) {
+  return (
+    <Screen module={props.module} title='"producers" section'>
+      <p>
+        <a href='https://github.com/WebAssembly/tool-conventions/blob/main/ProducersSection.md'>
+          Tools used
+        </a>{' '}
+        to produce the module.
+      </p>
+      <table>
+        {props.module.producers!.map((field) => (
+          <tr>
+            <td>{field.name}</td>
+            <td>
+              {field.values.map(([name, version]) => (
+                <div>
+                  {name} {version}
+                </div>
+              ))}
+            </td>
+          </tr>
+        ))}
       </table>
     </Screen>
   );
@@ -420,6 +448,8 @@ class App extends preact.Component<AppProps, AppState> {
           // using the same component.
           if (this.state.section.name === 'name') {
             return <NamesSection module={module} />;
+          } else if (this.state.section.name === 'producers') {
+            return <ProducersSection module={module} />;
           }
         // fall through
         default:
@@ -500,6 +530,10 @@ function load(wasmBytes: ArrayBuffer) {
             if (names.globalNames) {
               module.globalNames = names.globalNames;
             }
+            break;
+          case 'producers':
+            section.name = 'producers';
+            module.producers = wasm.readProducersSection(reader);
             break;
           default:
             section.name = `custom: '${custom.name}'`;
