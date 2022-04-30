@@ -221,6 +221,23 @@ export class Instructions extends preact.Component<
         );
         break;
 
+      case wasmCode.Instr.i32_const:
+      case wasmCode.Instr.i64_const:
+        yield (
+          <div style={`padding-left: ${indent * 2}ch`}>
+            {instr.op} {instr.n}
+          </div>
+        );
+        break;
+      case wasmCode.Instr.f32_const:
+      case wasmCode.Instr.f64_const:
+        yield (
+          <div style={`padding-left: ${indent * 2}ch`}>
+            {instr.op} {instr.z}
+          </div>
+        );
+        break;
+
       default:
         const toPrint = [instr.op.toString()];
         for (const [key, val] of Object.entries(instr)) {
