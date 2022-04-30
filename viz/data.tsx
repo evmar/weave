@@ -65,7 +65,11 @@ export class HexView extends preact.Component<HexView.Props, HexView.State> {
       const vizBytes = [];
       for (let col = 0; col < 16; col++) {
         const index = row * 16 + col;
-        if (index >= view.byteLength) break;
+        if (index >= view.byteLength) {
+          hexBytes.push('   ');
+          vizBytes.push(' ');
+          continue;
+        }
         const byte = view.getUint8(index);
         const hexByte = hex(byte);
         const vizByte =
