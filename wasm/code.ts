@@ -199,6 +199,11 @@ export enum Instr {
   i64_extend8_s = 'i64.extend8_s',
   i64_extend16_s = 'i64.extend16_s',
   i64_extend32_s = 'i64.extend32_s',
+
+  // reference
+  ref_null = 'ref.null',
+  ref_is_null = 'ref.is_null',
+  ref_func = 'ref.func',
 }
 
 interface InstrBlock {
@@ -276,6 +281,14 @@ interface InstrConstFloat {
   op: Instr.f32_const | Instr.f64_const;
   z: number;
 }
+interface InstrRefNull {
+  op: Instr.ref_null;
+  type: Type;
+}
+interface InstrRefFunc {
+  op: Instr.ref_func;
+  index: number;
+}
 type InstructionWithFields =
   | InstrBlock
   | InstrIf
@@ -288,7 +301,9 @@ type InstructionWithFields =
   | InstrGlobal
   | InstrMem
   | InstrConstInt
-  | InstrConstFloat;
+  | InstrConstFloat
+  | InstrRefNull
+  | InstrRefFunc;
 
 // All other instructions that weren't specially typed above hold just an op.
 // Use a little TypeScript magic so we get a fully discriminated union.
@@ -722,6 +737,13 @@ function readInstruction(r: Reader): Instruction {
       return { op: Instr.i64_extend16_s };
     case 0xc4:
       return { op: Instr.i64_extend32_s };
+
+    case 0xd0:
+      return { op: Instr.ref_null, type: readValType(r) };
+    case 0xd1:
+      return { op: Instr.ref_is_null };
+    case 0xd2:
+      return { op: Instr.ref_func, index: r.readUint() };
 
     default:
       throw new Error(`unhandled op ${op.toString(16)}`);

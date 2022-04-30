@@ -26,6 +26,7 @@ export interface ParsedModule {
   exports: wasm.Export[];
   functions: Indexed<Function>[];
   tables: Indexed<wasm.TableType>[];
+  elements: Indexed<wasm.Element>[];
   data: Indexed<wasm.DataSectionData>[];
   globals: Indexed<wasm.Global>[];
 
@@ -280,6 +281,40 @@ function TableSection(props: { module: ParsedModule }) {
   );
 }
 
+function ElementSection(props: { module: ParsedModule }) {
+  const columns: Column<Indexed<wasm.Element>>[] = [
+    { name: 'index', className: 'right', data: (elem) => elem.index },
+    { name: 'type', data: (elem) => elem.type },
+    {
+      name: 'init',
+      data: (elem) => `${elem.init.length} entries`,
+    },
+    {
+      name: 'mode',
+      data: (elem) => {
+        if (elem.mode === wasm.ElementMode.active) {
+          return (
+            <div>
+              active table={elem.table}
+              <br />
+              offset:
+              <Instructions module={props.module} instrs={elem.offset} />
+            </div>
+          );
+        } else {
+          return elem.mode;
+        }
+      },
+    },
+  ];
+  return (
+    <Screen module={props.module} title='"element" section'>
+      <p>Initializers for tables.</p>
+      <Table columns={columns}>{props.module.elements}</Table>
+    </Screen>
+  );
+}
+
 interface AppProps {
   module: ParsedModule;
 }
@@ -360,6 +395,8 @@ class App extends preact.Component<AppProps, AppState> {
           return <GlobalSection module={module} />;
         case wasm.SectionKind.export:
           return <Exports module={module} />;
+        case wasm.SectionKind.element:
+          return <ElementSection module={module} />;
         case wasm.SectionKind.code:
           return (
             <CodeSection
@@ -433,6 +470,7 @@ function load(wasmBytes: ArrayBuffer) {
     exports: [],
     functions: [],
     data: [],
+    elements: [],
     globals: [],
     functionNames: new Map(),
     globalNames: new Map(),
@@ -523,6 +561,11 @@ function load(wasmBytes: ArrayBuffer) {
             module.functionNames.set(exp.desc.index, exp.name);
           }
         }
+        break;
+      case wasm.SectionKind.element:
+        module.elements = wasm
+          .readElementSection(wasm.getSectionReader(wasmBytes, section))
+          .map((elem, i) => ({ ...elem, index: i }));
         break;
       case wasm.SectionKind.code:
         wasmCode

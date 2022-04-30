@@ -13,7 +13,7 @@ import {
   readTable,
   TableType,
 } from './shared';
-import { FuncType, readFuncType } from './type';
+import { FuncType, readFuncType, readValType, Type } from './type';
 
 export enum SectionKind {
   custom = 'custom',
@@ -186,6 +186,50 @@ export function readExportSection(r: Reader): Export[] {
       throw new Error(`unhandled export desc type ${desc8.toString(16)}`);
     }
     return { name, desc: { kind, index: r.readUint() } };
+  });
+}
+
+export enum ElementMode {
+  passive = 'passive',
+  active = 'active',
+  declarative = 'declarative',
+}
+
+export interface ElementBase {
+  type: Type;
+  init: code.Instruction[][];
+  mode: ElementMode.passive | ElementMode.declarative;
+}
+export interface ElementActive {
+  type: Type;
+  init: code.Instruction[][];
+  mode: ElementMode.active;
+  table: number;
+  offset: code.Instruction[];
+}
+export type Element = ElementBase | ElementActive;
+
+export function readElementSection(r: Reader): Element[] {
+  return r.vec(() => {
+    const flags = r.read8();
+    switch (flags) {
+      case 0: {
+        const expr = code.readExpr(r);
+        const funcs = r.vec(() => r.readUint());
+        const init = funcs.map((index) => [
+          { op: code.Instr.ref_func, index } as const,
+        ]);
+        return {
+          type: Type.funcref,
+          init,
+          mode: ElementMode.active,
+          table: 0,
+          offset: expr,
+        };
+      }
+      default:
+        throw new Error(`TODO: unhandled element flags ${flags.toString(16)}`);
+    }
   });
 }
 
