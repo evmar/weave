@@ -92,7 +92,7 @@ export class Instructions extends preact.Component<
     return label;
   }
 
-  private renderLabel(label: number): preact.ComponentChild {
+  private labelRef(label: number): preact.ComponentChild {
     return (
       <XRef
         id={`label${label}`}
@@ -100,6 +100,10 @@ export class Instructions extends preact.Component<
         onHighlight={this.props.onHighlight}
       />
     );
+  }
+
+  private labelTarget(label: number): preact.ComponentChild {
+    return <div class='label'>{this.labelRef(label)}:</div>;
   }
 
   private *renderInstr(
@@ -110,7 +114,7 @@ export class Instructions extends preact.Component<
       case wasmCode.Instr.block: {
         const label = this.addLabel();
         yield* this.renderInstrs(instr.body, indent);
-        yield <div class='label'>{this.renderLabel(label)}:</div>;
+        yield this.labelTarget(label);
         this.labelStack.pop();
         break;
       }
@@ -124,8 +128,34 @@ export class Instructions extends preact.Component<
           </div>
         );
         yield* this.renderInstrs(instr.body, indent + 1);
-        yield this.renderLabel(label);
+        yield this.labelTarget(label);
         this.labelStack.pop();
+        break;
+      }
+
+      case wasmCode.Instr.if: {
+        const label = this.addLabel();
+        yield (
+          <div>
+            {'  '.repeat(indent)}
+            if
+          </div>
+        );
+        yield* this.renderInstrs(instr.body, indent + 1);
+        yield this.labelTarget(label);
+        this.labelStack.pop();
+        if (instr.else) {
+          const label = this.addLabel();
+          yield (
+            <div>
+              {'  '.repeat(indent)}
+              {'else'}
+            </div>
+          );
+          yield* this.renderInstrs(instr.else, indent + 1);
+          yield this.labelTarget(label);
+          this.labelStack.pop();
+        }
         break;
       }
 
@@ -174,7 +204,7 @@ export class Instructions extends preact.Component<
           <div>
             {'  '.repeat(indent)}
             {instr.op}{' '}
-            {this.renderLabel(
+            {this.labelRef(
               this.labelStack[this.labelStack.length - target - 1]
             )}
           </div>
@@ -187,7 +217,7 @@ export class Instructions extends preact.Component<
             {'  '.repeat(indent)}
             {instr.op}{' '}
             {instr.labels.map((target, i) => {
-              const label = this.renderLabel(
+              const label = this.labelRef(
                 this.labelStack[this.labelStack.length - target - 1]
               );
               return (
@@ -197,7 +227,7 @@ export class Instructions extends preact.Component<
               );
             })}{' '}
             else=&gt;
-            {this.renderLabel(
+            {this.labelRef(
               this.labelStack[this.labelStack.length - instr.default - 1]
             )}
           </div>
@@ -218,22 +248,6 @@ export class Instructions extends preact.Component<
             {'\n'}
           </div>
         );
-    }
-
-    // Render bodies of block instructions.
-    switch (instr.op) {
-      case wasmCode.Instr.if:
-        yield* this.renderInstrs(instr.body, indent + 1);
-        if (instr.else) {
-          yield (
-            <div>
-              {'  '.repeat(indent)}
-              {'else'}
-            </div>
-          );
-          yield* this.renderInstrs(instr.else, indent + 1);
-        }
-        break;
     }
   }
 
