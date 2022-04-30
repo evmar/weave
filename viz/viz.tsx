@@ -358,16 +358,18 @@ function ElementSection(props: { module: ParsedModule }) {
   );
 }
 
-interface AppProps {
-  module: ParsedModule;
+namespace App {
+  export interface Props {
+    module: ParsedModule;
+  }
+  export interface State {
+    section?: wasm.SectionHeader & { name?: string };
+    func?: Indexed<Function>;
+    data?: Indexed<wasm.DataSectionData>;
+  }
 }
-interface AppState {
-  section?: wasm.SectionHeader & { name?: string };
-  func?: Indexed<Function>;
-  data?: Indexed<wasm.DataSectionData>;
-}
-class App extends preact.Component<AppProps, AppState> {
-  state: AppState = {};
+class App extends preact.Component<App.Props, App.State> {
+  state: App.State = {};
 
   private onHashChange = () => {
     const link = linkFromHash(document.location.hash);
@@ -423,7 +425,8 @@ class App extends preact.Component<AppProps, AppState> {
     window.onhashchange = this.onHashChange;
     this.onHashChange();
   }
-  render({ module }: AppProps) {
+  render() {
+    const { module } = this.props;
     if (this.state.section) {
       switch (this.state.section.kind) {
         case wasm.SectionKind.type:
