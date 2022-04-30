@@ -121,12 +121,7 @@ export class Instructions extends preact.Component<
 
       case wasmCode.Instr.loop: {
         const label = this.addLabel();
-        yield (
-          <div>
-            {'  '.repeat(indent)}
-            loop
-          </div>
-        );
+        yield <div style={`padding-left: ${indent * 2}ch`}>loop</div>;
         yield this.labelTarget(label);
         yield* this.renderInstrs(instr.body, indent + 1);
         this.labelStack.pop();
@@ -135,20 +130,10 @@ export class Instructions extends preact.Component<
 
       case wasmCode.Instr.if: {
         const label = this.addLabel();
-        yield (
-          <div>
-            {'  '.repeat(indent)}
-            if
-          </div>
-        );
+        yield <div style={`padding-left: ${indent * 2}ch`}>if</div>;
         yield* this.renderInstrs(instr.body, indent + 1);
         if (instr.else) {
-          yield (
-            <div>
-              {'  '.repeat(indent)}
-              {'else'}
-            </div>
-          );
+          yield <div style={`padding-left: ${indent * 2}ch`}>{'else'}</div>;
           yield* this.renderInstrs(instr.else, indent + 1);
         }
         yield this.labelTarget(label);
@@ -158,8 +143,7 @@ export class Instructions extends preact.Component<
 
       case wasmCode.Instr.call:
         yield (
-          <div>
-            {'  '.repeat(indent)}
+          <div style={`padding-left: ${indent * 2}ch`}>
             {instr.op}{' '}
             <FunctionRef module={this.props.module} index={instr.func} />
           </div>
@@ -169,8 +153,7 @@ export class Instructions extends preact.Component<
       case wasmCode.Instr.global_get:
       case wasmCode.Instr.global_set:
         yield (
-          <div>
-            {'  '.repeat(indent)}
+          <div style={`padding-left: ${indent * 2}ch`}>
             {instr.op}{' '}
             <GlobalRef module={this.props.module} index={instr.global} />
           </div>
@@ -181,8 +164,7 @@ export class Instructions extends preact.Component<
       case wasmCode.Instr.local_set:
       case wasmCode.Instr.local_tee:
         yield (
-          <div>
-            {'  '.repeat(indent)}
+          <div style={`padding-left: ${indent * 2}ch`}>
             {instr.op} $
             <XRef
               id={`local${instr.local}`}
@@ -198,8 +180,7 @@ export class Instructions extends preact.Component<
       case wasmCode.Instr.br_if: {
         const target = instr.label;
         yield (
-          <div>
-            {'  '.repeat(indent)}
+          <div style={`padding-left: ${indent*2}ch`}>
             {instr.op}{' '}
             {this.labelRef(
               this.labelStack[this.labelStack.length - target - 1]
@@ -210,8 +191,7 @@ export class Instructions extends preact.Component<
       }
       case wasmCode.Instr.br_table:
         yield (
-          <div>
-            {'  '.repeat(indent)}
+          <div style={`padding-left: ${indent * 2}ch`}>
             {instr.op}{' '}
             {instr.labels.map((target, i) => {
               const label = this.labelRef(
@@ -239,8 +219,7 @@ export class Instructions extends preact.Component<
           toPrint.push(` ${key}=${val}`);
         }
         yield (
-          <div>
-            {'  '.repeat(indent)}
+          <div style={`padding-left: ${indent * 2}ch`}>
             {toPrint.join('')}
             {'\n'}
           </div>
