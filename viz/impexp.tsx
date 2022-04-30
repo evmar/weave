@@ -40,6 +40,16 @@ function ImpExpDesc(props: {
         </div>
       );
     }
+    case wasm.DescKind.memidx: {
+      const sec = props.module.sections.findIndex(
+        (sec) => sec.kind === wasm.SectionKind.memory
+      )!;
+      return (
+        <div>
+          <Link target={['section', sec]}>memory {props.desc.index}</Link>
+        </div>
+      );
+    }
     default:
       return <div>{wasm.descToString(props.desc)}</div>;
   }

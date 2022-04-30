@@ -11,7 +11,7 @@ export enum DescKind {
   funcidx = 'funcidx',
   typeidx = 'typeidx',
   tableidx = 'tableidx',
-  memidx = 'tableidx',
+  memidx = 'memidx',
   globalidx = 'globalidx',
 }
 
