@@ -5,7 +5,7 @@ import { h, Fragment } from 'preact';
 import * as hooks from 'preact/hooks';
 
 import { Sections } from './sections';
-import { DataSection, DataHex } from './data';
+import { DataSection, DataHex, HexView } from './data';
 import { CodeSection, Function, Instructions } from './code';
 import { Column, Table } from './table';
 import { Exports, Imports } from './impexp';
@@ -31,6 +31,7 @@ export interface ParsedModule {
   data: Indexed<wasm.DataSectionData>[];
   globals: Indexed<wasm.Global>[];
   memories: Indexed<wasm.Limits>[];
+  customSectionData: Map<number, DataView>;
 
   functionNames: Map<number, string>;
   globalNames: Map<number, string>;
@@ -466,6 +467,18 @@ class App extends preact.Component<AppProps, AppState> {
             return <NamesSection module={module} />;
           } else if (this.state.section.name === 'producers') {
             return <ProducersSection module={module} />;
+          } else {
+            return (
+              <Screen module={module} title='custom section'>
+                <p>
+                  No view yet for <code>{this.state.section.name}</code>.
+                  Showing raw dump.
+                </p>
+                <HexView
+                  data={module.customSectionData.get(this.state.section.index)!}
+                />
+              </Screen>
+            );
           }
         // fall through
         default:
@@ -519,6 +532,7 @@ function load(wasmBytes: ArrayBuffer) {
     elements: [],
     globals: [],
     memories: [],
+    customSectionData: new Map(),
     functionNames: new Map(),
     globalNames: new Map(),
   };
@@ -552,9 +566,17 @@ function load(wasmBytes: ArrayBuffer) {
             section.name = 'producers';
             module.producers = wasm.readProducersSection(reader);
             break;
-          default:
+          default: {
+            const offset = reader.view.byteOffset + reader.ofs;
+            const view = new DataView(
+              reader.view.buffer,
+              offset,
+              reader.view.byteLength - offset
+            );
             section.name = `custom: '${custom.name}'`;
+            module.customSectionData.set(section.index, view);
             break;
+          }
         }
         break;
       }
