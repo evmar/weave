@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>weave</title>
+    <style>
+      @font-face {
+        font-family: 'Inter';
+        src: url('Inter-Regular.ttf');
+      }
+      @font-face {
+        font-family: 'Inter';
+        src: url('Inter-Bold.ttf');
+        font-weight: 700;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        font-variant-numeric: tabular-nums;
+        max-width: 80ex;
+        margin: 4ex auto;
+        overflow-y: scroll;
+      }
+      th,
+      td {
+        padding: 0.25ex 0;
+        padding-right: 2ex;
+        vertical-align: baseline;
+      }
+      pre {
+        margin: 0;
+      }
+      .nowrap {
+        white-space: nowrap;
+      }
+      .break-all {
+        word-break: break-all;
+      }
+      h1,
+      h2 {
+        font-weight: normal;
+        margin: 0.5ex 0;
+      }
+      h1 {
+        font-size: 1.5em;
+      }
+      h1 a {
+        color: inherit;
+      }
+      pre,
+      code {
+        font-family: WebKitWorkaround, monospace;
+      }
+      input,
+      button {
+        font: inherit;
+      }
+      table {
+        table-layout: fixed;
+      }
+      .right {
+        text-align: right;
+      }
+      .highlight {
+        background: #eee;
+      }
+      .hover:hover {
+        background: #eee;
+      }
+      .pointer {
+        cursor: pointer;
+      }
+      form.inline-edit {
+        flex: 1;
+      }
+      input.inline-edit {
+        font-size: 90%;
+        width: 100%;
+      }
+      button.inline-edit {
+        padding: 0 2px;
+        font-size: 80%;
+      }
+      .flex-container {
+        align-items: baseline;
+        display: flex;
+        flex: 1;
+      }
+      pre.code {
+        position: relative;
+        white-space: pre-wrap;
+      }
+      .label {
+        position: absolute;
+        left: -12ex;
+      }
+
+      .code-treemap-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        padding: 16px;
+        background: #00000099;
+      }
+      .code-treemap-done {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        cursor: pointer;
+        z-index: 1000;
+        background: #fff;
+        border: 0;
+        padding: 0;
+        font-size: 24px;
+        color: #000;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        box-shadow: 1px 1px 2px #000000cc;
+      }
+      .code-treemap {
+        width: 100%;
+        height: 100%;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body, div.webtreemap-node {
+          background: #222;
+          color: #ccc;
+        }
+        .highlight {
+          background: #444;
+        }
+        .hover:hover, div.webtreemap-node:hover {
+          background: #444;
+        }
+        a {
+          color: #66f;
+        }
+      }
+    </style>
+  </head>
+  <body></body>
+  <script src="bundle.js"></script>
+</html>
