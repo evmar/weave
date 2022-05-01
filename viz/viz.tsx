@@ -645,11 +645,10 @@ function load(wasmBytes: ArrayBuffer) {
             module.producers = wasm.readProducersSection(reader);
             break;
           default: {
-            const offset = reader.view.byteOffset + reader.ofs;
             const view = new DataView(
               reader.view.buffer,
-              offset,
-              reader.view.byteLength - offset
+              reader.view.byteOffset + reader.ofs,
+              reader.view.byteLength - reader.ofs
             );
             section.name = `custom: '${custom.name}'`;
             module.customSectionData.set(section.index, view);
