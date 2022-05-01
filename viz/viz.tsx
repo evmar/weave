@@ -88,7 +88,6 @@ export function GlobalRef(props: { module: ParsedModule; index: number }) {
 }
 
 export function Screen(props: {
-  module: ParsedModule;
   title: string;
   children: preact.ComponentChildren;
 }) {
@@ -111,7 +110,7 @@ export function FunctionType(props: { type: wasm.FuncType }) {
 function NamesSection(props: { module: ParsedModule }) {
   const sec = props.module.names!;
   return (
-    <Screen module={props.module} title='"name" section'>
+    <Screen title='"name" section'>
       <p>
         Names for objects found in the file, typically for debugging purposes.
       </p>
@@ -143,7 +142,7 @@ function NamesSection(props: { module: ParsedModule }) {
 
 function ProducersSection(props: { module: ParsedModule }) {
   return (
-    <Screen module={props.module} title='"producers" section'>
+    <Screen title='"producers" section'>
       <p>
         <a href='https://github.com/WebAssembly/tool-conventions/blob/main/ProducersSection.md'>
           Tools used
@@ -178,7 +177,7 @@ function TypeSection(props: { module: ParsedModule }) {
     },
   ];
   return (
-    <Screen module={props.module} title='"type" section'>
+    <Screen title='"type" section'>
       <p>One entry per distinct function type used in the module.</p>
       <Table columns={columns}>
         {props.module.types.map((t, i) => ({ ...t, index: i }))}
@@ -232,7 +231,7 @@ function MemorySection(props: { module: ParsedModule }) {
     { name: 'limits', data: (limits) => wasm.limitsToString(limits) },
   ];
   return (
-    <Screen module={props.module} title='"memory" section'>
+    <Screen title='"memory" section'>
       <p>Definition of memory. Currently limited to one entry.</p>
       <Table columns={columns}>{props.module.memories}</Table>
     </Screen>
@@ -243,7 +242,7 @@ function GlobalSection(props: { module: ParsedModule }) {
   const [edited, setEdited] = hooks.useState(0);
 
   return (
-    <Screen module={props.module} title='"globals" section'>
+    <Screen title='"globals" section'>
       <p>Global variables, accessible to both the host environment and Wasm.</p>
       <table>
         <thead>
@@ -298,7 +297,7 @@ function FunctionSection(props: {
     },
   ];
   return (
-    <Screen module={props.module} title='"function" section'>
+    <Screen title='"function" section'>
       <p>Associates functions with their types.</p>
       <Table columns={columns} onClick={(row) => props.onClick(row.index)}>
         {props.module.functions}
@@ -314,7 +313,7 @@ function TableSection(props: { module: ParsedModule }) {
     { name: 'type', data: (table) => table.element },
   ];
   return (
-    <Screen module={props.module} title='"table" section'>
+    <Screen title='"table" section'>
       <p>
         Collections of opaque references. (Wasm 1.0 only allowed a single
         table.)
@@ -351,14 +350,14 @@ function ElementSection(props: { module: ParsedModule }) {
     },
   ];
   return (
-    <Screen module={props.module} title='"element" section'>
+    <Screen title='"element" section'>
       <p>Initializers for tables.</p>
       <Table columns={columns}>{props.module.elements}</Table>
     </Screen>
   );
 }
 
-namespace App {
+namespace Weave {
   export interface Props {
     module: ParsedModule;
   }
@@ -368,8 +367,8 @@ namespace App {
     data?: Indexed<wasm.DataSectionData>;
   }
 }
-class App extends preact.Component<App.Props, App.State> {
-  state: App.State = {};
+class Weave extends preact.Component<Weave.Props, Weave.State> {
+  state: Weave.State = {};
 
   private onHashChange = () => {
     const link = linkFromHash(document.location.hash);
@@ -472,7 +471,7 @@ class App extends preact.Component<App.Props, App.State> {
             return <ProducersSection module={module} />;
           } else {
             return (
-              <Screen module={module} title='custom section'>
+              <Screen title='custom section'>
                 <p>
                   No view yet for <code>{this.state.section.name}</code>.
                   Showing raw dump.
@@ -518,6 +517,82 @@ class App extends preact.Component<App.Props, App.State> {
         />
       );
     }
+  }
+}
+
+namespace App {
+  export interface State {
+    module?: ParsedModule;
+  }
+}
+class App extends preact.Component<{}, App.State> {
+  private load(buffer: ArrayBuffer) {
+    const module = load(buffer);
+    this.setState({ module });
+  }
+
+  /**
+   * Allow drag'n'drop of a wasm file to load it.
+   * This function took me an hour of fiddling with the DOM API to figure out.
+   * The two key tricks are preventDefault on dragover and checking relatedTarget
+   * on dragleave.
+   */
+  private addDragHandlers() {
+    window.ondragenter = (ev) => {
+      document.body.style.opacity = '0.5';
+      ev.preventDefault();
+    };
+    window.ondragleave = (ev) => {
+      if (ev.relatedTarget) {
+        // https://stackoverflow.com/questions/3144881/how-do-i-detect-a-html5-drag-event-entering-and-leaving-the-window-like-gmail-d
+        return;
+      }
+      document.body.style.opacity = '';
+      ev.preventDefault();
+    };
+    window.ondragover = (ev) => {
+      ev.preventDefault();
+    };
+    window.ondrop = async (ev) => {
+      document.body.style.opacity = '';
+      if (ev.dataTransfer?.items.length !== 1) return;
+      const file = ev.dataTransfer.items[0].getAsFile();
+      if (!file) return;
+      ev.preventDefault();
+      this.load(await file.arrayBuffer());
+    };
+  }
+
+  async componentDidMount() {
+    this.addDragHandlers();
+    if (document.location.search) {
+      const name = document.location.search.substring(1);
+      const wasmBytes = await (await fetch(name)).arrayBuffer();
+      this.load(wasmBytes);
+    }
+  }
+
+  render() {
+    if (this.state.module) {
+      return <Weave module={this.state.module} />;
+    }
+    return (
+      <>
+        <header>
+          <h1>weave</h1>
+        </header>
+        <main>
+          <p>
+            Weave is a viewer for WebAssembly <code>.wasm</code> files, like an
+            interactive <code>objdump</code>.
+          </p>
+          <p>
+            Load a file by drag'n'drop'ing a <code>.wasm</code> file onto this
+            page.
+          </p>
+        </main>
+      </>
+    );
   }
 }
 
@@ -663,46 +738,11 @@ function load(wasmBytes: ArrayBuffer) {
         break;
     }
   }
-  preact.render(<App module={module}></App>, document.body);
+  return module;
 }
 
-/**
- * Allow drag'n'drop of a wasm file to load it.
- * This function took me an hour of fiddling with the DOM API to figure out.
- * The two key tricks are preventDefault on dragover and checking relatedTarget
- * on dragleave.
- */
-function addDragHandlers() {
-  window.ondragenter = (ev) => {
-    document.body.style.opacity = '0.5';
-    ev.preventDefault();
-  };
-  window.ondragleave = (ev) => {
-    if (ev.relatedTarget) {
-      // https://stackoverflow.com/questions/3144881/how-do-i-detect-a-html5-drag-event-entering-and-leaving-the-window-like-gmail-d
-      return;
-    }
-    document.body.style.opacity = '';
-    ev.preventDefault();
-  };
-  window.ondragover = (ev) => {
-    ev.preventDefault();
-  };
-  window.ondrop = async (ev) => {
-    document.body.style.opacity = '';
-    if (ev.dataTransfer?.items.length !== 1) return;
-    const file = ev.dataTransfer.items[0].getAsFile();
-    if (!file) return;
-    ev.preventDefault();
-    load(await file.arrayBuffer());
-  };
-}
-
-async function main() {
-  const name = 't.wasm';
-  const wasmBytes = await (await fetch('t.wasm')).arrayBuffer();
-  load(wasmBytes);
-  addDragHandlers();
+function main() {
+  preact.render(<App />, document.body);
 }
 
 main();
