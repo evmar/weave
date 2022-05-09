@@ -305,7 +305,7 @@ export function Function(props: {
     undefined
   );
   return (
-    <Screen module={props.module} title={`function ${props.func.index}`}>
+    <Screen title={`function ${props.func.index}`}>
       <table>
         <tr>
           <th className='right'>name</th>
@@ -403,7 +403,7 @@ export function CodeSection(props: CodeProps) {
   ];
 
   return (
-    <Screen module={props.module} title='"code" section'>
+    <Screen title='"code" section'>
       <p>
         Function bodies.{' '}
         <button
@@ -412,7 +412,6 @@ export function CodeSection(props: CodeProps) {
           View Treemap
         </button>
       </p>
-
       <Table columns={columns} onClick={(func) => props.onClick(func.index)}>
         {props.children}
       </Table>

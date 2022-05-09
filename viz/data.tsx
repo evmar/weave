@@ -34,7 +34,7 @@ export function DataSection(props: {
   ];
 
   return (
-    <Screen module={props.module} title='"data" section'>
+    <Screen title='"data" section'>
       <p>Initialization-time data.</p>
       <Table columns={columns} onClick={props.onClick}>
         {props.data}
@@ -109,7 +109,7 @@ export function DataHex(props: {
   data: Indexed<wasm.DataSectionData>;
 }) {
   return (
-    <Screen module={props.module} title={`data[${props.data.index}]`}>
+    <Screen title={`data[${props.data.index}]`}>
       <table>
         <tr>
           <th className='right'>size</th>
