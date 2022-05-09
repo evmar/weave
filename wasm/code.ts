@@ -478,9 +478,9 @@ function readInstruction(r: Reader): Instruction {
     }
 
     case 0x41:
-      return { op: Instr.i32_const, n: r.readUint() };
+      return { op: Instr.i32_const, n: r.readSint() };
     case 0x42:
-      return { op: Instr.i64_const, n: r.readUintBig() };
+      return { op: Instr.i64_const, n: r.readSintBig() };
     case 0x43:
       return { op: Instr.f32_const, z: r.readF32() };
     case 0x44:

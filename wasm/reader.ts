@@ -46,7 +46,13 @@ export class Reader {
     return n;
   }
 
-  readUintBig(): bigint {
+  // TODO: signed
+  readSint(): number {
+    return this.readUint();
+  }
+
+  // TODO: signed
+  readSintBig(): bigint {
     let n = 0n;
     let shift = 0;
     while (true) {
