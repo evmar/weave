@@ -273,9 +273,13 @@ interface InstrMem {
   align: number;
   offset: number;
 }
-interface InstrConstInt {
-  op: Instr.i32_const | Instr.i64_const;
+interface InstrConstInt32 {
+  op: Instr.i32_const;
   n: number;
+}
+interface InstrConstInt64 {
+  op: Instr.i64_const;
+  n: bigint;
 }
 interface InstrConstFloat {
   op: Instr.f32_const | Instr.f64_const;
@@ -300,7 +304,8 @@ type InstructionWithFields =
   | InstrLocal
   | InstrGlobal
   | InstrMem
-  | InstrConstInt
+  | InstrConstInt32
+  | InstrConstInt64
   | InstrConstFloat
   | InstrRefNull
   | InstrRefFunc;
@@ -475,7 +480,7 @@ function readInstruction(r: Reader): Instruction {
     case 0x41:
       return { op: Instr.i32_const, n: r.readUint() };
     case 0x42:
-      return { op: Instr.i64_const, n: r.readUint() };
+      return { op: Instr.i64_const, n: r.readUintBig() };
     case 0x43:
       return { op: Instr.f32_const, z: r.readF32() };
     case 0x44:

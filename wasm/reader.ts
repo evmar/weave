@@ -39,8 +39,20 @@ export class Reader {
     let shift = 0;
     while (true) {
       const b = this.read8();
-      n |= (b & 0x7f) << shift;
-      if ((b & 0x80) === 0) break;
+      n |= (b & 0b0111_1111) << shift;
+      if ((b & 0b1000_0000) === 0) break;
+      shift += 7;
+    }
+    return n;
+  }
+
+  readUintBig(): bigint {
+    let n = 0n;
+    let shift = 0;
+    while (true) {
+      const b = this.read8();
+      n |= BigInt(b & 0b0111_1111) << BigInt(shift);
+      if ((b & 0b1000_0000) === 0) break;
       shift += 7;
     }
     return n;
