@@ -15,6 +15,7 @@ import * as d3 from 'd3';
 import { Column, Table } from './table';
 import { Reader } from 'wasm/reader';
 import { funcTypeToString } from 'wasm';
+import { showCodeTreemap } from './code-treemap';
 
 function XRef(props: {
   id: string;
@@ -403,7 +404,15 @@ export function CodeSection(props: CodeProps) {
 
   return (
     <Screen module={props.module} title='"code" section'>
-      <p>Function bodies.</p>
+      <p>
+        Function bodies.{' '}
+        <button
+          onClick={() => showCodeTreemap(props.children, props.functionNames)}
+        >
+          View Treemap
+        </button>
+      </p>
+
       <Table columns={columns} onClick={(func) => props.onClick(func.index)}>
         {props.children}
       </Table>
