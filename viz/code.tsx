@@ -387,6 +387,11 @@ export function CodeSection(props: CodeProps) {
     {
       name: 'name',
       cellClass: 'break-all',
+      sort: (a, b) =>
+        d3.ascending(
+          props.functionNames.get(a.index),
+          props.functionNames.get(b.index)
+        ),
       data: (f) => <code>{props.functionNames.get(f.index)}</code>,
     },
     {
