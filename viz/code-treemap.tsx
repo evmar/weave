@@ -132,7 +132,7 @@ class Treemap extends preact.Component<TreemapProps> {
     const { root } = this.props;
     webtreemap.render(container, root, {
       caption(node) {
-        return `${node.id} (${d3.format(',')(node.size)}))`;
+        return `${node.id} (${d3.format(',')(node.size)})`;
       },
     });
   }
