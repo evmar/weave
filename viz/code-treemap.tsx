@@ -18,22 +18,35 @@ function simplifyCPPName(name: string): string[] {
   for (let i = 0; i < name.length; i++) {
     switch (name[i]) {
       case '(':
-      case '<':
         stack.push(name[i]);
         continue;
+      case '<':
+        if (name[i + 1] !== '=') {
+          // `<=`
+          stack.push(name[i]);
+          continue;
+        }
+        break;
       case ')':
         if (stack.pop() !== '(') throw new Error('failed to parse C++ symbol');
         if (stack.length === 0) letters.push('()');
         continue;
       case '>':
-        if (stack.pop() !== '<') throw new Error('failed to parse C++ symbol');
-        continue;
+        if (name[i + 1] !== '=') {
+          // `>=`
+          if (stack.pop() !== '<')
+            throw new Error('failed to parse C++ symbol');
+          continue;
+        }
+        break;
       case '-':
         if (name[i + 1] === '>') {
+          // `->`
           i++;
           if (stack.length === 0) letters.push('->');
           continue;
         }
+        break;
     }
     if (stack.length === 0) {
       letters.push(name[i]);
@@ -44,7 +57,7 @@ function simplifyCPPName(name: string): string[] {
   // name is now e.g. `foo::iterator bar::fn() const`
   // Rust name comes out like `mangled$gibberish ()` so avoid that in particular.
   let parts = name.split(' ').filter((part) => part !== '()');
-  let fn = parts.find((part) => part.endsWith('()'));
+  let fn = parts.find((part) => part.endsWith('()') && part !== 'decltype()');
   if (fn) {
     fn = fn.slice(0, -2);
   } else {
@@ -58,6 +71,7 @@ function simplifyCPPName(name: string): string[] {
 // console.log(simplifyCPPName('(anonymous namespace)::itanium_demangle::NameType* (anonymous namespace)::DefaultAllocator::makeNode<(anonymous namespace)::itanium_demangle::NameType, char const (&) [14]>(char const (&) [14])'));
 // console.log(simplifyCPPName("std::__2::__hash_const_iterator<std::__2::__hash_node<char const*, void*>*> std::__2::__hash_table<char const*, Json::ValueAllocator::InternHash, Json::ValueAllocator::InternHash, std::__2::allocator<char const*> >::find<char const*>(char const* const&) const"));
 // console.log(simplifyCPPName("_$LT$alloc..alloc..Global$u20$as$u20$core..alloc..Allocator$GT$::deallocate::h24852c13dde43f03 (.103)"));
+// console.log(simplifyCPPName("decltype(((hb_forward<unsigned int&>(fp)) <= (hb_forward<unsigned int&>(fp0))) ? (hb_forward<unsigned int&>(fp)) : (hb_forward<unsigned int&>(fp0))) $_4::operator()<unsigned int&, unsigned int&>(unsigned int&, unsigned int&) const"));
 
 export function showCodeTreemap(
   headers: Indexed<wasmCode.FunctionHeader>[],
@@ -77,13 +91,18 @@ export function showCodeTreemap(
 
   for (const header of headers) {
     const name = nameMap.get(header.index);
-    let path = name
-      ? nameToPath(name).filter((p) => p)
-      : ['unknown', String(header.index)];
-    if (path.length === 0) {
-      // Avoid infinite loop on parse failures.
-      console.error(`BUG: failed to simplify ${name}`);
-      path = ['unknown', String(header.index)];
+    let path = ['unknown', String(header.index)];
+    try {
+      if (name) {
+        const parsed = nameToPath(name).filter((p) => p);
+        if (parsed.length === 0) {
+          console.error(`BUG: failed to simplify ${name}`);
+        } else {
+          path = parsed;
+        }
+      }
+    } catch (err: unknown) {
+      console.error(`parsing ${JSON.stringify(name)}: ${err}`);
     }
     root.addFunction(header, path);
   }
