@@ -17,3 +17,5 @@ To hack on visualization:
 $ cd viz
 $ npm run serve
 ```
+
+You can add `?foo.wasm` to the URL to load a wasm file from the `viz` subdir while hacking.
