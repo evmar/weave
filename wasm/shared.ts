@@ -59,28 +59,28 @@ export function descToString(
 export interface Limits {
   minimum: number;
   maximum?: number;
+  shared: boolean;
 }
 
 export function readLimits(r: Reader): Limits {
   const b = r.read8();
-  let minimum: number;
+  let minimum = r.readUint();
   let maximum: number | undefined;
-  switch (b) {
-    case 0:
-      minimum = r.readUint();
-      break;
-    case 1:
-      minimum = r.readUint();
-      maximum = r.readUint();
-      break;
-    default:
-      throw new Error(`invalid limits flag ${b.toString(16)}`);
+  if (b & 1) {
+    maximum = r.readUint();
   }
-  return { minimum, maximum };
+  // https://github.com/WebAssembly/threads/blob/main/proposals/threads/Overview.md#spec-changes
+  let shared = (b & 0b10) !== 0;
+  if (b >> 2 !== 0) {
+    throw new Error(`invalid limits flag ${b.toString(16)}`);
+  }
+  return { minimum, maximum, shared };
 }
 
 export function limitsToString(limits: Limits) {
-  return `min=${limits.minimum} max=${limits.maximum ?? 'none'}`;
+  return `min=${limits.minimum} max=${limits.maximum ?? 'none'}${
+    limits.shared ? ' shared' : ''
+  }`;
 }
 
 export interface TableType {
