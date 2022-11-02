@@ -14,6 +14,7 @@ browse some random files I have been looking at:
 To hack on visualization:
 
 ```
+$ npm i
 $ cd viz
 $ npm run serve
 ```
