@@ -12,7 +12,6 @@
     "prettier": "^2.6.2"
   },
   "scripts": {
-    "fmt": "prettier -w .",
-    "dist": "(cd viz && npm run bundle); cp viz/viz.html index.html; cp viz/bundle.js ."
+    "fmt": "prettier -w ."
   }
 }

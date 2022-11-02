@@ -20,3 +20,20 @@ $ npm run serve
 ```
 
 You can add `?foo.wasm` to the URL to load a wasm file from the `viz` subdir while hacking.
+
+## Deploying demo
+
+Setup:
+
+```
+$ git worktree demo
+```
+
+Deploy:
+
+```
+$ ./deploy.sh demo
+$ cd demo
+$ git commit -a --amend
+$ git push -f
+```
