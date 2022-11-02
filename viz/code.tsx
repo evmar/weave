@@ -370,6 +370,14 @@ export function Function(props: {
   );
 }
 
+/** <input type=search incremental>, but with hacks because incremental isn't in typings. */
+function IncrementalInput(
+  args: preact.JSX.HTMLAttributes<HTMLInputElement>
+): preact.JSX.Element {
+  const incrementalArgs = { type: 'search', incremental: true, ...args };
+  return <input {...incrementalArgs} />;
+}
+
 interface CodeProps {
   module: ParsedModule;
   children: Indexed<wasmCode.FunctionHeader>[];
@@ -381,6 +389,13 @@ export function CodeSection(props: CodeProps) {
     () => d3.sum(props.children.map((f) => f.len)),
     props.children
   );
+  const [filter, setFilter] = hooks.useState('');
+  const funcs = filter
+    ? props.children.filter((f) => {
+        const name = props.functionNames.get(f.index);
+        return name?.match(filter);
+      })
+    : props.children;
 
   const columns: Column<Indexed<wasmCode.FunctionHeader>>[] = [
     { name: 'index', className: 'right', sort: null, data: (f) => f.index },
@@ -409,16 +424,23 @@ export function CodeSection(props: CodeProps) {
 
   return (
     <Screen title='"code" section'>
-      <p>
-        Function bodies.{' '}
-        <button
-          onClick={() => showCodeTreemap(props.children, props.functionNames)}
-        >
-          View Treemap
-        </button>
+      <p style={{ display: 'flex' }}>
+        <div>
+          Function bodies.{' '}
+          <button
+            onClick={() => showCodeTreemap(props.children, props.functionNames)}
+          >
+            View Treemap
+          </button>
+        </div>
+        <div style={{ flex: 1 }}></div>
+        <IncrementalInput
+          placeholder='filter by name'
+          onSearch={(ev) => setFilter((ev.target as HTMLInputElement).value)}
+        />
       </p>
       <Table columns={columns} onClick={(func) => props.onClick(func.index)}>
-        {props.children}
+        {funcs}
       </Table>
     </Screen>
   );
