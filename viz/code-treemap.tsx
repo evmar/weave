@@ -5,22 +5,30 @@ import * as preactCompat from 'preact/compat';
 import * as wasmCode from 'wasm/code';
 import * as webtreemap from 'webtreemap/build/webtreemap';
 import * as symbol from './symbol';
-import { Indexed } from './viz';
+import { Indexed, Toolchain } from './viz';
 
 export function showCodeTreemap(
+  toolchain: Toolchain,
   headers: Indexed<wasmCode.FunctionHeader>[],
   nameMap: Map<number, string>,
 ) {
   const root = new FunctionNode('code');
 
   let nameToPath = (name: string) => name.split('.');
-  const names = Array.from(nameMap.values());
-  if (names.includes('go.buildid')) {
-    // Likely Go binary
-    nameToPath = (name: string) => name.split(/[._:]/);
-  } else if (names.some((name) => name.startsWith('std::'))) {
-    // Likely C++ binary
-    nameToPath = symbol.simplifyCPPName;
+  switch (toolchain) {
+    case 'Go':
+      nameToPath = (name: string) => name.split(/[._:]/);
+      break;
+    case 'Rust':
+      break;
+    default:
+      for (const name of nameMap.values()) {
+        if (name.startsWith('std::')) {
+          // Likely C++ binary
+          nameToPath = symbol.simplifyCPPName;
+          break;
+        }
+      }
   }
 
   for (const header of headers) {

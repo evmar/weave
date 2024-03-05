@@ -417,7 +417,7 @@ export function CodeSection(props: CodeProps) {
         <div>
           Function bodies.{' '}
           <button
-            onClick={() => showCodeTreemap(props.children, props.functionNames)}
+            onClick={() => showCodeTreemap(props.module.toolchain, props.children, props.functionNames)}
           >
             View Treemap
           </button>

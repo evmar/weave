@@ -16,9 +16,11 @@ export interface Function {
   ofs: number;
   len: number;
 }
+export type Toolchain = 'Go' | 'Rust' | 'Unknown';
 export interface ParsedModule {
   bytes: ArrayBuffer;
   sections: (wasm.SectionHeader & { name?: string })[];
+  toolchain: Toolchain;
 
   names?: wasm.NameSection;
   producers?: wasm.ProducersField[];
@@ -593,6 +595,7 @@ function load(wasmBytes: ArrayBuffer) {
   const sections = wasm.read(wasmBytes);
   const module: ParsedModule = {
     bytes: wasmBytes,
+    toolchain: 'Unknown',
     sections: sections.map((sec, index) => ({ ...sec, index })),
     types: [],
     imports: [],
@@ -635,7 +638,19 @@ function load(wasmBytes: ArrayBuffer) {
             break;
           case 'producers':
             section.name = 'producers';
-            module.producers = wasm.readProducersSection(reader);
+            const producers = wasm.readProducersSection(reader);
+            const lang = producers.find((p) => p.name == 'language');
+            if (lang) {
+              switch (lang.values[0][0]) {
+                case 'Go':
+                  module.toolchain = 'Go';
+                  break;
+                case 'Rust':
+                  module.toolchain = 'Rust';
+                  break;
+              }
+            }
+            module.producers = producers;
             break;
           default: {
             const view = new DataView(
