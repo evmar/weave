@@ -1,14 +1,14 @@
+import * as preact from 'preact';
+import { Fragment, h } from 'preact';
+import * as hooks from 'preact/hooks';
 import * as wasm from 'wasm';
 import * as wasmCode from 'wasm/code';
-import * as preact from 'preact';
-import { h, Fragment } from 'preact';
-import * as hooks from 'preact/hooks';
 
-import { Sections } from './sections';
-import { DataSection, DataHex, HexView } from './data';
 import { CodeSection, Function, Instructions } from './code';
-import { Column, Table } from './table';
+import { DataHex, DataSection, HexView } from './data';
 import { Exports, Imports } from './impexp';
+import { Sections } from './sections';
+import { Column, Table } from './table';
 
 export type Indexed<T> = T & { index: number };
 export interface Function {
@@ -77,7 +77,7 @@ export function FunctionRef(props: { module: ParsedModule; index: number }) {
 
 export function GlobalRef(props: { module: ParsedModule; index: number }) {
   const sec = props.module.sections.find(
-    (sec) => sec.kind === wasm.SectionKind.global
+    (sec) => sec.kind === wasm.SectionKind.global,
   )!;
 
   return (
@@ -291,9 +291,7 @@ function FunctionSection(props: {
     { name: 'func', className: 'right', data: (row) => row.index },
     {
       name: 'type',
-      data: (row) => (
-        <code>{wasm.funcTypeToString(props.module.types[row.typeidx])}</code>
-      ),
+      data: (row) => <code>{wasm.funcTypeToString(props.module.types[row.typeidx])}</code>,
     },
   ];
   return (
@@ -315,8 +313,7 @@ function TableSection(props: { module: ParsedModule }) {
   return (
     <Screen title='"table" section'>
       <p>
-        Collections of opaque references. (Wasm 1.0 only allowed a single
-        table.)
+        Collections of opaque references. (Wasm 1.0 only allowed a single table.)
       </p>
       <Table columns={columns}>{props.module.tables}</Table>
     </Screen>
@@ -379,18 +376,18 @@ class Weave extends preact.Component<Weave.Props, Weave.State> {
     const [target, index] = link;
     if (target === 'section') {
       const section = this.props.module.sections.find(
-        (sec) => sec.index === index
+        (sec) => sec.index === index,
       );
       if (section) {
         this.setState({ section, func: undefined });
       }
     } else if (target === 'function') {
       const importedCount = this.props.module.imports.filter(
-        (imp) => imp.desc.kind === wasm.DescKind.typeidx
+        (imp) => imp.desc.kind === wasm.DescKind.typeidx,
       ).length;
       if (index < importedCount) {
         const section = this.props.module.sections.find(
-          (sec) => sec.kind === wasm.SectionKind.import
+          (sec) => sec.kind === wasm.SectionKind.import,
         );
         if (section) {
           this.setState({ section, func: undefined, data: undefined });
@@ -473,8 +470,7 @@ class Weave extends preact.Component<Weave.Props, Weave.State> {
             return (
               <Screen title='custom section'>
                 <p>
-                  No view yet for <code>{this.state.section.name}</code>.
-                  Showing raw dump.
+                  No view yet for <code>{this.state.section.name}</code>. Showing raw dump.
                 </p>
                 <HexView
                   data={module.customSectionData.get(this.state.section.index)!}
@@ -486,8 +482,7 @@ class Weave extends preact.Component<Weave.Props, Weave.State> {
         default:
           return (
             <div>
-              TODO: no viewer implemented for '{this.state.section.kind}'
-              section yet
+              TODO: no viewer implemented for '{this.state.section.kind}' section yet
             </div>
           );
       }
@@ -498,7 +493,8 @@ class Weave extends preact.Component<Weave.Props, Weave.State> {
           module={this.props.module}
           func={this.state.func}
           name={module.functionNames.get(this.state.func.index)}
-        ></Function>
+        >
+        </Function>
       );
     } else if (this.state.data) {
       return (
@@ -583,12 +579,10 @@ class App extends preact.Component<{}, App.State> {
         </header>
         <main>
           <p>
-            Weave is a viewer for WebAssembly <code>.wasm</code> files, like an
-            interactive <code>objdump</code>.
+            Weave is a viewer for WebAssembly <code>.wasm</code> files, like an interactive <code>objdump</code>.
           </p>
           <p>
-            Load a file by drag'n'drop'ing a <code>.wasm</code> file onto this
-            page.
+            Load a file by drag'n'drop'ing a <code>.wasm</code> file onto this page.
           </p>
         </main>
       </>
@@ -648,7 +642,7 @@ function load(wasmBytes: ArrayBuffer) {
             const view = new DataView(
               reader.view.buffer,
               reader.view.byteOffset + reader.ofs,
-              reader.view.byteLength - reader.ofs
+              reader.view.byteLength - reader.ofs,
             );
             section.name = `custom: '${custom.name}'`;
             module.customSectionData.set(section.index, view);
@@ -709,7 +703,7 @@ function load(wasmBytes: ArrayBuffer) {
         break;
       case wasm.SectionKind.export:
         module.exports = wasm.readExportSection(
-          wasm.getSectionReader(wasmBytes, section)
+          wasm.getSectionReader(wasmBytes, section),
         );
         for (const exp of module.exports) {
           if (exp.desc.kind == wasm.DescKind.funcidx) {

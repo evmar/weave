@@ -26,15 +26,15 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
 
   shouldComponentUpdate(
     nextProps: Readonly<Props<T>>,
-    nextState: Readonly<State<T>>
+    nextState: Readonly<State<T>>,
   ): boolean {
     return this.props !== nextProps || this.state !== nextState;
   }
 
-  rows = memo(function (
+  rows = memo(function(
     sortBy: Column<T> | undefined,
     limit: number,
-    rows: T[]
+    rows: T[],
   ) {
     rows = [...rows];
     if (sortBy && sortBy.sort) {
@@ -50,7 +50,7 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
     const rows = this.rows(
       this.state.sortBy,
       this.state.limit,
-      this.props.children
+      this.props.children,
     );
     return (
       <table cellSpacing='0' cellPadding='0'>
@@ -60,12 +60,8 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
               const canSort = col.sort !== undefined;
               return (
                 <th
-                  className={
-                    (col.className ?? '') + (canSort ? ' pointer' : '')
-                  }
-                  onClick={
-                    canSort ? () => this.setState({ sortBy: col }) : undefined
-                  }
+                  className={(col.className ?? '') + (canSort ? ' pointer' : '')}
+                  onClick={canSort ? () => this.setState({ sortBy: col }) : undefined}
                 >
                   {col.name}
                   {this.state.sortBy === col && ' \u2193'}
@@ -95,16 +91,12 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
             <tr>
               <td colSpan={this.props.columns.length}>
                 <button
-                  onClick={() =>
-                    this.setState({ limit: this.state.limit + 1000 })
-                  }
+                  onClick={() => this.setState({ limit: this.state.limit + 1000 })}
                 >
-                  show{' '}
-                  {Math.min(
+                  show {Math.min(
                     1000,
-                    this.props.children.length - this.rows.length
-                  )}{' '}
-                  more
+                    this.props.children.length - this.rows.length,
+                  )} more
                 </button>
               </td>
             </tr>

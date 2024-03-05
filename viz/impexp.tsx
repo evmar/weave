@@ -1,14 +1,7 @@
-import {
-  Screen,
-  FunctionRef,
-  FunctionType,
-  Indexed,
-  ParsedModule,
-  Link,
-} from './viz';
+import { Fragment, h } from 'preact';
 import * as wasm from 'wasm';
-import { h, Fragment } from 'preact';
 import { Column, Table } from './table';
+import { FunctionRef, FunctionType, Indexed, Link, ParsedModule, Screen } from './viz';
 
 function ImpExpDesc(props: {
   module: ParsedModule;
@@ -19,20 +12,18 @@ function ImpExpDesc(props: {
     case wasm.DescKind.typeidx:
       return (
         <div>
-          function {props.index}:{' '}
-          <FunctionType type={props.module.types[props.desc.index]} />
+          function {props.index}: <FunctionType type={props.module.types[props.desc.index]} />
         </div>
       );
     case wasm.DescKind.funcidx:
       return (
         <div>
-          function {props.desc.index}:{' '}
-          <FunctionRef module={props.module} index={props.desc.index} />
+          function {props.desc.index}: <FunctionRef module={props.module} index={props.desc.index} />
         </div>
       );
     case wasm.DescKind.tableidx: {
       const sec = props.module.sections.findIndex(
-        (sec) => sec.kind === wasm.SectionKind.table
+        (sec) => sec.kind === wasm.SectionKind.table,
       )!;
       return (
         <div>
@@ -42,7 +33,7 @@ function ImpExpDesc(props: {
     }
     case wasm.DescKind.memidx: {
       const sec = props.module.sections.findIndex(
-        (sec) => sec.kind === wasm.SectionKind.memory
+        (sec) => sec.kind === wasm.SectionKind.memory,
       )!;
       return (
         <div>
@@ -69,9 +60,7 @@ export function Imports(props: { module: ParsedModule }) {
     {
       name: 'desc',
       cellClass: 'nowrap',
-      data: (imp) => (
-        <ImpExpDesc module={props.module} index={imp.index} desc={imp.desc} />
-      ),
+      data: (imp) => <ImpExpDesc module={props.module} index={imp.index} desc={imp.desc} />,
     },
   ];
   return (

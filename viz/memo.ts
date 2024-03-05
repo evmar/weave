@@ -9,7 +9,7 @@ function arrayEqual<T>(a: T[], b: T[]): boolean {
 export function memo<T extends Function>(fn: T): T {
   let lastArgs: unknown[] = [];
   let lastValue: T | undefined = undefined;
-  const memoed = function () {
+  const memoed = function() {
     if (!arrayEqual(arguments as any as unknown[], lastArgs)) {
       lastArgs = [...arguments];
       lastValue = fn(...lastArgs);

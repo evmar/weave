@@ -1,10 +1,10 @@
-import * as wasm from 'wasm';
-import { Indexed, ParsedModule, Screen } from './viz';
+import * as d3 from 'd3';
 import { h } from 'preact';
 import * as preact from 'preact';
+import * as wasm from 'wasm';
 import { Instructions } from './code';
 import { Column, Table } from './table';
-import * as d3 from 'd3';
+import { Indexed, ParsedModule, Screen } from './viz';
 
 export function DataSection(props: {
   module: ParsedModule;
@@ -72,8 +72,7 @@ export class HexView extends preact.Component<HexView.Props, HexView.State> {
         }
         const byte = view.getUint8(index);
         const hexByte = hex(byte);
-        const vizByte =
-          byte >= 0x20 && byte < 0x7f ? String.fromCharCode(byte) : '.';
+        const vizByte = byte >= 0x20 && byte < 0x7f ? String.fromCharCode(byte) : '.';
         hexBytes.push(
           ' ',
           <span
@@ -81,7 +80,7 @@ export class HexView extends preact.Component<HexView.Props, HexView.State> {
             className={index === this.state.hover ? 'highlight' : ''}
           >
             {hexByte}
-          </span>
+          </span>,
         );
         vizBytes.push(
           <span
@@ -89,15 +88,13 @@ export class HexView extends preact.Component<HexView.Props, HexView.State> {
             className={index === this.state.hover ? 'highlight' : ''}
           >
             {vizByte}
-          </span>
+          </span>,
         );
       }
       rows.push(
         <div>
-          {hex(row * 16, 6)} {hexBytes}
-          {'  '}
-          {vizBytes}
-        </div>
+          {hex(row * 16, 6)} {hexBytes}{'  '}{vizBytes}
+        </div>,
       );
     }
     return <pre>{rows}</pre>;

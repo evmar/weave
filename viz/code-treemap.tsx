@@ -1,10 +1,10 @@
-import { Indexed } from './viz';
-import * as wasmCode from 'wasm/code';
-import { h, Fragment } from 'preact';
+import * as d3 from 'd3';
+import { Fragment, h } from 'preact';
 import * as preact from 'preact';
 import * as preactCompat from 'preact/compat';
-import * as d3 from 'd3';
+import * as wasmCode from 'wasm/code';
 import * as webtreemap from 'webtreemap/build/webtreemap';
+import { Indexed } from './viz';
 
 /**
  * Given a C++ function name, simplify it as appropriate for the treemap.
@@ -34,8 +34,9 @@ function simplifyCPPName(name: string): string[] {
       case '>':
         if (name[i + 1] !== '=') {
           // `>=`
-          if (stack.pop() !== '<')
+          if (stack.pop() !== '<') {
             throw new Error('failed to parse C++ symbol');
+          }
           continue;
         }
         break;
@@ -75,7 +76,7 @@ function simplifyCPPName(name: string): string[] {
 
 export function showCodeTreemap(
   headers: Indexed<wasmCode.FunctionHeader>[],
-  nameMap: Map<number, string>
+  nameMap: Map<number, string>,
 ) {
   const root = new FunctionNode('code');
 
@@ -119,7 +120,7 @@ export function showCodeTreemap(
         container.remove();
       }}
     />,
-    container
+    container,
   );
 }
 

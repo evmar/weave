@@ -1,7 +1,7 @@
+export { Reader } from './reader';
 export * from './sections';
 export * from './shared';
 export * from './type';
-export { Reader } from './reader';
 import { Reader } from './reader';
 import { SectionKind } from './sections';
 
@@ -14,7 +14,7 @@ export interface SectionHeader {
 
 export function getSectionReader(
   buffer: ArrayBuffer,
-  section: SectionHeader
+  section: SectionHeader,
 ): Reader {
   return new Reader(new DataView(buffer, section.ofs, section.len));
 }

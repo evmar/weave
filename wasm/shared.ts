@@ -42,7 +42,7 @@ type DescIndexKinds =
   | DescIndex<DescKind.globalidx>;
 
 export function descToString(
-  desc: DescTable | DescMem | DescGlobal | DescIndexKinds
+  desc: DescTable | DescMem | DescGlobal | DescIndexKinds,
 ): string {
   switch (desc.kind) {
     case DescKind.table:
@@ -78,9 +78,7 @@ export function readLimits(r: Reader): Limits {
 }
 
 export function limitsToString(limits: Limits) {
-  return `min=${limits.minimum} max=${limits.maximum ?? 'none'}${
-    limits.shared ? ' shared' : ''
-  }`;
+  return `min=${limits.minimum} max=${limits.maximum ?? 'none'}${limits.shared ? ' shared' : ''}`;
 }
 
 export interface TableType {

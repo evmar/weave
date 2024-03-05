@@ -6,7 +6,7 @@ function main(args: string[]) {
   const file = fs.readFileSync(args[0]);
   const buf = file.buffer.slice(
     file.byteOffset,
-    file.byteOffset + file.byteLength
+    file.byteOffset + file.byteLength,
   );
 
   const module = wasm.read(new DataView(buf));

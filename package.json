@@ -8,10 +8,7 @@
   "devDependencies": {
     "typescript": "^4.6.3"
   },
-  "dependencies": {
-    "prettier": "^2.6.2"
-  },
   "scripts": {
-    "fmt": "prettier -w ."
+    "fmt": "dprint fmt"
   }
 }

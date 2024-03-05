@@ -84,7 +84,7 @@ export class Reader {
     const view = new DataView(
       this.view.buffer,
       this.view.byteOffset + this.ofs,
-      len
+      len,
     );
     this.ofs += len;
     return view;
@@ -102,7 +102,7 @@ export class Reader {
   name(): string {
     const len = this.readUint();
     const str = textDecoder.decode(
-      new DataView(this.view.buffer, this.view.byteOffset + this.ofs, len)
+      new DataView(this.view.buffer, this.view.byteOffset + this.ofs, len),
     );
     this.ofs += len;
     return str;

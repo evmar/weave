@@ -1,21 +1,13 @@
-import {
-  Function,
-  FunctionRef,
-  GlobalRef,
-  Indexed,
-  Screen,
-  ParsedModule,
-  InlineEdit,
-} from './viz';
-import * as wasmCode from 'wasm/code';
-import * as preact from 'preact';
-import { h, Fragment } from 'preact';
-import * as hooks from 'preact/hooks';
 import * as d3 from 'd3';
-import { Column, Table } from './table';
-import { Reader } from 'wasm/reader';
+import * as preact from 'preact';
+import { Fragment, h } from 'preact';
+import * as hooks from 'preact/hooks';
 import { funcTypeToString } from 'wasm';
+import * as wasmCode from 'wasm/code';
+import { Reader } from 'wasm/reader';
 import { showCodeTreemap } from './code-treemap';
+import { Column, Table } from './table';
+import { Function, FunctionRef, GlobalRef, Indexed, InlineEdit, ParsedModule, Screen } from './viz';
 
 function XRef(props: {
   id: string;
@@ -126,7 +118,7 @@ export class Instructions extends preact.Component<
 
   private *renderInstr(
     instr: wasmCode.Instruction,
-    indent = 0
+    indent = 0,
   ): Generator<preact.ComponentChild> {
     switch (instr.op) {
       case wasmCode.Instr.block: {
@@ -162,8 +154,7 @@ export class Instructions extends preact.Component<
       case wasmCode.Instr.call:
         yield (
           <div style={`padding-left: ${indent * 2}ch`}>
-            {instr.op}{' '}
-            <FunctionRef module={this.props.module} index={instr.func} />
+            {instr.op} <FunctionRef module={this.props.module} index={instr.func} />
           </div>
         );
         break;
@@ -172,8 +163,7 @@ export class Instructions extends preact.Component<
       case wasmCode.Instr.global_set:
         yield (
           <div style={`padding-left: ${indent * 2}ch`}>
-            {instr.op}{' '}
-            <GlobalRef module={this.props.module} index={instr.global} />
+            {instr.op} <GlobalRef module={this.props.module} index={instr.global} />
           </div>
         );
         break;
@@ -207,16 +197,15 @@ export class Instructions extends preact.Component<
       case wasmCode.Instr.br_table:
         yield (
           <div style={`padding-left: ${indent * 2}ch`}>
-            {instr.op}{' '}
-            {instr.labels.map((target, i) => {
+            {instr.op} {instr.labels.map((target, i) => {
               const label = this.labelRef(target);
               return (
                 <span>
-                  {i}=&gt;{label}{' '}
+                  {i}=&gt;{label}
+                  {' '}
                 </span>
               );
-            })}{' '}
-            else=&gt;
+            })} else=&gt;
             {this.labelRef(instr.default)}
           </div>
         );
@@ -280,7 +269,7 @@ export function Function(props: {
   name?: string;
 }) {
   const funcBody = wasmCode.readFunction(
-    new Reader(new DataView(props.module.bytes, props.func.ofs, props.func.len))
+    new Reader(new DataView(props.module.bytes, props.func.ofs, props.func.len)),
   );
   const funcType = props.module.types[props.func.typeidx];
   const [localNames, setLocalNames] = hooks.useState<Map<string, string>>(
@@ -296,13 +285,13 @@ export function Function(props: {
         index++;
       }
       return localNames;
-    }
+    },
   );
   const nameLocal = (id: string, name: string) => {
     setLocalNames(new Map(localNames.set(id, name)));
   };
   const [highlight, setHighlight] = hooks.useState<string | undefined>(
-    undefined
+    undefined,
   );
   return (
     <Screen title={`function ${props.func.index}`}>
@@ -372,7 +361,7 @@ export function Function(props: {
 
 /** <input type=search incremental>, but with hacks because incremental isn't in typings. */
 function IncrementalInput(
-  args: preact.JSX.HTMLAttributes<HTMLInputElement>
+  args: preact.JSX.HTMLAttributes<HTMLInputElement>,
 ): preact.JSX.Element {
   const incrementalArgs = { type: 'search', incremental: true, ...args };
   return <input {...incrementalArgs} />;
@@ -387,14 +376,14 @@ interface CodeProps {
 export function CodeSection(props: CodeProps) {
   const totalSize = hooks.useMemo(
     () => d3.sum(props.children.map((f) => f.len)),
-    props.children
+    props.children,
   );
   const [filter, setFilter] = hooks.useState('');
   const funcs = filter
     ? props.children.filter((f) => {
-        const name = props.functionNames.get(f.index);
-        return name?.match(filter);
-      })
+      const name = props.functionNames.get(f.index);
+      return name?.match(filter);
+    })
     : props.children;
 
   const columns: Column<Indexed<wasmCode.FunctionHeader>>[] = [
@@ -405,7 +394,7 @@ export function CodeSection(props: CodeProps) {
       sort: (a, b) =>
         d3.ascending(
           props.functionNames.get(a.index),
-          props.functionNames.get(b.index)
+          props.functionNames.get(b.index),
         ),
       data: (f) => <code>{props.functionNames.get(f.index)}</code>,
     },

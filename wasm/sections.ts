@@ -3,16 +3,16 @@ import { Reader } from './reader';
 import {
   DescGlobal,
   DescIndex,
+  DescKind,
   DescMem,
   DescTable,
   descToString,
-  DescKind,
   GlobalType,
+  Limits,
   readGlobalType,
   readLimits,
   readTable,
   TableType,
-  Limits,
 } from './shared';
 import { FuncType, readFuncType, readValType, Type } from './type';
 
@@ -273,7 +273,7 @@ export function readDataSection(r: Reader): DataSectionData[] {
       }
       default:
         throw new Error(
-          `unhandled data section data flags ${flags.toString(16)}`
+          `unhandled data section data flags ${flags.toString(16)}`,
         );
     }
   });

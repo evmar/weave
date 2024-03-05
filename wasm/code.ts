@@ -804,9 +804,9 @@ export function print(instrs: Instruction[], indent = 0) {
     }
     console.log(toPrint.join(''));
     if (
-      instr.op === Instr.if ||
-      instr.op === Instr.block ||
-      instr.op === Instr.loop
+      instr.op === Instr.if
+      || instr.op === Instr.block
+      || instr.op === Instr.loop
     ) {
       print(instr.body, indent + 1);
       if (instr.op === Instr.if && instr.else) {

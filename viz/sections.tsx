@@ -1,7 +1,7 @@
-import * as wasm from 'wasm';
 import * as d3 from 'd3';
 import { h } from 'preact';
 import * as preact from 'preact';
+import * as wasm from 'wasm';
 import { ParsedModule, Screen } from './viz';
 
 interface SectionsPartProps {
@@ -13,9 +13,7 @@ interface SectionsPartProps {
 function Pie(props: SectionsPartProps) {
   const width = 200;
   const height = 200;
-  const colors = props.sections.map((_, i) =>
-    d3.interpolateBlues(i / props.sections.length)
-  );
+  const colors = props.sections.map((_, i) => d3.interpolateBlues(i / props.sections.length));
   const color = d3.scaleOrdinal(props.sections, colors);
 
   const arcs = d3
@@ -43,15 +41,13 @@ function Pie(props: SectionsPartProps) {
             .data(arcs)
             .join('path')
             .attr('fill', (d) => color(d.data))
-            .attr('stroke', (d) =>
-              d.data === props.hovered ? 'black' : 'none'
-            )
+            .attr('stroke', (d) => d.data === props.hovered ? 'black' : 'none')
             .attr('d', arc)
             .on('mouseover', (ev, d) => props.onHover(d.data))
             .on('mouseout', (ev, d) => props.onHover(undefined))
-            .on('click', (e, d) => props.onClick(d.data))
-        }
-      ></g>
+            .on('click', (e, d) => props.onClick(d.data))}
+      >
+      </g>
     </svg>
   );
 }
@@ -70,9 +66,7 @@ function SectionTable(props: SectionsPartProps) {
       <tbody id='table'>
         {props.sections.map((sec) => (
           <tr
-            className={
-              'pointer hover ' + (sec === props.hovered ? 'highlight' : '')
-            }
+            className={'pointer hover ' + (sec === props.hovered ? 'highlight' : '')}
             onMouseEnter={() => props.onHover(sec)}
             onMouseLeave={() => props.onHover(undefined)}
             onClick={() => props.onClick(sec)}
