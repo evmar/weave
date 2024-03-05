@@ -9,20 +9,20 @@ function main(args: string[]) {
     file.byteOffset + file.byteLength,
   );
 
-  const module = wasm.read(new DataView(buf));
+  const module = wasm.read(buf);
   let funcIndex = 0;
-  for (const sec of module.sections) {
+  for (const sec of module) {
     console.log(`# section: ${sec.kind} (${sec.len} bytes)`);
     switch (sec.kind) {
       case wasm.SectionKind.type: {
-        const types = wasm.readTypeSection(module.getReader(sec));
+        const types = wasm.readTypeSection(wasm.getSectionReader(buf, sec));
         for (let i = 0; i < types.length; i++) {
           console.log(`  ${i}: ${wasm.funcTypeToString(types[i])}`);
         }
         break;
       }
       case wasm.SectionKind.import:
-        for (const imp of wasm.readImportSection(module.getReader(sec))) {
+        for (const imp of wasm.readImportSection(wasm.getSectionReader(buf, sec))) {
           switch (imp.desc.kind) {
             case wasm.DescKind.typeidx:
               console.log(`  func ${funcIndex++}: ${wasm.importToString(imp)}`);
@@ -33,12 +33,16 @@ function main(args: string[]) {
         }
         break;
       case wasm.SectionKind.export:
-        for (const exp of wasm.readExportSection(module.getReader(sec))) {
+        for (const exp of wasm.readExportSection(wasm.getSectionReader(buf, sec))) {
           console.log(`  ${wasm.exportToString(exp)}`);
         }
         break;
       case wasm.SectionKind.code:
-        for (const func of code.read(module.getReader(sec))) {
+        for (const funcHeader of code.read(wasm.getSectionReader(buf, sec))) {
+          const func = code.readFunction(
+            new wasm.Reader(new DataView(buf, funcHeader.ofs, funcHeader.len)),
+          );
+
           console.log(`  func ${funcIndex++}`);
           if (func.locals.length > 0) {
             console.log('    locals', func.locals);
