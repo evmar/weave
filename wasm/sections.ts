@@ -104,13 +104,13 @@ export function readNameSection(r: Reader): NameSection {
 // https://github.com/WebAssembly/tool-conventions/blob/main/ProducersSection.md
 export interface ProducersField {
   name: string;
-  values: Array<[string, string]>;
+  values: Array<{ name: string, version: string }>;
 }
 export function readProducersSection(r: Reader): ProducersField[] {
   return r.vec(() => {
     const name = r.name();
-    const values: [string, string][] = r.vec(() => {
-      return [r.name(), r.name()];
+    const values = r.vec(() => {
+      return { name: r.name(), version: r.name() };
     });
     return { name, values };
   });
@@ -181,10 +181,10 @@ export function readGlobalSection(r: Reader): Global[] {
 export interface Export {
   name: string;
   desc:
-    | DescIndex<DescKind.funcidx>
-    | DescIndex<DescKind.tableidx>
-    | DescIndex<DescKind.memidx>
-    | DescIndex<DescKind.globalidx>;
+  | DescIndex<DescKind.funcidx>
+  | DescIndex<DescKind.tableidx>
+  | DescIndex<DescKind.memidx>
+  | DescIndex<DescKind.globalidx>;
 }
 export function exportToString(exp: Export): string {
   return `${exp.name} (${descToString(exp.desc)})`;

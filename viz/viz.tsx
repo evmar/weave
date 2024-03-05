@@ -156,7 +156,7 @@ function ProducersSection(props: { module: ParsedModule }) {
           <tr>
             <td>{field.name}</td>
             <td>
-              {field.values.map(([name, version]) => (
+              {field.values.map(({ name, version }) => (
                 <div>
                   {name} {version}
                 </div>
@@ -641,7 +641,7 @@ function load(wasmBytes: ArrayBuffer) {
             const producers = wasm.readProducersSection(reader);
             const lang = producers.find((p) => p.name == 'language');
             if (lang) {
-              switch (lang.values[0][0]) {
+              switch (lang.values[0].name) {
                 case 'Go':
                   module.toolchain = 'Go';
                   break;
