@@ -34,20 +34,25 @@ export function showCodeTreemap(
 
   for (const header of headers) {
     const name = nameMap.get(header.index);
-    let path = ['unknown', String(header.index)];
+    if (!name) {
+      root.addFunction(header, ['no name', `${header.index}`], `noname ${header.index}`);
+      return;
+    }
+    let path;
     try {
-      if (name) {
-        const parsed = nameToPath(name).filter((p) => p);
-        if (parsed.length === 0) {
-          console.error(`BUG: failed to simplify ${name}`);
-        } else {
-          path = parsed;
-        }
+      const parsed = nameToPath(name).filter((p) => p);
+      if (parsed.length === 0) {
+        console.error(`BUG: failed to simplify ${name}`);
+      } else {
+        path = parsed;
       }
     } catch (err: unknown) {
       console.error(`parsing ${JSON.stringify(name)}: ${err}`);
     }
-    root.addFunction(header, path);
+    if (!path) {
+      path = ['parse failure', name];
+    }
+    root.addFunction(header, path, name);
   }
   root.sort();
 
@@ -94,23 +99,28 @@ class Treemap extends preact.Component<TreemapProps> {
     const { root } = this.props;
     webtreemap.render(container, root, {
       caption(node) {
-        return `${node.id} (${d3.format(',')(node.size)})`;
+        let caption = `${node.id} (${d3.format(',')(node.size)})`;
+        const fn = node as FunctionNode;
+        if (fn.originalName && fn.originalName !== node.id) {
+          caption += `\n${(node as FunctionNode).originalName}`;
+        }
+        return caption;
       },
     });
   }
 }
 class FunctionNode implements webtreemap.Node {
-  constructor(readonly id: string, public size: number = 0) {
+  constructor(readonly id: string, readonly originalName?: string, public size: number = 0) {
   }
 
   children: webtreemap.Node[] = [];
   childrenByName = new Map<string, FunctionNode>();
 
-  addFunction(func: wasmCode.FunctionHeader, path: string[]) {
+  addFunction(func: wasmCode.FunctionHeader, path: string[], originalName: string) {
     this.size += func.len;
     const [head, ...tail] = path;
     if (tail.length === 0) {
-      const child = new FunctionNode(head, func.len);
+      const child = new FunctionNode(head, originalName, func.len);
       this.children.push(child);
       return;
     }
@@ -120,7 +130,7 @@ class FunctionNode implements webtreemap.Node {
       this.children.push(child);
       this.childrenByName.set(head, child);
     }
-    child.addFunction(func, tail);
+    child.addFunction(func, tail, originalName);
   }
 
   sort() {

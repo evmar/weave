@@ -60,35 +60,55 @@ export function parseCPP(name: string): string[] {
   return fn.split('::');
 }
 
+type Part = string | Part[];
 export function parseRust(name: string): string[] {
-  const stack: Array<[string, string]> = [['', '']];
-  for (let i = 0; i < name.length; i++) {
-    const c = name[i];
-    switch (c) {
-      case '<':
-        stack.push([c, '']);
-        break;
-      case '>':
-        let [bracket, text] = stack.pop()!;
-        if (bracket != '<') {
-          throw new Error('<> mismatch');
+  let ns = /::/y;
+  let ident = /[^:<> ]+/y;
+  let as = / as /y;
+  let i = 0;
+  function parse(): Part[] {
+    const parts: Part[] = [];
+    while (i < name.length) {
+      let match;
+      if (name[i] === '<') {
+        i++;
+        const p = parse();
+        if (name[i] !== '>') {
+          throw new Error('parse error');
         }
-        const match = text.match(/(.*?) as (.*?)/);
-        if (match) {
-          text = match[1];
-        }
-        stack[stack.length - 1][1] += text;
-        break;
-      default:
-        stack[stack.length - 1][1] += c;
+        i++;
+        parts.push(p);
+      } else if (name[i] === '>') {
+        return parts;
+      } else if (ns.lastIndex = i, ns.test(name)) {
+        i = ns.lastIndex;
+      } else if (ident.lastIndex = i, match = ident.exec(name)) {
+        i = ident.lastIndex;
+        parts.push(match[0]);
+      } else if (as.lastIndex = i, as.test(name)) {
+        i = as.lastIndex;
+        const rest = parse();
+      } else {
+        throw new Error('parse fail');
+      }
     }
+    return parts;
   }
-  name = stack[0][1];
 
-  const parts = name.split('::');
-  const last = parts[parts.length - 1];
-  if (/h[0-9a-f]{16}/.test(last)) {
-    parts.pop();
+  let parts = parse();
+  if (typeof parts[0] !== 'string') {
+    // <foo as bar>::baz => foo::baz
+    parts = parts[0].concat(parts.slice(1));
   }
-  return parts;
+
+  function flatten(part: Part): string {
+    if (typeof part === 'string') return part;
+    return '<' + part.map((p) => flatten(p)).join('::') + '>';
+  }
+  let flat = parts.map(flatten);
+  const last = flat[flat.length - 1];
+  if (/h[0-9a-f]{16}/.test(last)) {
+    flat.pop();
+  }
+  return flat;
 }

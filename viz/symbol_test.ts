@@ -44,7 +44,16 @@ describe('parseRust', () => {
     );
   });
 
-  test('<a as b>', () => {
+  test('generic', () => {
+    assert.deepStrictEqual(
+      symbol.parseRust(
+        'hashbrown::raw::RawTable<T,A>::reserve_rehash::h4ed5a7010a909eec',
+      ),
+      ['hashbrown', 'raw', 'RawTable', '<T,A>', 'reserve_rehash'],
+    );
+  })
+
+  test('<a as b>::foo', () => {
     assert.deepStrictEqual(
       symbol.parseRust(
         '<iced_x86::formatter::intel::info::SimpleInstrInfo_Reg32 as iced_x86::formatter::intel::info::InstrInfo>::op_info::h324368603d2df9ba'
