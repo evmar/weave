@@ -4967,12 +4967,53 @@
     return fn.split("::");
   }
   function parseRust(name) {
-    const parts = name.split("::");
-    const last = parts[parts.length - 1];
-    if (/h[0-9a-f]{16}/.test(last)) {
-      parts.pop();
+    let ns = /::/y;
+    let ident = /[^:<> ]+/y;
+    let as = / as /y;
+    let i3 = 0;
+    function parse() {
+      const parts2 = [];
+      while (i3 < name.length) {
+        let match;
+        if (name[i3] === "<") {
+          i3++;
+          const p3 = parse();
+          if (name[i3] !== ">") {
+            throw new Error("parse error");
+          }
+          i3++;
+          parts2.push(p3);
+        } else if (name[i3] === ">") {
+          return parts2;
+        } else if (ns.lastIndex = i3, ns.test(name)) {
+          i3 = ns.lastIndex;
+        } else if (ident.lastIndex = i3, match = ident.exec(name)) {
+          i3 = ident.lastIndex;
+          parts2.push(match[0]);
+        } else if (as.lastIndex = i3, as.test(name)) {
+          i3 = as.lastIndex;
+          const rest = parse();
+        } else {
+          throw new Error("parse fail");
+        }
+      }
+      return parts2;
     }
-    return parts;
+    let parts = parse();
+    if (typeof parts[0] !== "string") {
+      parts = parts[0].concat(parts.slice(1));
+    }
+    function flatten(part) {
+      if (typeof part === "string")
+        return part;
+      return "<" + part.map((p3) => flatten(p3)).join("::") + ">";
+    }
+    let flat = parts.map(flatten);
+    const last = flat[flat.length - 1];
+    if (/h[0-9a-f]{16}/.test(last)) {
+      flat.pop();
+    }
+    return flat;
   }
 
   // code-treemap.tsx
@@ -4996,20 +5037,25 @@
     }
     for (const header of headers) {
       const name = nameMap.get(header.index);
-      let path2 = ["unknown", String(header.index)];
+      if (!name) {
+        root2.addFunction(header, ["no name", `${header.index}`], `noname ${header.index}`);
+        return;
+      }
+      let path2;
       try {
-        if (name) {
-          const parsed = nameToPath(name).filter((p3) => p3);
-          if (parsed.length === 0) {
-            console.error(`BUG: failed to simplify ${name}`);
-          } else {
-            path2 = parsed;
-          }
+        const parsed = nameToPath(name).filter((p3) => p3);
+        if (parsed.length === 0) {
+          console.error(`BUG: failed to simplify ${name}`);
+        } else {
+          path2 = parsed;
         }
       } catch (err) {
         console.error(`parsing ${JSON.stringify(name)}: ${err}`);
       }
-      root2.addFunction(header, path2);
+      if (!path2) {
+        path2 = ["parse failure", name];
+      }
+      root2.addFunction(header, path2, name);
     }
     root2.sort();
     const container = document.createElement("div");
@@ -5046,33 +5092,40 @@
       const { root: root2 } = this.props;
       webtreemap.render(container, root2, {
         caption(node) {
-          return `${node.id} (${format(",")(node.size)})`;
+          let caption = `${node.id} (${format(",")(node.size)})`;
+          const fn = node;
+          if (fn.originalName && fn.originalName !== node.id) {
+            caption += `
+${node.originalName}`;
+          }
+          return caption;
         }
       });
     }
   };
   var FunctionNode = class {
-    constructor(id2, size = 0) {
+    constructor(id2, originalName, size = 0) {
+      this.id = id2;
+      this.originalName = originalName;
+      this.size = size;
       this.children = [];
       this.childrenByName = /* @__PURE__ */ new Map();
-      this.id = id2;
-      this.size = size;
     }
-    addFunction(func, path2) {
+    addFunction(func, path2, originalName) {
       this.size += func.len;
-      if (path2.length === 1) {
-        const child2 = new FunctionNode(path2[0], func.len);
+      const [head, ...tail] = path2;
+      if (tail.length === 0) {
+        const child2 = new FunctionNode(head, originalName, func.len);
         this.children.push(child2);
         return;
       }
-      const [head, ...tail] = path2;
       let child = this.childrenByName.get(head);
       if (!child) {
         child = new FunctionNode(head);
         this.children.push(child);
         this.childrenByName.set(head, child);
       }
-      child.addFunction(func, tail);
+      child.addFunction(func, tail, originalName);
     }
     sort() {
       this.children.sort((a3, b3) => descending(a3.size, b3.size));
@@ -5481,7 +5534,7 @@
   }
   var HexView = class extends _ {
     render() {
-      const visibleRows = 20;
+      const visibleRows = 100;
       const view = this.props.data;
       const rows = [];
       for (let row = 0; row < visibleRows && row * 16 < view.byteLength; row++) {
@@ -5497,6 +5550,8 @@
           const byte = view.getUint8(index);
           const hexByte = hex2(byte);
           const vizByte = byte >= 32 && byte < 127 ? String.fromCharCode(byte) : ".";
+          if (col === 8)
+            hexBytes.push(" ");
           hexBytes.push(" ", /* @__PURE__ */ v("span", {
             onMouseOver: () => this.setState({ hover: index }),
             className: index === this.state.hover ? "highlight" : ""
@@ -5508,7 +5563,9 @@
         }
         rows.push(/* @__PURE__ */ v("div", null, hex2(row * 16, 6), " ", hexBytes, "  ", vizBytes));
       }
-      return /* @__PURE__ */ v("pre", null, rows);
+      return /* @__PURE__ */ v("pre", {
+        class: "hex"
+      }, rows);
     }
   };
   function DataHex(props) {
