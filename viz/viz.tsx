@@ -493,8 +493,7 @@ class Weave extends preact.Component<Weave.Props, Weave.State> {
           module={this.props.module}
           func={this.state.func}
           name={module.functionNames.get(this.state.func.index)}
-        >
-        </Function>
+        />
       );
     } else if (this.state.data) {
       return (

@@ -64,7 +64,7 @@ export function Imports(props: { module: ParsedModule }) {
     },
   ];
   return (
-    <Screen module={props.module} title='"import" section'>
+    <Screen title='"import" section'>
       <p>Functions etc. imported from the host environment.</p>
       <Table columns={columns}>{props.module.imports}</Table>
     </Screen>
@@ -85,7 +85,7 @@ export function Exports(props: { module: ParsedModule }) {
     },
   ];
   return (
-    <Screen module={props.module} title='"export" section'>
+    <Screen title='"export" section'>
       <p>Functions etc. exported to the host environment.</p>
       <Table columns={columns}>{props.module.exports}</Table>
     </Screen>
