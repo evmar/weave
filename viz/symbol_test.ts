@@ -43,4 +43,13 @@ describe('parseRust', () => {
       ['std', 'sync', 'once', 'Once', 'call_once', '{{closure}}'],
     );
   });
+
+  test('<a as b>', () => {
+    assert.deepStrictEqual(
+      symbol.parseRust(
+        '<iced_x86::formatter::intel::info::SimpleInstrInfo_Reg32 as iced_x86::formatter::intel::info::InstrInfo>::op_info::h324368603d2df9ba'
+      ),
+      ['iced_x86', 'formatter', 'intel', 'info', 'SimpleInstrInfo_Reg32', 'op_info'],
+    );
+  });
 });

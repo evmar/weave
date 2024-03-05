@@ -61,6 +61,30 @@ export function parseCPP(name: string): string[] {
 }
 
 export function parseRust(name: string): string[] {
+  const stack: Array<[string, string]> = [['', '']];
+  for (let i = 0; i < name.length; i++) {
+    const c = name[i];
+    switch (c) {
+      case '<':
+        stack.push([c, '']);
+        break;
+      case '>':
+        let [bracket, text] = stack.pop()!;
+        if (bracket != '<') {
+          throw new Error('<> mismatch');
+        }
+        const match = text.match(/(.*?) as (.*?)/);
+        if (match) {
+          text = match[1];
+        }
+        stack[stack.length - 1][1] += text;
+        break;
+      default:
+        stack[stack.length - 1][1] += c;
+    }
+  }
+  name = stack[0][1];
+
   const parts = name.split('::');
   const last = parts[parts.length - 1];
   if (/h[0-9a-f]{16}/.test(last)) {
