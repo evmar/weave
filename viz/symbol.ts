@@ -59,9 +59,3 @@ export function simplifyCPPName(name: string): string[] {
   }
   return fn.split('::');
 }
-
-// Some test cases, if we ever add a test suite:
-// console.log(simplifyCPPName('(anonymous namespace)::itanium_demangle::NameType* (anonymous namespace)::DefaultAllocator::makeNode<(anonymous namespace)::itanium_demangle::NameType, char const (&) [14]>(char const (&) [14])'));
-// console.log(simplifyCPPName("std::__2::__hash_const_iterator<std::__2::__hash_node<char const*, void*>*> std::__2::__hash_table<char const*, Json::ValueAllocator::InternHash, Json::ValueAllocator::InternHash, std::__2::allocator<char const*> >::find<char const*>(char const* const&) const"));
-// console.log(simplifyCPPName("_$LT$alloc..alloc..Global$u20$as$u20$core..alloc..Allocator$GT$::deallocate::h24852c13dde43f03 (.103)"));
-// console.log(simplifyCPPName("decltype(((hb_forward<unsigned int&>(fp)) <= (hb_forward<unsigned int&>(fp0))) ? (hb_forward<unsigned int&>(fp)) : (hb_forward<unsigned int&>(fp0))) $_4::operator()<unsigned int&, unsigned int&>(unsigned int&, unsigned int&) const"));
