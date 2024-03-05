@@ -7,7 +7,7 @@ browse some random files I have been looking at:
 
 - figma.com [13mb, C++](https://evmar.github.io/weave/?wasm/figma.wasm)
 - gioui.org demo [7mb, Golang](https://evmar.github.io/weave/?wasm/gioui-demo.wasm)
-- retrowin32 [723kb, Rust](https://evmar.github.io/weave/?wasm/rust.wasm)
+- [retrowin32](https://github.com/evmar/retrowin32) [1.1mb, Rust](https://evmar.github.io/weave/?wasm/retrowin32.wasm)
 
 ## Development
 
