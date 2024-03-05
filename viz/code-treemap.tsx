@@ -100,24 +100,20 @@ class Treemap extends preact.Component<TreemapProps> {
   }
 }
 class FunctionNode implements webtreemap.Node {
-  id: string;
-  size: number;
+  constructor(readonly id: string, public size: number = 0) {
+  }
+
   children: webtreemap.Node[] = [];
   childrenByName = new Map<string, FunctionNode>();
 
-  constructor(id: string, size: number = 0) {
-    this.id = id;
-    this.size = size;
-  }
-
   addFunction(func: wasmCode.FunctionHeader, path: string[]) {
     this.size += func.len;
-    if (path.length === 1) {
-      const child = new FunctionNode(path[0], func.len);
+    const [head, ...tail] = path;
+    if (tail.length === 0) {
+      const child = new FunctionNode(head, func.len);
       this.children.push(child);
       return;
     }
-    const [head, ...tail] = path;
     let child = this.childrenByName.get(head);
     if (!child) {
       child = new FunctionNode(head);
