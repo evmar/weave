@@ -20,12 +20,13 @@ export function showCodeTreemap(
       nameToPath = (name: string) => name.split(/[._:]/);
       break;
     case 'Rust':
+      nameToPath = symbol.parseRust;
       break;
     default:
       for (const name of nameMap.values()) {
         if (name.startsWith('std::')) {
           // Likely C++ binary
-          nameToPath = symbol.simplifyCPPName;
+          nameToPath = symbol.parseCPP;
           break;
         }
       }

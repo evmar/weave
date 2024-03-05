@@ -4,7 +4,7 @@
  * but it does at least attempt to match parens and angle brackets as found in complex
  * C++ types.
  */
-export function simplifyCPPName(name: string): string[] {
+export function parseCPP(name: string): string[] {
   const stack = [];
   let letters = [];
   for (let i = 0; i < name.length; i++) {
@@ -58,4 +58,13 @@ export function simplifyCPPName(name: string): string[] {
     fn = parts[parts.length - 1];
   }
   return fn.split('::');
+}
+
+export function parseRust(name: string): string[] {
+  const parts = name.split('::');
+  const last = parts[parts.length - 1];
+  if (/h[0-9a-f]{16}/.test(last)) {
+    parts.pop();
+  }
+  return parts;
 }
