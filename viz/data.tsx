@@ -57,7 +57,7 @@ namespace HexView {
 }
 export class HexView extends preact.Component<HexView.Props, HexView.State> {
   render() {
-    const visibleRows = 20;
+    const visibleRows = 100;
     const view = this.props.data;
     const rows = [];
     for (let row = 0; row < visibleRows && row * 16 < view.byteLength; row++) {
@@ -73,6 +73,7 @@ export class HexView extends preact.Component<HexView.Props, HexView.State> {
         const byte = view.getUint8(index);
         const hexByte = hex(byte);
         const vizByte = byte >= 0x20 && byte < 0x7f ? String.fromCharCode(byte) : '.';
+        if (col === 8) hexBytes.push(' ');
         hexBytes.push(
           ' ',
           <span
@@ -97,7 +98,7 @@ export class HexView extends preact.Component<HexView.Props, HexView.State> {
         </div>,
       );
     }
-    return <pre>{rows}</pre>;
+    return <pre class='hex'>{rows}</pre>;
   }
 }
 
