@@ -30,6 +30,7 @@ export enum SectionKind {
   code = 'code',
   data = 'data',
   data_count = 'data count',
+  tag = 'tag'
 }
 
 export interface CustomSection {
@@ -184,7 +185,8 @@ export interface Export {
   | DescIndex<DescKind.funcidx>
   | DescIndex<DescKind.tableidx>
   | DescIndex<DescKind.memidx>
-  | DescIndex<DescKind.globalidx>;
+  | DescIndex<DescKind.globalidx>
+  | DescIndex<DescKind.tagidx>;
 }
 export function exportToString(exp: Export): string {
   return `${exp.name} (${descToString(exp.desc)})`;
@@ -200,6 +202,7 @@ export function readExportSection(r: Reader): Export[] {
         DescKind.tableidx,
         DescKind.memidx,
         DescKind.globalidx,
+        DescKind.tagidx,
       ] as const
     )[desc8];
     if (!kind) {

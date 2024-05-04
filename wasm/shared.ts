@@ -7,12 +7,14 @@ export enum DescKind {
   table = 'table',
   mem = 'mem',
   global = 'global',
+  tag = 'tag',
 
   funcidx = 'funcidx',
   typeidx = 'typeidx',
   tableidx = 'tableidx',
   memidx = 'memidx',
   globalidx = 'globalidx',
+  tagidx = 'tagidx',
 }
 
 export interface DescTable {
@@ -39,7 +41,8 @@ type DescIndexKinds =
   | DescIndex<DescKind.typeidx>
   | DescIndex<DescKind.tableidx>
   | DescIndex<DescKind.memidx>
-  | DescIndex<DescKind.globalidx>;
+  | DescIndex<DescKind.globalidx>
+  | DescIndex<DescKind.tagidx>;
 
 export function descToString(
   desc: DescTable | DescMem | DescGlobal | DescIndexKinds,
