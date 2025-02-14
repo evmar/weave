@@ -33,6 +33,13 @@ export function DataSection(props: {
     },
   ];
 
+  if (props.module.dataNames) {
+    columns.splice(1, 0, {
+      name: 'name',
+      data: (data) => props.module.dataNames.get(data.index),
+    });
+  }
+
   return (
     <Screen title='"data" section'>
       <p>Initialization-time data.</p>
@@ -106,9 +113,16 @@ export function DataHex(props: {
   module: ParsedModule;
   data: Indexed<wasm.DataSectionData>;
 }) {
+  const name = props.module.dataNames.get(props.data.index);
   return (
     <Screen title={`data[${props.data.index}]`}>
       <table>
+        {name ?
+          <tr>
+            <th>name</th>
+            <td>{name}</td>
+          </tr>
+          : null}
         <tr>
           <th className='right'>size</th>
           <td>{d3.format(',')(props.data.init.byteLength)} bytes</td>

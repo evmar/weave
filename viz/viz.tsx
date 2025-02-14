@@ -37,6 +37,7 @@ export interface ParsedModule {
 
   functionNames: Map<number, string>;
   globalNames: Map<number, string>;
+  dataNames: Map<number, string>;
 }
 
 type Link = [target: 'section' | 'function' | 'data', index: number];
@@ -609,6 +610,7 @@ function load(wasmBytes: ArrayBuffer) {
     customSectionData: new Map(),
     functionNames: new Map(),
     globalNames: new Map(),
+    dataNames: new Map(),
   };
   (window as any)['module'] = module;
 
@@ -634,6 +636,9 @@ function load(wasmBytes: ArrayBuffer) {
             }
             if (names.globalNames) {
               module.globalNames = names.globalNames;
+            }
+            if (names.dataNames) {
+              module.dataNames = names.dataNames;
             }
             break;
           case 'producers':
