@@ -298,7 +298,7 @@ export function Function(props: {
       <table>
         <tr>
           <th className='right'>name</th>
-          <td>{props.name}</td>
+          <td className='break-all'>{props.name}</td>
         </tr>
         {funcType.params.length > 0 && (
           <tr>

@@ -80,7 +80,7 @@ export function Exports(props: { module: ParsedModule }) {
     },
     {
       name: 'desc',
-      cellClass: 'nowrap',
+      cellClass: 'break-all',
       data: (exp) => <ImpExpDesc module={props.module} desc={exp.desc} />,
     },
   ];
