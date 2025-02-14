@@ -616,110 +616,6 @@
     this.__v && (this.__e = true, n2 && this.__h.push(n2), m(this));
   }, _.prototype.render = d, t = [], o = typeof Promise == "function" ? Promise.prototype.then.bind(Promise.resolve()) : setTimeout, g.__r = 0, f = 0;
 
-  // ../node_modules/preact/hooks/dist/hooks.module.js
-  var t2;
-  var u2;
-  var r2;
-  var o2 = 0;
-  var i2 = [];
-  var c2 = l.__b;
-  var f2 = l.__r;
-  var e2 = l.diffed;
-  var a2 = l.__c;
-  var v2 = l.unmount;
-  function l2(t3, r3) {
-    l.__h && l.__h(u2, t3, o2 || r3), o2 = 0;
-    var i3 = u2.__H || (u2.__H = { __: [], __h: [] });
-    return t3 >= i3.__.length && i3.__.push({}), i3.__[t3];
-  }
-  function m2(n2) {
-    return o2 = 1, p2(w2, n2);
-  }
-  function p2(n2, r3, o3) {
-    var i3 = l2(t2++, 2);
-    return i3.t = n2, i3.__c || (i3.__ = [o3 ? o3(r3) : w2(void 0, r3), function(n3) {
-      var t3 = i3.t(i3.__[0], n3);
-      i3.__[0] !== t3 && (i3.__ = [t3, i3.__[1]], i3.__c.setState({}));
-    }], i3.__c = u2), i3.__;
-  }
-  function y2(r3, o3) {
-    var i3 = l2(t2++, 3);
-    !l.__s && k2(i3.__H, o3) && (i3.__ = r3, i3.__H = o3, u2.__H.__h.push(i3));
-  }
-  function h2(n2) {
-    return o2 = 5, _2(function() {
-      return { current: n2 };
-    }, []);
-  }
-  function _2(n2, u3) {
-    var r3 = l2(t2++, 7);
-    return k2(r3.__H, u3) && (r3.__ = n2(), r3.__H = u3, r3.__h = n2), r3.__;
-  }
-  function x2() {
-    for (var t3; t3 = i2.shift(); )
-      if (t3.__P)
-        try {
-          t3.__H.__h.forEach(g2), t3.__H.__h.forEach(j2), t3.__H.__h = [];
-        } catch (u3) {
-          t3.__H.__h = [], l.__e(u3, t3.__v);
-        }
-  }
-  l.__b = function(n2) {
-    u2 = null, c2 && c2(n2);
-  }, l.__r = function(n2) {
-    f2 && f2(n2), t2 = 0;
-    var r3 = (u2 = n2.__c).__H;
-    r3 && (r3.__h.forEach(g2), r3.__h.forEach(j2), r3.__h = []);
-  }, l.diffed = function(t3) {
-    e2 && e2(t3);
-    var o3 = t3.__c;
-    o3 && o3.__H && o3.__H.__h.length && (i2.push(o3) !== 1 && r2 === l.requestAnimationFrame || ((r2 = l.requestAnimationFrame) || function(n2) {
-      var t4, u3 = function() {
-        clearTimeout(r3), b2 && cancelAnimationFrame(t4), setTimeout(n2);
-      }, r3 = setTimeout(u3, 100);
-      b2 && (t4 = requestAnimationFrame(u3));
-    })(x2)), u2 = null;
-  }, l.__c = function(t3, u3) {
-    u3.some(function(t4) {
-      try {
-        t4.__h.forEach(g2), t4.__h = t4.__h.filter(function(n2) {
-          return !n2.__ || j2(n2);
-        });
-      } catch (r3) {
-        u3.some(function(n2) {
-          n2.__h && (n2.__h = []);
-        }), u3 = [], l.__e(r3, t4.__v);
-      }
-    }), a2 && a2(t3, u3);
-  }, l.unmount = function(t3) {
-    v2 && v2(t3);
-    var u3, r3 = t3.__c;
-    r3 && r3.__H && (r3.__H.__.forEach(function(n2) {
-      try {
-        g2(n2);
-      } catch (n3) {
-        u3 = n3;
-      }
-    }), u3 && l.__e(u3, r3.__v));
-  };
-  var b2 = typeof requestAnimationFrame == "function";
-  function g2(n2) {
-    var t3 = u2, r3 = n2.__c;
-    typeof r3 == "function" && (n2.__c = void 0, r3()), u2 = t3;
-  }
-  function j2(n2) {
-    var t3 = u2;
-    n2.__c = n2.__(), u2 = t3;
-  }
-  function k2(n2, t3) {
-    return !n2 || n2.length !== t3.length || t3.some(function(t4, u3) {
-      return t4 !== n2[u3];
-    });
-  }
-  function w2(n2, t3) {
-    return typeof t3 == "function" ? t3(n2) : t3;
-  }
-
   // ../wasm/reader.ts
   var textDecoder = new TextDecoder();
   var Reader = class {
@@ -1465,7 +1361,8 @@
         "funcidx" /* funcidx */,
         "tableidx" /* tableidx */,
         "memidx" /* memidx */,
-        "globalidx" /* globalidx */
+        "globalidx" /* globalidx */,
+        "tagidx" /* tagidx */
       ][desc8];
       if (!kind) {
         throw new Error(`unhandled export desc type ${desc8.toString(16)}`);
@@ -1476,24 +1373,28 @@
   function readElementSection(r3) {
     return r3.vec(() => {
       const flags = r3.read8();
-      switch (flags) {
-        case 0: {
-          const expr = readExpr(r3);
-          const funcs = r3.vec(() => r3.readUint());
-          const init2 = funcs.map((index) => [
-            { op: "ref.func" /* ref_func */, index }
-          ]);
-          return {
-            type: "funcref" /* funcref */,
-            init: init2,
-            mode: "active" /* active */,
-            table: 0,
-            offset: expr
-          };
-        }
-        default:
-          throw new Error(`TODO: unhandled element flags ${flags.toString(16)}`);
+      const funcRefs = (flags & 4) === 0;
+      const unhandled = flags & ~4;
+      if (unhandled !== 0) {
+        throw new Error(`TODO: unhandled element flags ${flags.toString(16)}`);
       }
+      const offset = readExpr(r3);
+      let init2;
+      if (funcRefs) {
+        const funcs = r3.vec(() => r3.readUint());
+        init2 = funcs.map((index) => [
+          { op: "ref.func" /* ref_func */, index }
+        ]);
+      } else {
+        init2 = r3.vec(() => readExpr(r3));
+      }
+      return {
+        type: "funcref" /* funcref */,
+        init: init2,
+        mode: "active" /* active */,
+        table: 0,
+        offset
+      };
     });
   }
   function readDataSection(r3) {
@@ -1559,6 +1460,158 @@
       sections.push(readSectionHeader(r3, index));
     }
     return sections;
+  }
+
+  // module.tsx
+  function FunctionRef(props) {
+    return /* @__PURE__ */ v(Link, {
+      title: `function ${props.index}`,
+      target: ["function", props.index]
+    }, props.module.functionNames.get(props.index) ?? `function ${props.index}`);
+  }
+  function GlobalRef(props) {
+    const sec = props.module.sections.find((sec2) => sec2.kind === "global" /* global */);
+    return /* @__PURE__ */ v(Link, {
+      title: `global ${props.index}`,
+      target: ["section", sec.index]
+    }, props.module.globalNames.get(props.index) ?? `global ${props.index}`);
+  }
+  function FunctionType(props) {
+    return /* @__PURE__ */ v("code", null, funcTypeToString(props.type));
+  }
+  function loadModule(wasmBytes) {
+    const sections = read2(wasmBytes);
+    const module = {
+      bytes: wasmBytes,
+      toolchain: "Unknown",
+      sections: sections.map((sec, index) => ({ ...sec, index })),
+      types: [],
+      imports: [],
+      tables: [],
+      exports: [],
+      functions: [],
+      data: [],
+      elements: [],
+      globals: [],
+      memories: [],
+      customSectionData: /* @__PURE__ */ new Map(),
+      functionNames: /* @__PURE__ */ new Map(),
+      globalNames: /* @__PURE__ */ new Map(),
+      dataNames: /* @__PURE__ */ new Map()
+    };
+    window["module"] = module;
+    let importedFunctionCount = 0;
+    let importedGlobalCount = 0;
+    for (const section of module.sections) {
+      switch (section.kind) {
+        case "custom" /* custom */: {
+          const reader = getSectionReader(wasmBytes, section);
+          const custom = readCustomSection(reader);
+          switch (custom.name) {
+            case "name":
+              section.name = "name";
+              const names = readNameSection(reader);
+              module.names = names;
+              if (names.functionNames) {
+                for (const [idx, name] of names.functionNames) {
+                  if (module.functionNames.has(idx)) {
+                    continue;
+                  }
+                  module.functionNames.set(idx, name);
+                }
+              }
+              if (names.globalNames) {
+                module.globalNames = names.globalNames;
+              }
+              if (names.dataNames) {
+                module.dataNames = names.dataNames;
+              }
+              break;
+            case "producers":
+              section.name = "producers";
+              const producers = readProducersSection(reader);
+              const lang = producers.find((p3) => p3.name == "language");
+              if (lang) {
+                switch (lang.values[0].name) {
+                  case "Go":
+                    module.toolchain = "Go";
+                    break;
+                  case "Rust":
+                    module.toolchain = "Rust";
+                    break;
+                }
+              }
+              module.producers = producers;
+              break;
+            default: {
+              const view = new DataView(reader.view.buffer, reader.view.byteOffset + reader.ofs, reader.view.byteLength - reader.ofs);
+              section.name = `custom: '${custom.name}'`;
+              module.customSectionData.set(section.index, view);
+              break;
+            }
+          }
+          break;
+        }
+        case "type" /* type */:
+          module.types = readTypeSection(getSectionReader(wasmBytes, section)).map((t3, i3) => {
+            return { ...t3, index: i3 };
+          });
+          break;
+        case "import" /* import */:
+          module.imports = readImportSection(getSectionReader(wasmBytes, section)).map((imp) => {
+            switch (imp.desc.kind) {
+              case "typeidx" /* typeidx */:
+                module.functionNames.set(importedFunctionCount, imp.name);
+                return { ...imp, index: importedFunctionCount++ };
+              case "global" /* global */:
+                importedGlobalCount++;
+              default:
+                return { ...imp, index: "todo" };
+            }
+          });
+          break;
+        case "function" /* function */:
+          module.functions = readFunctionSection(getSectionReader(wasmBytes, section)).map((typeidx, i3) => {
+            return {
+              index: importedFunctionCount + i3,
+              typeidx,
+              ofs: 0,
+              len: 0
+            };
+          });
+          break;
+        case "table" /* table */:
+          module.tables = readTableSection(getSectionReader(wasmBytes, section)).map((table, i3) => ({ ...table, index: i3 }));
+          break;
+        case "global" /* global */:
+          module.globals = readGlobalSection(getSectionReader(wasmBytes, section)).map((global, i3) => ({ ...global, index: importedGlobalCount + i3 }));
+          break;
+        case "memory" /* memory */:
+          module.memories = readMemorySection(getSectionReader(wasmBytes, section)).map((memory, i3) => ({ ...memory, index: i3 }));
+          break;
+        case "export" /* export */:
+          module.exports = readExportSection(getSectionReader(wasmBytes, section));
+          for (const exp of module.exports) {
+            if (exp.desc.kind == "funcidx" /* funcidx */) {
+              module.functionNames.set(exp.desc.index, exp.name);
+            }
+          }
+          break;
+        case "element" /* element */:
+          module.elements = readElementSection(getSectionReader(wasmBytes, section)).map((elem, i3) => ({ ...elem, index: i3 }));
+          break;
+        case "code" /* code */:
+          read(getSectionReader(wasmBytes, section)).forEach((func, i3) => {
+            module.functions[i3].ofs = func.ofs;
+            module.functions[i3].len = func.len;
+          });
+          break;
+        case "data" /* data */:
+          module.data = readDataSection(getSectionReader(wasmBytes, section)).map((data, index) => ({ ...data, index }));
+          break;
+      }
+    }
+    return module;
   }
 
   // ../node_modules/d3-array/src/ascending.js
@@ -4735,6 +4788,188 @@
     return node.__zoom;
   }
 
+  // css.ts
+  function classNames(...classes) {
+    const strs = [];
+    for (const c3 of classes) {
+      if (typeof c3 === "string") {
+        strs.push(c3);
+      } else if (c3) {
+        strs.push(...Object.keys(c3).filter((k3) => c3[k3]));
+      }
+    }
+    return strs.join(" ");
+  }
+
+  // sections.tsx
+  function Pie(props) {
+    const width = 200;
+    const height = 200;
+    const colors = props.sections.map((_3, i3) => Blues_default(i3 / props.sections.length));
+    const color2 = ordinal(props.sections, colors);
+    const arcs = pie_default().padAngle(0.01).value((s3) => s3.len)(props.sections);
+    const arc = arc_default().innerRadius(width / 2 * 0.6).outerRadius(width / 2 * 0.95);
+    return /* @__PURE__ */ v("svg", {
+      width,
+      height,
+      viewBox: [-width / 2, -height / 2, width, height].join(" ")
+    }, /* @__PURE__ */ v("g", {
+      strokeLinejoin: "round",
+      strokeWidth: "2",
+      ref: (g3) => select_default2(g3).selectAll("path").data(arcs).join("path").attr("fill", (d3) => color2(d3.data)).attr("stroke", (d3) => d3.data === props.hovered ? "black" : "none").attr("d", arc).on("mouseover", (ev, d3) => props.onHover(d3.data)).on("mouseout", (ev, d3) => props.onHover(void 0)).on("click", (e3, d3) => props.onClick(d3.data))
+    }));
+  }
+  function SectionTable(props) {
+    const totalSize = sum(props.sections.map((sec) => sec.len));
+    return /* @__PURE__ */ v("table", {
+      style: "flex:1",
+      cellSpacing: "0",
+      cellPadding: "0"
+    }, /* @__PURE__ */ v("thead", null, /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", null, "section"), /* @__PURE__ */ v("th", {
+      className: "right"
+    }, "size"), /* @__PURE__ */ v("th", {
+      className: "right"
+    }, "%"))), /* @__PURE__ */ v("tbody", {
+      id: "table"
+    }, props.sections.map((sec) => /* @__PURE__ */ v("tr", {
+      className: classNames("pointer hover", { highlight: sec === props.hovered }),
+      onMouseEnter: () => props.onHover(sec),
+      onMouseLeave: () => props.onHover(void 0),
+      onClick: () => props.onClick(sec)
+    }, /* @__PURE__ */ v("td", null, sec.name ?? sec.kind), /* @__PURE__ */ v("td", {
+      className: "right"
+    }, format(",")(sec.len)), /* @__PURE__ */ v("td", {
+      className: "right"
+    }, format(".1%")(sec.len / totalSize))))));
+  }
+  var Sections = class extends _ {
+    constructor() {
+      super(...arguments);
+      this.onSectionHover = (section) => {
+        this.setState({ hovered: section });
+      };
+    }
+    render(props, state) {
+      return /* @__PURE__ */ v(Screen, {
+        title: "sections"
+      }, /* @__PURE__ */ v("div", {
+        style: "display: flex; align-items: center; gap: 2ex"
+      }, /* @__PURE__ */ v(Pie, {
+        ...props,
+        ...state,
+        onHover: this.onSectionHover
+      }), /* @__PURE__ */ v(SectionTable, {
+        ...props,
+        ...state,
+        onHover: this.onSectionHover
+      })));
+    }
+  };
+
+  // ../node_modules/preact/hooks/dist/hooks.module.js
+  var t2;
+  var u2;
+  var r2;
+  var o2 = 0;
+  var i2 = [];
+  var c2 = l.__b;
+  var f2 = l.__r;
+  var e2 = l.diffed;
+  var a2 = l.__c;
+  var v2 = l.unmount;
+  function l2(t3, r3) {
+    l.__h && l.__h(u2, t3, o2 || r3), o2 = 0;
+    var i3 = u2.__H || (u2.__H = { __: [], __h: [] });
+    return t3 >= i3.__.length && i3.__.push({}), i3.__[t3];
+  }
+  function m2(n2) {
+    return o2 = 1, p2(w2, n2);
+  }
+  function p2(n2, r3, o3) {
+    var i3 = l2(t2++, 2);
+    return i3.t = n2, i3.__c || (i3.__ = [o3 ? o3(r3) : w2(void 0, r3), function(n3) {
+      var t3 = i3.t(i3.__[0], n3);
+      i3.__[0] !== t3 && (i3.__ = [t3, i3.__[1]], i3.__c.setState({}));
+    }], i3.__c = u2), i3.__;
+  }
+  function y2(r3, o3) {
+    var i3 = l2(t2++, 3);
+    !l.__s && k2(i3.__H, o3) && (i3.__ = r3, i3.__H = o3, u2.__H.__h.push(i3));
+  }
+  function h2(n2) {
+    return o2 = 5, _2(function() {
+      return { current: n2 };
+    }, []);
+  }
+  function _2(n2, u3) {
+    var r3 = l2(t2++, 7);
+    return k2(r3.__H, u3) && (r3.__ = n2(), r3.__H = u3, r3.__h = n2), r3.__;
+  }
+  function x2() {
+    for (var t3; t3 = i2.shift(); )
+      if (t3.__P)
+        try {
+          t3.__H.__h.forEach(g2), t3.__H.__h.forEach(j2), t3.__H.__h = [];
+        } catch (u3) {
+          t3.__H.__h = [], l.__e(u3, t3.__v);
+        }
+  }
+  l.__b = function(n2) {
+    u2 = null, c2 && c2(n2);
+  }, l.__r = function(n2) {
+    f2 && f2(n2), t2 = 0;
+    var r3 = (u2 = n2.__c).__H;
+    r3 && (r3.__h.forEach(g2), r3.__h.forEach(j2), r3.__h = []);
+  }, l.diffed = function(t3) {
+    e2 && e2(t3);
+    var o3 = t3.__c;
+    o3 && o3.__H && o3.__H.__h.length && (i2.push(o3) !== 1 && r2 === l.requestAnimationFrame || ((r2 = l.requestAnimationFrame) || function(n2) {
+      var t4, u3 = function() {
+        clearTimeout(r3), b2 && cancelAnimationFrame(t4), setTimeout(n2);
+      }, r3 = setTimeout(u3, 100);
+      b2 && (t4 = requestAnimationFrame(u3));
+    })(x2)), u2 = null;
+  }, l.__c = function(t3, u3) {
+    u3.some(function(t4) {
+      try {
+        t4.__h.forEach(g2), t4.__h = t4.__h.filter(function(n2) {
+          return !n2.__ || j2(n2);
+        });
+      } catch (r3) {
+        u3.some(function(n2) {
+          n2.__h && (n2.__h = []);
+        }), u3 = [], l.__e(r3, t4.__v);
+      }
+    }), a2 && a2(t3, u3);
+  }, l.unmount = function(t3) {
+    v2 && v2(t3);
+    var u3, r3 = t3.__c;
+    r3 && r3.__H && (r3.__H.__.forEach(function(n2) {
+      try {
+        g2(n2);
+      } catch (n3) {
+        u3 = n3;
+      }
+    }), u3 && l.__e(u3, r3.__v));
+  };
+  var b2 = typeof requestAnimationFrame == "function";
+  function g2(n2) {
+    var t3 = u2, r3 = n2.__c;
+    typeof r3 == "function" && (n2.__c = void 0, r3()), u2 = t3;
+  }
+  function j2(n2) {
+    var t3 = u2;
+    n2.__c = n2.__(), u2 = t3;
+  }
+  function k2(n2, t3) {
+    return !n2 || n2.length !== t3.length || t3.some(function(t4, u3) {
+      return t4 !== n2[u3];
+    });
+  }
+  function w2(n2, t3) {
+    return typeof t3 == "function" ? t3(n2) : t3;
+  }
+
   // ../node_modules/preact/compat/dist/compat.module.js
   function C2(n2, t3) {
     for (var e3 in t3)
@@ -4967,12 +5202,53 @@
     return fn.split("::");
   }
   function parseRust(name) {
-    const parts = name.split("::");
-    const last = parts[parts.length - 1];
-    if (/h[0-9a-f]{16}/.test(last)) {
-      parts.pop();
+    let ns = /::/y;
+    let ident = /[^:<> ]+/y;
+    let as = / as /y;
+    let i3 = 0;
+    function parse() {
+      const parts2 = [];
+      while (i3 < name.length) {
+        let match;
+        if (name[i3] === "<") {
+          i3++;
+          const p3 = parse();
+          if (name[i3] !== ">") {
+            throw new Error("parse error");
+          }
+          i3++;
+          parts2.push(p3);
+        } else if (name[i3] === ">") {
+          return parts2;
+        } else if (ns.lastIndex = i3, ns.test(name)) {
+          i3 = ns.lastIndex;
+        } else if (ident.lastIndex = i3, match = ident.exec(name)) {
+          i3 = ident.lastIndex;
+          parts2.push(match[0]);
+        } else if (as.lastIndex = i3, as.test(name)) {
+          i3 = as.lastIndex;
+          const rest = parse();
+        } else {
+          throw new Error("parse fail");
+        }
+      }
+      return parts2;
     }
-    return parts;
+    let parts = parse();
+    if (typeof parts[0] !== "string") {
+      parts = parts[0].concat(parts.slice(1));
+    }
+    function flatten(part) {
+      if (typeof part === "string")
+        return part;
+      return "<" + part.map((p3) => flatten(p3)).join("::") + ">";
+    }
+    let flat = parts.map(flatten);
+    const last = flat[flat.length - 1];
+    if (/h[0-9a-f]{16}/.test(last)) {
+      flat.pop();
+    }
+    return flat;
   }
 
   // code-treemap.tsx
@@ -4996,20 +5272,25 @@
     }
     for (const header of headers) {
       const name = nameMap.get(header.index);
-      let path2 = ["unknown", String(header.index)];
+      if (!name) {
+        root2.addFunction(header, ["no name", `${header.index}`], `noname ${header.index}`);
+        return;
+      }
+      let path2;
       try {
-        if (name) {
-          const parsed = nameToPath(name).filter((p3) => p3);
-          if (parsed.length === 0) {
-            console.error(`BUG: failed to simplify ${name}`);
-          } else {
-            path2 = parsed;
-          }
+        const parsed = nameToPath(name).filter((p3) => p3);
+        if (parsed.length === 0) {
+          console.error(`BUG: failed to simplify ${name}`);
+        } else {
+          path2 = parsed;
         }
       } catch (err) {
         console.error(`parsing ${JSON.stringify(name)}: ${err}`);
       }
-      root2.addFunction(header, path2);
+      if (!path2) {
+        path2 = ["parse failure", name];
+      }
+      root2.addFunction(header, path2, name);
     }
     root2.sort();
     const container = document.createElement("div");
@@ -5046,33 +5327,40 @@
       const { root: root2 } = this.props;
       webtreemap.render(container, root2, {
         caption(node) {
-          return `${node.id} (${format(",")(node.size)})`;
+          let caption = `${node.id} (${format(",")(node.size)})`;
+          const fn = node;
+          if (fn.originalName && fn.originalName !== node.id) {
+            caption += `
+${node.originalName}`;
+          }
+          return caption;
         }
       });
     }
   };
   var FunctionNode = class {
-    constructor(id2, size = 0) {
+    constructor(id2, originalName, size = 0) {
+      this.id = id2;
+      this.originalName = originalName;
+      this.size = size;
       this.children = [];
       this.childrenByName = /* @__PURE__ */ new Map();
-      this.id = id2;
-      this.size = size;
     }
-    addFunction(func, path2) {
+    addFunction(func, path2, originalName) {
       this.size += func.len;
-      if (path2.length === 1) {
-        const child2 = new FunctionNode(path2[0], func.len);
+      const [head, ...tail] = path2;
+      if (tail.length === 0) {
+        const child2 = new FunctionNode(head, originalName, func.len);
         this.children.push(child2);
         return;
       }
-      const [head, ...tail] = path2;
       let child = this.childrenByName.get(head);
       if (!child) {
         child = new FunctionNode(head);
         this.children.push(child);
         this.childrenByName.set(head, child);
       }
-      child.addFunction(func, tail);
+      child.addFunction(func, tail, originalName);
     }
     sort() {
       this.children.sort((a3, b3) => descending(a3.size, b3.size));
@@ -5132,16 +5420,16 @@
       }, /* @__PURE__ */ v("thead", null, /* @__PURE__ */ v("tr", null, this.props.columns.map((col) => {
         const canSort = col.sort !== void 0;
         return /* @__PURE__ */ v("th", {
-          className: (col.className ?? "") + (canSort ? " pointer" : ""),
+          className: classNames(col.className, { pointer: canSort }),
           onClick: canSort ? () => this.setState({ sortBy: col }) : void 0
         }, col.name, this.state.sortBy === col && " \u2193");
       }))), /* @__PURE__ */ v("tbody", null, rows.map((row) => {
         return /* @__PURE__ */ v("tr", {
-          className: this.props.onClick ? "hover pointer" : "",
+          className: classNames({ "hover pointer": !!this.props.onClick }),
           onClick: this.props.onClick && (() => this.props.onClick(row))
         }, this.props.columns.map((col) => {
           return /* @__PURE__ */ v("td", {
-            className: col.className + " " + col.cellClass
+            className: classNames(col.className, col.cellClass)
           }, col.data(row));
         }));
       }), rows.length < this.props.children.length && /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("td", {
@@ -5152,7 +5440,44 @@
     }
   };
 
-  // code.tsx
+  // inline-edit.tsx
+  function InlineEdit(props) {
+    const [editing, setEditing] = m2(false);
+    const input = h2(null);
+    y2(() => {
+      if (editing)
+        input.current.focus();
+    }, [editing]);
+    const commit = (ev) => {
+      if (!input.current)
+        return;
+      props.onEdit(input.current?.value ?? "");
+      setEditing(false);
+      ev.preventDefault();
+      return false;
+    };
+    if (editing) {
+      return /* @__PURE__ */ v("form", {
+        className: "inline-edit",
+        onSubmit: commit
+      }, /* @__PURE__ */ v("input", {
+        ref: input,
+        size: 1,
+        type: "text",
+        className: "inline-edit",
+        onfocusout: commit,
+        value: props.children
+      }));
+    } else {
+      return /* @__PURE__ */ v("span", {
+        onClick: () => setEditing(true)
+      }, props.children, " ", /* @__PURE__ */ v("button", {
+        className: "inline-edit"
+      }, "\u270E"));
+    }
+  }
+
+  // section-code.tsx
   function XRef(props) {
     const name = props.names?.get(props.id) ?? props.id;
     return /* @__PURE__ */ v("span", {
@@ -5335,7 +5660,7 @@
       onEdit: props.onEdit
     }, props.name));
   }
-  function Function(props) {
+  function FunctionView(props) {
     const funcBody = readFunction(new Reader(new DataView(props.module.bytes, props.func.ofs, props.func.len)));
     const funcType = props.module.types[props.func.typeidx];
     const [localNames, setLocalNames] = m2(() => {
@@ -5359,7 +5684,9 @@
       title: `function ${props.func.index}`
     }, /* @__PURE__ */ v("table", null, /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
       className: "right"
-    }, "name"), /* @__PURE__ */ v("td", null, props.name)), funcType.params.length > 0 && /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
+    }, "name"), /* @__PURE__ */ v("td", {
+      className: "break-all"
+    }, props.name)), funcType.params.length > 0 && /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
       className: "right"
     }, "params"), /* @__PURE__ */ v("td", null, funcType.params.map((type2, index) => {
       const id2 = `local${index}`;
@@ -5442,7 +5769,7 @@
     }, funcs));
   }
 
-  // data.tsx
+  // section-data.tsx
   function DataSection(props) {
     const columns = [
       {
@@ -5469,6 +5796,12 @@
         }
       }
     ];
+    if (props.module.dataNames) {
+      columns.splice(1, 0, {
+        name: "name",
+        data: (data) => props.module.dataNames.get(data.index)
+      });
+    }
     return /* @__PURE__ */ v(Screen, {
       title: '"data" section'
     }, /* @__PURE__ */ v("p", null, "Initialization-time data."), /* @__PURE__ */ v(Table, {
@@ -5481,7 +5814,7 @@
   }
   var HexView = class extends _ {
     render() {
-      const visibleRows = 20;
+      const visibleRows = 100;
       const view = this.props.data;
       const rows = [];
       for (let row = 0; row < visibleRows && row * 16 < view.byteLength; row++) {
@@ -5497,24 +5830,29 @@
           const byte = view.getUint8(index);
           const hexByte = hex2(byte);
           const vizByte = byte >= 32 && byte < 127 ? String.fromCharCode(byte) : ".";
+          if (col === 8)
+            hexBytes.push(" ");
           hexBytes.push(" ", /* @__PURE__ */ v("span", {
             onMouseOver: () => this.setState({ hover: index }),
-            className: index === this.state.hover ? "highlight" : ""
+            className: classNames({ highlight: index === this.state.hover })
           }, hexByte));
           vizBytes.push(/* @__PURE__ */ v("span", {
             onMouseOver: () => this.setState({ hover: index }),
-            className: index === this.state.hover ? "highlight" : ""
+            className: classNames({ highlight: index === this.state.hover })
           }, vizByte));
         }
         rows.push(/* @__PURE__ */ v("div", null, hex2(row * 16, 6), " ", hexBytes, "  ", vizBytes));
       }
-      return /* @__PURE__ */ v("pre", null, rows);
+      return /* @__PURE__ */ v("pre", {
+        class: "hex"
+      }, rows);
     }
   };
   function DataHex(props) {
+    const name = props.module.dataNames.get(props.data.index);
     return /* @__PURE__ */ v(Screen, {
       title: `data[${props.data.index}]`
-    }, /* @__PURE__ */ v("table", null, /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
+    }, /* @__PURE__ */ v("table", null, name ? /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", null, "name"), /* @__PURE__ */ v("td", null, name)) : null, /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
       className: "right"
     }, "size"), /* @__PURE__ */ v("td", null, format(",")(props.data.init.byteLength), " bytes")), /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
       className: "right"
@@ -5526,7 +5864,78 @@
     }));
   }
 
-  // impexp.tsx
+  // section-element.tsx
+  function ElementSection(props) {
+    const columns = [
+      { name: "index", className: "right", data: (elem) => elem.index },
+      { name: "type", data: (elem) => elem.type },
+      {
+        name: "init",
+        data: (elem) => `${elem.init.length} entries`
+      },
+      {
+        name: "mode",
+        data: (elem) => {
+          if (elem.mode === "active" /* active */) {
+            return /* @__PURE__ */ v("div", null, "active table=", elem.table, /* @__PURE__ */ v("br", null), "offset:", /* @__PURE__ */ v(Instructions, {
+              module: props.module,
+              instrs: elem.offset
+            }));
+          } else {
+            return elem.mode;
+          }
+        }
+      }
+    ];
+    return /* @__PURE__ */ v(Screen, {
+      title: '"element" section'
+    }, /* @__PURE__ */ v("p", null, "Initializers for tables."), /* @__PURE__ */ v(Table, {
+      columns
+    }, props.module.elements));
+  }
+
+  // section-function.tsx
+  function FunctionSection(props) {
+    const columns = [
+      { name: "func", className: "right", data: (row) => row.index },
+      {
+        name: "type",
+        data: (row) => /* @__PURE__ */ v("code", null, funcTypeToString(props.module.types[row.typeidx]))
+      }
+    ];
+    return /* @__PURE__ */ v(Screen, {
+      title: '"function" section'
+    }, /* @__PURE__ */ v("p", null, "Associates functions with their types."), /* @__PURE__ */ v(Table, {
+      columns,
+      onClick: (row) => props.onClick(row.index)
+    }, props.module.functions));
+  }
+
+  // section-globals.tsx
+  function GlobalSection(props) {
+    const [edited, setEdited] = m2(0);
+    return /* @__PURE__ */ v(Screen, {
+      title: '"globals" section'
+    }, /* @__PURE__ */ v("p", null, "Global variables, accessible to both the host environment and Wasm."), /* @__PURE__ */ v("table", null, /* @__PURE__ */ v("thead", null, /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
+      className: "right"
+    }, "index"), /* @__PURE__ */ v("th", null, "name"), /* @__PURE__ */ v("th", null, "type"), /* @__PURE__ */ v("th", null, "init"))), /* @__PURE__ */ v("tbody", null, props.module.globals.map((global) => {
+      return /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("td", {
+        className: "right"
+      }, global.index), /* @__PURE__ */ v("td", {
+        className: "break-all flex-container"
+      }, /* @__PURE__ */ v(InlineEdit, {
+        onEdit: (name) => {
+          props.module.globalNames.set(global.index, name);
+          setEdited(edited + 1);
+        }
+      }, props.module.globalNames.get(global.index) ?? "")), /* @__PURE__ */ v("td", null, global.type.mut ? "var" : "const", " ", global.type.valType), /* @__PURE__ */ v("td", null, /* @__PURE__ */ v(Instructions, {
+        module: props.module,
+        instrs: global.init
+      })));
+    }))));
+  }
+
+  // section-impexp.tsx
   function ImpExpDesc(props) {
     switch (props.desc.kind) {
       case "typeidx" /* typeidx */:
@@ -5563,7 +5972,6 @@
       },
       {
         name: "desc",
-        cellClass: "nowrap",
         data: (imp) => /* @__PURE__ */ v(ImpExpDesc, {
           module: props.module,
           index: imp.index,
@@ -5586,7 +5994,7 @@
       },
       {
         name: "desc",
-        cellClass: "nowrap",
+        cellClass: "break-all",
         data: (exp) => /* @__PURE__ */ v(ImpExpDesc, {
           module: props.module,
           desc: exp.desc
@@ -5600,70 +6008,78 @@
     }, props.module.exports));
   }
 
-  // sections.tsx
-  function Pie(props) {
-    const width = 200;
-    const height = 200;
-    const colors = props.sections.map((_3, i3) => Blues_default(i3 / props.sections.length));
-    const color2 = ordinal(props.sections, colors);
-    const arcs = pie_default().padAngle(0.01).value((s3) => s3.len)(props.sections);
-    const arc = arc_default().innerRadius(width / 2 * 0.6).outerRadius(width / 2 * 0.95);
-    return /* @__PURE__ */ v("svg", {
-      width,
-      height,
-      viewBox: [-width / 2, -height / 2, width, height].join(" ")
-    }, /* @__PURE__ */ v("g", {
-      strokeLinejoin: "round",
-      strokeWidth: "2",
-      ref: (g3) => select_default2(g3).selectAll("path").data(arcs).join("path").attr("fill", (d3) => color2(d3.data)).attr("stroke", (d3) => d3.data === props.hovered ? "black" : "none").attr("d", arc).on("mouseover", (ev, d3) => props.onHover(d3.data)).on("mouseout", (ev, d3) => props.onHover(void 0)).on("click", (e3, d3) => props.onClick(d3.data))
-    }));
+  // section-memory.tsx
+  function MemorySection(props) {
+    const columns = [
+      { name: "index", className: "right", data: (limits) => limits.index },
+      { name: "limits", data: (limits) => limitsToString(limits) }
+    ];
+    return /* @__PURE__ */ v(Screen, {
+      title: '"memory" section'
+    }, /* @__PURE__ */ v("p", null, "Definition of memory. Currently limited to one entry."), /* @__PURE__ */ v(Table, {
+      columns
+    }, props.module.memories));
   }
-  function SectionTable(props) {
-    const totalSize = sum(props.sections.map((sec) => sec.len));
-    return /* @__PURE__ */ v("table", {
-      style: "flex:1",
-      cellSpacing: "0",
-      cellPadding: "0"
-    }, /* @__PURE__ */ v("thead", null, /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", null, "section"), /* @__PURE__ */ v("th", {
+
+  // section-names.tsx
+  function NamesSection(props) {
+    const sec = props.module.names;
+    return /* @__PURE__ */ v(Screen, {
+      title: '"name" section'
+    }, /* @__PURE__ */ v("p", null, "Names for objects found in the file, typically for debugging purposes."), /* @__PURE__ */ v("table", null, /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
       className: "right"
-    }, "size"), /* @__PURE__ */ v("th", {
+    }, "module name"), /* @__PURE__ */ v("td", null, sec.moduleName ?? /* @__PURE__ */ v("i", null, "none"))), /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
       className: "right"
-    }, "%"))), /* @__PURE__ */ v("tbody", {
-      id: "table"
-    }, props.sections.map((sec) => /* @__PURE__ */ v("tr", {
-      className: "pointer hover " + (sec === props.hovered ? "highlight" : ""),
-      onMouseEnter: () => props.onHover(sec),
-      onMouseLeave: () => props.onHover(void 0),
-      onClick: () => props.onClick(sec)
-    }, /* @__PURE__ */ v("td", null, sec.name ?? sec.kind), /* @__PURE__ */ v("td", {
+    }, "local names"), /* @__PURE__ */ v("td", null, sec.localNames?.size ?? /* @__PURE__ */ v("i", null, "none"))), /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
       className: "right"
-    }, format(",")(sec.len)), /* @__PURE__ */ v("td", {
+    }, "function names"), /* @__PURE__ */ v("td", null, sec.functionNames?.size ?? /* @__PURE__ */ v("i", null, "none"))), /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
       className: "right"
-    }, format(".1%")(sec.len / totalSize))))));
+    }, "global names"), /* @__PURE__ */ v("td", null, sec.globalNames?.size ?? /* @__PURE__ */ v("i", null, "none"))), /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
+      className: "right"
+    }, "data names"), /* @__PURE__ */ v("td", null, sec.dataNames?.size ?? /* @__PURE__ */ v("i", null, "none")))));
   }
-  var Sections = class extends _ {
-    constructor() {
-      super(...arguments);
-      this.onSectionHover = (section) => {
-        this.setState({ hovered: section });
-      };
-    }
-    render(props, state) {
-      return /* @__PURE__ */ v(Screen, {
-        title: "sections"
-      }, /* @__PURE__ */ v("div", {
-        style: "display: flex; align-items: center; gap: 2ex"
-      }, /* @__PURE__ */ v(Pie, {
-        ...props,
-        ...state,
-        onHover: this.onSectionHover
-      }), /* @__PURE__ */ v(SectionTable, {
-        ...props,
-        ...state,
-        onHover: this.onSectionHover
-      })));
-    }
-  };
+
+  // section-producers.tsx
+  function ProducersSection(props) {
+    return /* @__PURE__ */ v(Screen, {
+      title: '"producers" section'
+    }, /* @__PURE__ */ v("p", null, /* @__PURE__ */ v("a", {
+      href: "https://github.com/WebAssembly/tool-conventions/blob/main/ProducersSection.md"
+    }, "Tools used"), " ", "to produce the module."), /* @__PURE__ */ v("table", null, props.module.producers.map((field) => /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("td", null, field.name), /* @__PURE__ */ v("td", null, field.values.map(({ name, version }) => /* @__PURE__ */ v("div", null, name, " ", version)))))));
+  }
+
+  // section-table.tsx
+  function TableSection(props) {
+    const columns = [
+      { name: "index", className: "right", data: (table) => table.index },
+      { name: "limits", data: (table) => limitsToString(table.limits) },
+      { name: "type", data: (table) => table.element }
+    ];
+    return /* @__PURE__ */ v(Screen, {
+      title: '"table" section'
+    }, /* @__PURE__ */ v("p", null, "Collections of opaque references. (Wasm 1.0 only allowed a single table.)"), /* @__PURE__ */ v(Table, {
+      columns
+    }, props.module.tables));
+  }
+
+  // section-types.tsx
+  function TypeSection(props) {
+    const columns = [
+      { name: "index", className: "right", data: (row) => row.index },
+      {
+        name: "type",
+        cellClass: "break-all",
+        data: (type2) => /* @__PURE__ */ v(FunctionType, {
+          type: type2
+        })
+      }
+    ];
+    return /* @__PURE__ */ v(Screen, {
+      title: '"type" section'
+    }, /* @__PURE__ */ v("p", null, "One entry per distinct function type used in the module."), /* @__PURE__ */ v(Table, {
+      columns
+    }, props.module.types.map((t3, i3) => ({ ...t3, index: i3 }))));
+  }
 
   // viz.tsx
   function urlFromLink([target, index]) {
@@ -5690,189 +6106,10 @@
       href: urlFromLink(props.target)
     }, props.children);
   }
-  function FunctionRef(props) {
-    return /* @__PURE__ */ v(Link, {
-      title: `function ${props.index}`,
-      target: ["function", props.index]
-    }, props.module.functionNames.get(props.index) ?? `function ${props.index}`);
-  }
-  function GlobalRef(props) {
-    const sec = props.module.sections.find((sec2) => sec2.kind === "global" /* global */);
-    return /* @__PURE__ */ v(Link, {
-      title: `global ${props.index}`,
-      target: ["section", sec.index]
-    }, props.module.globalNames.get(props.index) ?? `global ${props.index}`);
-  }
   function Screen(props) {
     return /* @__PURE__ */ v(d, null, /* @__PURE__ */ v("header", null, /* @__PURE__ */ v("h1", null, /* @__PURE__ */ v("a", {
       href: "#"
     }, "weave"), " > ", props.title)), /* @__PURE__ */ v("main", null, props.children));
-  }
-  function FunctionType(props) {
-    return /* @__PURE__ */ v("code", null, funcTypeToString(props.type));
-  }
-  function NamesSection(props) {
-    const sec = props.module.names;
-    return /* @__PURE__ */ v(Screen, {
-      title: '"name" section'
-    }, /* @__PURE__ */ v("p", null, "Names for objects found in the file, typically for debugging purposes."), /* @__PURE__ */ v("table", null, /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
-      className: "right"
-    }, "module name"), /* @__PURE__ */ v("td", null, sec.moduleName ?? /* @__PURE__ */ v("i", null, "none"))), /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
-      className: "right"
-    }, "local names"), /* @__PURE__ */ v("td", null, sec.localNames ? sec.localNames.size : /* @__PURE__ */ v("i", null, "none"))), /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
-      className: "right"
-    }, "function names"), /* @__PURE__ */ v("td", null, sec.functionNames ? sec.functionNames.size : /* @__PURE__ */ v("i", null, "none"))), /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
-      className: "right"
-    }, "global names"), /* @__PURE__ */ v("td", null, sec.globalNames ? sec.globalNames.size : /* @__PURE__ */ v("i", null, "none"))), /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
-      className: "right"
-    }, "data names"), /* @__PURE__ */ v("td", null, sec.dataNames ? sec.dataNames.size : /* @__PURE__ */ v("i", null, "none")))));
-  }
-  function ProducersSection(props) {
-    return /* @__PURE__ */ v(Screen, {
-      title: '"producers" section'
-    }, /* @__PURE__ */ v("p", null, /* @__PURE__ */ v("a", {
-      href: "https://github.com/WebAssembly/tool-conventions/blob/main/ProducersSection.md"
-    }, "Tools used"), " ", "to produce the module."), /* @__PURE__ */ v("table", null, props.module.producers.map((field) => /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("td", null, field.name), /* @__PURE__ */ v("td", null, field.values.map(({ name, version }) => /* @__PURE__ */ v("div", null, name, " ", version)))))));
-  }
-  function TypeSection(props) {
-    const columns = [
-      { name: "index", className: "right", data: (row) => row.index },
-      {
-        name: "type",
-        cellClass: "break-all",
-        data: (type2) => /* @__PURE__ */ v(FunctionType, {
-          type: type2
-        })
-      }
-    ];
-    return /* @__PURE__ */ v(Screen, {
-      title: '"type" section'
-    }, /* @__PURE__ */ v("p", null, "One entry per distinct function type used in the module."), /* @__PURE__ */ v(Table, {
-      columns
-    }, props.module.types.map((t3, i3) => ({ ...t3, index: i3 }))));
-  }
-  function InlineEdit(props) {
-    const [editing, setEditing] = m2(false);
-    const input = h2(null);
-    y2(() => {
-      if (editing)
-        input.current.focus();
-    }, [editing]);
-    const commit = (ev) => {
-      if (!input.current)
-        return;
-      props.onEdit(input.current?.value ?? "");
-      setEditing(false);
-      ev.preventDefault();
-      return false;
-    };
-    if (editing) {
-      return /* @__PURE__ */ v("form", {
-        className: "inline-edit",
-        onSubmit: commit
-      }, /* @__PURE__ */ v("input", {
-        ref: input,
-        size: 1,
-        type: "text",
-        className: "inline-edit",
-        onfocusout: commit,
-        value: props.children
-      }));
-    } else {
-      return /* @__PURE__ */ v("span", {
-        onClick: () => setEditing(true)
-      }, props.children, " ", /* @__PURE__ */ v("button", {
-        className: "inline-edit"
-      }, "\u270E"));
-    }
-  }
-  function MemorySection(props) {
-    const columns = [
-      { name: "index", className: "right", data: (limits) => limits.index },
-      { name: "limits", data: (limits) => limitsToString(limits) }
-    ];
-    return /* @__PURE__ */ v(Screen, {
-      title: '"memory" section'
-    }, /* @__PURE__ */ v("p", null, "Definition of memory. Currently limited to one entry."), /* @__PURE__ */ v(Table, {
-      columns
-    }, props.module.memories));
-  }
-  function GlobalSection(props) {
-    const [edited, setEdited] = m2(0);
-    return /* @__PURE__ */ v(Screen, {
-      title: '"globals" section'
-    }, /* @__PURE__ */ v("p", null, "Global variables, accessible to both the host environment and Wasm."), /* @__PURE__ */ v("table", null, /* @__PURE__ */ v("thead", null, /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("th", {
-      className: "right"
-    }, "index"), /* @__PURE__ */ v("th", null, "name"), /* @__PURE__ */ v("th", null, "type"), /* @__PURE__ */ v("th", null, "init"))), /* @__PURE__ */ v("tbody", null, props.module.globals.map((global) => {
-      return /* @__PURE__ */ v("tr", null, /* @__PURE__ */ v("td", {
-        className: "right"
-      }, global.index), /* @__PURE__ */ v("td", {
-        className: "break-all flex-container"
-      }, /* @__PURE__ */ v(InlineEdit, {
-        onEdit: (name) => {
-          props.module.globalNames.set(global.index, name);
-          setEdited(edited + 1);
-        }
-      }, props.module.globalNames.get(global.index) ?? "")), /* @__PURE__ */ v("td", null, global.type.mut ? "var" : "const", " ", global.type.valType), /* @__PURE__ */ v("td", null, /* @__PURE__ */ v(Instructions, {
-        module: props.module,
-        instrs: global.init
-      })));
-    }))));
-  }
-  function FunctionSection(props) {
-    const columns = [
-      { name: "func", className: "right", data: (row) => row.index },
-      {
-        name: "type",
-        data: (row) => /* @__PURE__ */ v("code", null, funcTypeToString(props.module.types[row.typeidx]))
-      }
-    ];
-    return /* @__PURE__ */ v(Screen, {
-      title: '"function" section'
-    }, /* @__PURE__ */ v("p", null, "Associates functions with their types."), /* @__PURE__ */ v(Table, {
-      columns,
-      onClick: (row) => props.onClick(row.index)
-    }, props.module.functions));
-  }
-  function TableSection(props) {
-    const columns = [
-      { name: "index", className: "right", data: (table) => table.index },
-      { name: "limits", data: (table) => limitsToString(table.limits) },
-      { name: "type", data: (table) => table.element }
-    ];
-    return /* @__PURE__ */ v(Screen, {
-      title: '"table" section'
-    }, /* @__PURE__ */ v("p", null, "Collections of opaque references. (Wasm 1.0 only allowed a single table.)"), /* @__PURE__ */ v(Table, {
-      columns
-    }, props.module.tables));
-  }
-  function ElementSection(props) {
-    const columns = [
-      { name: "index", className: "right", data: (elem) => elem.index },
-      { name: "type", data: (elem) => elem.type },
-      {
-        name: "init",
-        data: (elem) => `${elem.init.length} entries`
-      },
-      {
-        name: "mode",
-        data: (elem) => {
-          if (elem.mode === "active" /* active */) {
-            return /* @__PURE__ */ v("div", null, "active table=", elem.table, /* @__PURE__ */ v("br", null), "offset:", /* @__PURE__ */ v(Instructions, {
-              module: props.module,
-              instrs: elem.offset
-            }));
-          } else {
-            return elem.mode;
-          }
-        }
-      }
-    ];
-    return /* @__PURE__ */ v(Screen, {
-      title: '"element" section'
-    }, /* @__PURE__ */ v("p", null, "Initializers for tables."), /* @__PURE__ */ v(Table, {
-      columns
-    }, props.module.elements));
   }
   var Weave = class extends _ {
     constructor() {
@@ -5994,7 +6231,7 @@
             return /* @__PURE__ */ v("div", null, "TODO: no viewer implemented for '", this.state.section.kind, "' section yet");
         }
       } else if (this.state.func) {
-        return /* @__PURE__ */ v(Function, {
+        return /* @__PURE__ */ v(FunctionView, {
           key: this.state.func.index,
           module: this.props.module,
           func: this.state.func,
@@ -6017,7 +6254,7 @@
   };
   var App = class extends _ {
     load(buffer) {
-      const module = load(buffer);
+      const module = loadModule(buffer);
       this.setState({ module });
     }
     addDragHandlers() {
@@ -6063,136 +6300,6 @@
       return /* @__PURE__ */ v(d, null, /* @__PURE__ */ v("header", null, /* @__PURE__ */ v("h1", null, "weave")), /* @__PURE__ */ v("main", null, /* @__PURE__ */ v("p", null, "Weave is a viewer for WebAssembly ", /* @__PURE__ */ v("code", null, ".wasm"), " files, like an interactive ", /* @__PURE__ */ v("code", null, "objdump"), "."), /* @__PURE__ */ v("p", null, "Load a file by drag'n'drop'ing a ", /* @__PURE__ */ v("code", null, ".wasm"), " file onto this page.")));
     }
   };
-  function load(wasmBytes) {
-    const sections = read2(wasmBytes);
-    const module = {
-      bytes: wasmBytes,
-      toolchain: "Unknown",
-      sections: sections.map((sec, index) => ({ ...sec, index })),
-      types: [],
-      imports: [],
-      tables: [],
-      exports: [],
-      functions: [],
-      data: [],
-      elements: [],
-      globals: [],
-      memories: [],
-      customSectionData: /* @__PURE__ */ new Map(),
-      functionNames: /* @__PURE__ */ new Map(),
-      globalNames: /* @__PURE__ */ new Map()
-    };
-    window["module"] = module;
-    let importedFunctionCount = 0;
-    let importedGlobalCount = 0;
-    for (const section of module.sections) {
-      switch (section.kind) {
-        case "custom" /* custom */: {
-          const reader = getSectionReader(wasmBytes, section);
-          const custom = readCustomSection(reader);
-          switch (custom.name) {
-            case "name":
-              section.name = "name";
-              const names = readNameSection(reader);
-              module.names = names;
-              if (names.functionNames) {
-                for (const [idx, name] of names.functionNames) {
-                  if (module.functionNames.has(idx)) {
-                    continue;
-                  }
-                  module.functionNames.set(idx, name);
-                }
-              }
-              if (names.globalNames) {
-                module.globalNames = names.globalNames;
-              }
-              break;
-            case "producers":
-              section.name = "producers";
-              const producers = readProducersSection(reader);
-              const lang = producers.find((p3) => p3.name == "language");
-              if (lang) {
-                switch (lang.values[0].name) {
-                  case "Go":
-                    module.toolchain = "Go";
-                    break;
-                  case "Rust":
-                    module.toolchain = "Rust";
-                    break;
-                }
-              }
-              module.producers = producers;
-              break;
-            default: {
-              const view = new DataView(reader.view.buffer, reader.view.byteOffset + reader.ofs, reader.view.byteLength - reader.ofs);
-              section.name = `custom: '${custom.name}'`;
-              module.customSectionData.set(section.index, view);
-              break;
-            }
-          }
-          break;
-        }
-        case "type" /* type */:
-          module.types = readTypeSection(getSectionReader(wasmBytes, section)).map((t3, i3) => {
-            return { ...t3, index: i3 };
-          });
-          break;
-        case "import" /* import */:
-          module.imports = readImportSection(getSectionReader(wasmBytes, section)).map((imp) => {
-            switch (imp.desc.kind) {
-              case "typeidx" /* typeidx */:
-                module.functionNames.set(importedFunctionCount, imp.name);
-                return { ...imp, index: importedFunctionCount++ };
-              case "global" /* global */:
-                importedGlobalCount++;
-              default:
-                return { ...imp, index: "todo" };
-            }
-          });
-          break;
-        case "function" /* function */:
-          module.functions = readFunctionSection(getSectionReader(wasmBytes, section)).map((typeidx, i3) => {
-            return {
-              index: importedFunctionCount + i3,
-              typeidx,
-              ofs: 0,
-              len: 0
-            };
-          });
-          break;
-        case "table" /* table */:
-          module.tables = readTableSection(getSectionReader(wasmBytes, section)).map((table, i3) => ({ ...table, index: i3 }));
-          break;
-        case "global" /* global */:
-          module.globals = readGlobalSection(getSectionReader(wasmBytes, section)).map((global, i3) => ({ ...global, index: importedGlobalCount + i3 }));
-          break;
-        case "memory" /* memory */:
-          module.memories = readMemorySection(getSectionReader(wasmBytes, section)).map((memory, i3) => ({ ...memory, index: i3 }));
-          break;
-        case "export" /* export */:
-          module.exports = readExportSection(getSectionReader(wasmBytes, section));
-          for (const exp of module.exports) {
-            if (exp.desc.kind == "funcidx" /* funcidx */) {
-              module.functionNames.set(exp.desc.index, exp.name);
-            }
-          }
-          break;
-        case "element" /* element */:
-          module.elements = readElementSection(getSectionReader(wasmBytes, section)).map((elem, i3) => ({ ...elem, index: i3 }));
-          break;
-        case "code" /* code */:
-          read(getSectionReader(wasmBytes, section)).forEach((func, i3) => {
-            module.functions[i3].ofs = func.ofs;
-            module.functions[i3].len = func.len;
-          });
-          break;
-        case "data" /* data */:
-          module.data = readDataSection(getSectionReader(wasmBytes, section)).map((data, index) => ({ ...data, index }));
-          break;
-      }
-    }
-    return module;
-  }
   function main() {
     S(/* @__PURE__ */ v(App, null), document.body);
   }
