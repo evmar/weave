@@ -235,24 +235,31 @@ export type Element = ElementBase | ElementActive;
 export function readElementSection(r: Reader): Element[] {
   return r.vec(() => {
     const flags = r.read8();
-    switch (flags) {
-      case 0: {
-        const expr = code.readExpr(r);
-        const funcs = r.vec(() => r.readUint());
-        const init = funcs.map((index) => [
-          { op: code.Instr.ref_func, index } as const,
-        ]);
-        return {
-          type: Type.funcref,
-          init,
-          mode: ElementMode.active,
-          table: 0,
-          offset: expr,
-        };
-      }
-      default:
-        throw new Error(`TODO: unhandled element flags ${flags.toString(16)}`);
+    // Flags can be viewed as a bitfield, but we currently only
+    // handle one of the bits.
+    const funcRefs = (flags & 4) === 0;
+    const unhandled = flags & ~4;
+    if (unhandled !== 0) {
+      throw new Error(`TODO: unhandled element flags ${flags.toString(16)}`);
     }
+    const offset = code.readExpr(r);
+    let init: code.Instruction[][];
+    if (funcRefs) {
+      const funcs = r.vec(() => r.readUint());
+      init = funcs.map((index) => [
+        { op: code.Instr.ref_func, index } as const,
+      ]);
+    } else {
+      init = r.vec(() => code.readExpr(r));
+    }
+
+    return {
+      type: Type.funcref,
+      init: init,
+      mode: ElementMode.active,
+      table: 0,
+      offset,
+    };
   });
 }
 
