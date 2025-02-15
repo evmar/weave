@@ -59,7 +59,6 @@ export function Imports(props: { module: ParsedModule }) {
     },
     {
       name: 'desc',
-      cellClass: 'nowrap',
       data: (imp) => <ImpExpDesc module={props.module} index={imp.index} desc={imp.desc} />,
     },
   ];
