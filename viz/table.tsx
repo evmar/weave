@@ -31,7 +31,7 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
     return this.props !== nextProps || this.state !== nextState;
   }
 
-  rows = memo(function(
+  rows = memo(function (
     sortBy: Column<T> | undefined,
     limit: number,
     rows: T[],
@@ -79,7 +79,7 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
               >
                 {this.props.columns.map((col) => {
                   return (
-                    <td className={col.className + ' ' + col.cellClass}>
+                    <td className={(col.className ?? '') + ' ' + (col.cellClass ?? '')}>
                       {col.data(row)}
                     </td>
                   );
