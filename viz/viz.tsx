@@ -124,19 +124,19 @@ function NamesSection(props: { module: ParsedModule }) {
         </tr>
         <tr>
           <th className='right'>local names</th>
-          <td>{sec.localNames ? sec.localNames.size : <i>none</i>}</td>
+          <td>{sec.localNames?.size ?? <i>none</i>}</td>
         </tr>
         <tr>
           <th className='right'>function names</th>
-          <td>{sec.functionNames ? sec.functionNames.size : <i>none</i>}</td>
+          <td>{sec.functionNames?.size ?? <i>none</i>}</td>
         </tr>
         <tr>
           <th className='right'>global names</th>
-          <td>{sec.globalNames ? sec.globalNames.size : <i>none</i>}</td>
+          <td>{sec.globalNames?.size ?? <i>none</i>}</td>
         </tr>
         <tr>
           <th className='right'>data names</th>
-          <td>{sec.dataNames ? sec.dataNames.size : <i>none</i>}</td>
+          <td>{sec.dataNames?.size ?? <i>none</i>}</td>
         </tr>
       </table>
     </Screen>
