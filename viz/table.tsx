@@ -1,6 +1,7 @@
 import * as preact from 'preact';
 import { h } from 'preact';
 import { memo } from './memo';
+import { classNames } from './css';
 
 export interface Column<T> {
   name: string;
@@ -60,7 +61,7 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
               const canSort = col.sort !== undefined;
               return (
                 <th
-                  className={(col.className ?? '') + (canSort ? ' pointer' : '')}
+                  className={classNames(col.className, { pointer: canSort })}
                   onClick={canSort ? () => this.setState({ sortBy: col }) : undefined}
                 >
                   {col.name}
@@ -74,12 +75,12 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
           {rows.map((row) => {
             return (
               <tr
-                className={this.props.onClick ? 'hover pointer' : ''}
+                className={classNames({ 'hover pointer': !!this.props.onClick })}
                 onClick={this.props.onClick && (() => this.props.onClick!(row))}
               >
                 {this.props.columns.map((col) => {
                   return (
-                    <td className={(col.className ?? '') + ' ' + (col.cellClass ?? '')}>
+                    <td className={classNames(col.className, col.cellClass)}>
                       {col.data(row)}
                     </td>
                   );

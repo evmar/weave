@@ -3,6 +3,7 @@ import { h } from 'preact';
 import * as preact from 'preact';
 import * as wasm from 'wasm';
 import { ParsedModule, Screen } from './viz';
+import { classNames } from './css';
 
 interface SectionsPartProps {
   sections: (wasm.SectionHeader & { name?: string })[];
@@ -66,7 +67,7 @@ function SectionTable(props: SectionsPartProps) {
       <tbody id='table'>
         {props.sections.map((sec) => (
           <tr
-            className={'pointer hover ' + (sec === props.hovered ? 'highlight' : '')}
+            className={classNames('pointer hover', { highlight: sec === props.hovered })}
             onMouseEnter={() => props.onHover(sec)}
             onMouseLeave={() => props.onHover(undefined)}
             onClick={() => props.onClick(sec)}

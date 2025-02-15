@@ -5,6 +5,7 @@ import * as wasm from 'wasm';
 import { Instructions } from './code';
 import { Column, Table } from './table';
 import { Indexed, ParsedModule, Screen } from './viz';
+import { classNames } from './css';
 
 export function DataSection(props: {
   module: ParsedModule;
@@ -85,7 +86,7 @@ export class HexView extends preact.Component<HexView.Props, HexView.State> {
           ' ',
           <span
             onMouseOver={() => this.setState({ hover: index })}
-            className={index === this.state.hover ? 'highlight' : ''}
+            className={classNames({ highlight: index === this.state.hover })}
           >
             {hexByte}
           </span>,
@@ -93,7 +94,7 @@ export class HexView extends preact.Component<HexView.Props, HexView.State> {
         vizBytes.push(
           <span
             onMouseOver={() => this.setState({ hover: index })}
-            className={index === this.state.hover ? 'highlight' : ''}
+            className={classNames({ highlight: index === this.state.hover })}
           >
             {vizByte}
           </span>,
