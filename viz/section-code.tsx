@@ -11,7 +11,8 @@ import { Reader } from 'wasm/reader';
 import { showCodeTreemap } from './code-treemap';
 import { Column, Table } from './table';
 import { FunctionRef, FunctionSpan, GlobalRef, Indexed, ParsedModule } from './module';
-import { InlineEdit, Screen } from './viz';
+import { InlineEdit } from './inline-edit';
+import { Screen } from './viz';
 
 function XRef(props: {
   id: string;

@@ -4,7 +4,8 @@
 
 import { ParsedModule } from './module';
 import { Instructions } from './section-code';
-import { InlineEdit, Screen } from './viz';
+import { InlineEdit } from './inline-edit';
+import { Screen } from './viz';
 import { Fragment, h } from 'preact';
 import * as hooks from 'preact/hooks';
 
