@@ -1,8 +1,8 @@
 {
   "name": "viz",
   "scripts": {
-    "serve": "esbuild --bundle --target=es2020 --sourcemap --serve=:7761 --servedir=. --outfile=bundle.js viz.tsx",
-    "bundle": "esbuild --bundle --target=es2020 --sourcemap --outfile=bundle.js viz.tsx",
+    "serve": "esbuild --bundle --target=es2020 --sourcemap --outdir=. '--external:*.ttf' bundle=viz.tsx style=viz.css --serve=:7761 --servedir=.",
+    "bundle": "esbuild --bundle --target=es2020 --sourcemap --outdir=. '--external:*.ttf' bundle=viz.tsx style=viz.css",
     "test": "node --import tsx --test *_test.ts"
   },
   "dependencies": {

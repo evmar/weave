@@ -1,2 +1,5 @@
 *.wasm
-bundle.js*
+/wasm
+bundle.js
+style.css
+*.map
