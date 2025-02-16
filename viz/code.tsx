@@ -2,12 +2,12 @@ import * as d3 from 'd3';
 import * as preact from 'preact';
 import { Fragment, h } from 'preact';
 import * as hooks from 'preact/hooks';
-import { funcTypeToString } from 'wasm';
 import * as wasmCode from 'wasm/code';
 import { Reader } from 'wasm/reader';
 import { showCodeTreemap } from './code-treemap';
 import { Column, Table } from './table';
-import { FunctionSpan, FunctionRef, GlobalRef, Indexed, InlineEdit, ParsedModule, Screen } from './viz';
+import { FunctionRef, FunctionSpan, GlobalRef, Indexed, ParsedModule } from './module';
+import { InlineEdit, Screen } from './viz';
 
 function XRef(props: {
   id: string;

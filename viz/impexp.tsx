@@ -5,7 +5,8 @@
 import { Fragment, h } from 'preact';
 import * as wasm from 'wasm';
 import { Column, Table } from './table';
-import { FunctionRef, FunctionType, Indexed, Link, ParsedModule, Screen } from './viz';
+import { Link, Screen } from './viz';
+import { FunctionRef, FunctionType, Indexed, ParsedModule } from './module';
 
 function ImpExpDesc(props: {
   module: ParsedModule;

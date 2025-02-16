@@ -5,7 +5,7 @@ import * as preactCompat from 'preact/compat';
 import * as wasmCode from 'wasm/code';
 import * as webtreemap from 'webtreemap/build/webtreemap';
 import * as symbol from './symbol';
-import { Indexed, Toolchain } from './viz';
+import { Indexed, Toolchain } from './module';
 
 export function showCodeTreemap(
   toolchain: Toolchain,

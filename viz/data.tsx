@@ -8,7 +8,8 @@ import * as preact from 'preact';
 import * as wasm from 'wasm';
 import { Instructions } from './code';
 import { Column, Table } from './table';
-import { Indexed, ParsedModule, Screen } from './viz';
+import { Screen } from './viz';
+import { Indexed, ParsedModule } from './module';
 import { classNames } from './css';
 
 export function DataSection(props: {

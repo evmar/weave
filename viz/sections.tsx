@@ -6,7 +6,8 @@ import * as d3 from 'd3';
 import { h } from 'preact';
 import * as preact from 'preact';
 import * as wasm from 'wasm';
-import { ParsedModule, Screen } from './viz';
+import { Screen } from './viz';
+import { ParsedModule } from './module';
 import { classNames } from './css';
 
 interface SectionsPartProps {
