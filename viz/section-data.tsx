@@ -1,12 +1,12 @@
 /**
- * Component for displaying wasm data sections, including a hex viewer.
+ * The contents of the wasm "data" section, including a hex viewer.
  */
 
 import * as d3 from 'd3';
 import { h } from 'preact';
 import * as preact from 'preact';
 import * as wasm from 'wasm';
-import { Instructions } from './code';
+import { Instructions } from './section-code';
 import { Column, Table } from './table';
 import { Screen } from './viz';
 import { Indexed, ParsedModule } from './module';

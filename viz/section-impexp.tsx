@@ -1,5 +1,5 @@
 /**
- * Component for import/export sections.
+ * The contents of the wasm "imports" and "exports" sections.
  */
 
 import { Fragment, h } from 'preact';

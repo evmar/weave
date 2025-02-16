@@ -1,3 +1,7 @@
+/**
+ * The contents of the wasm "code" section, including rendering instructions.
+ */
+
 import * as d3 from 'd3';
 import * as preact from 'preact';
 import { Fragment, h } from 'preact';

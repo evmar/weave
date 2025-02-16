@@ -7,9 +7,9 @@ import { Fragment, h } from 'preact';
 import * as hooks from 'preact/hooks';
 import * as wasm from 'wasm';
 
-import { CodeSection, FunctionView, Instructions } from './code';
-import { DataHex, DataSection, HexView } from './data';
-import { Exports, Imports } from './impexp';
+import { CodeSection, FunctionView, Instructions } from './section-code';
+import { DataHex, DataSection, HexView } from './section-data';
+import { Exports, Imports } from './section-impexp';
 import { Sections } from './sections';
 import { Column, Table } from './table';
 import { FunctionType, FunctionSpan, Indexed, loadModule, ParsedModule } from './module';
