@@ -8,14 +8,14 @@ import * as hooks from 'preact/hooks';
 import * as wasm from 'wasm';
 import * as wasmCode from 'wasm/code';
 
-import { CodeSection, Function, Instructions } from './code';
+import { CodeSection, FunctionView, Instructions } from './code';
 import { DataHex, DataSection, HexView } from './data';
 import { Exports, Imports } from './impexp';
 import { Sections } from './sections';
 import { Column, Table } from './table';
 
 export type Indexed<T> = T & { index: number };
-export interface Function {
+export interface FunctionSpan {
   typeidx: number;
   ofs: number;
   len: number;
@@ -31,7 +31,7 @@ export interface ParsedModule {
   types: wasm.FuncType[];
   imports: Indexed<wasm.Import>[];
   exports: wasm.Export[];
-  functions: Indexed<Function>[];
+  functions: Indexed<FunctionSpan>[];
   tables: Indexed<wasm.TableType>[];
   elements: Indexed<wasm.Element>[];
   data: Indexed<wasm.DataSectionData>[];
@@ -294,7 +294,7 @@ function FunctionSection(props: {
   module: ParsedModule;
   onClick: (index: number) => void;
 }) {
-  const columns: Column<Indexed<Function>>[] = [
+  const columns: Column<Indexed<FunctionSpan>>[] = [
     { name: 'func', className: 'right', data: (row) => row.index },
     {
       name: 'type',
@@ -367,7 +367,7 @@ namespace Weave {
   }
   export interface State {
     section?: wasm.SectionHeader & { name?: string };
-    func?: Indexed<Function>;
+    func?: Indexed<FunctionSpan>;
     data?: Indexed<wasm.DataSectionData>;
   }
 }
@@ -495,7 +495,7 @@ class Weave extends preact.Component<Weave.Props, Weave.State> {
       }
     } else if (this.state.func) {
       return (
-        <Function
+        <FunctionView
           key={this.state.func.index}
           module={this.props.module}
           func={this.state.func}

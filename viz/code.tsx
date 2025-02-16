@@ -7,7 +7,7 @@ import * as wasmCode from 'wasm/code';
 import { Reader } from 'wasm/reader';
 import { showCodeTreemap } from './code-treemap';
 import { Column, Table } from './table';
-import { Function, FunctionRef, GlobalRef, Indexed, InlineEdit, ParsedModule, Screen } from './viz';
+import { FunctionSpan, FunctionRef, GlobalRef, Indexed, InlineEdit, ParsedModule, Screen } from './viz';
 
 function XRef(props: {
   id: string;
@@ -263,9 +263,9 @@ function EditableLocal(props: {
   );
 }
 
-export function Function(props: {
+export function FunctionView(props: {
   module: ParsedModule;
-  func: Indexed<Function>;
+  func: Indexed<FunctionSpan>;
   name?: string;
 }) {
   const funcBody = wasmCode.readFunction(
