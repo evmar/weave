@@ -4,9 +4,9 @@
 
 import { FunctionType, Indexed, ParsedModule } from './module';
 import { Screen } from './viz';
-import { Fragment, h } from 'preact';
 import { Column, Table } from './table';
 import * as wasm from 'wasm';
+import * as preact from 'preact';
 
 export function TypeSection(props: { module: ParsedModule }) {
   const columns: Column<Indexed<wasm.FuncType>>[] = [

@@ -2,11 +2,11 @@
  * The contents of the wasm "imports" and "exports" sections.
  */
 
-import { Fragment, h } from 'preact';
 import * as wasm from 'wasm';
 import { Column, Table } from './table';
 import { Link, Screen } from './viz';
 import { FunctionRef, FunctionType, Indexed, ParsedModule } from './module';
+import * as preact from 'preact';
 
 function ImpExpDesc(props: {
   module: ParsedModule;

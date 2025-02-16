@@ -1,5 +1,5 @@
-import { h } from 'preact';
 import * as hooks from 'preact/hooks';
+import * as preact from 'preact';
 
 export function InlineEdit(props: {
   onEdit: (newText: string) => void;

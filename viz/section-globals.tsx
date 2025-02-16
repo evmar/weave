@@ -6,8 +6,8 @@ import { ParsedModule } from './module';
 import { Instructions } from './section-code';
 import { InlineEdit } from './inline-edit';
 import { Screen } from './viz';
-import { Fragment, h } from 'preact';
 import * as hooks from 'preact/hooks';
+import * as preact from 'preact';
 
 export function GlobalSection(props: { module: ParsedModule }) {
   const [edited, setEdited] = hooks.useState(0);

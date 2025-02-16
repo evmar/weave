@@ -4,7 +4,7 @@
 
 import { ParsedModule } from './module';
 import { Screen } from './viz';
-import { Fragment, h } from 'preact';
+import * as preact from 'preact';
 
 export function NamesSection(props: { module: ParsedModule }) {
   const sec = props.module.names!;

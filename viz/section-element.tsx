@@ -4,10 +4,10 @@
 
 import { Indexed, ParsedModule } from './module';
 import { Screen } from './viz';
-import { Fragment, h } from 'preact';
 import { Column, Table } from './table';
 import * as wasm from 'wasm';
 import { Instructions } from './section-code';
+import * as preact from 'preact';
 
 export function ElementSection(props: { module: ParsedModule }) {
   const columns: Column<Indexed<wasm.Element>>[] = [

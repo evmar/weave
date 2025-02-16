@@ -3,7 +3,6 @@
  */
 
 import * as preact from 'preact';
-import { Fragment, h } from 'preact';
 import * as wasm from 'wasm';
 
 import { FunctionSpan, Indexed, loadModule, ParsedModule } from './module';

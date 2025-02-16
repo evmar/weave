@@ -5,8 +5,8 @@
 
 import * as wasm from 'wasm';
 import { Link } from './viz';
-import { Fragment, h } from 'preact';
 import * as wasmCode from 'wasm/code';
+import * as preact from 'preact';
 
 export type Indexed<T> = T & { index: number };
 export interface FunctionSpan {
