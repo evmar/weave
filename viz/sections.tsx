@@ -1,3 +1,7 @@
+/**
+ * Top-level file sections list.
+ */
+
 import * as d3 from 'd3';
 import { h } from 'preact';
 import * as preact from 'preact';

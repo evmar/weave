@@ -1,4 +1,9 @@
 /**
+ * Symbol munging.  Symbols are already demangled by the wasm toolchains, but we
+ * parse them further to make them hierarchical for the treemap.
+ */
+
+/**
  * Given a C++ function name, simplify it as appropriate for the treemap.
  * Parsing C++ function names correctly is very hard and this code is not correct,
  * but it does at least attempt to match parens and angle brackets as found in complex

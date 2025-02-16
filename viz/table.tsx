@@ -1,3 +1,7 @@
+/**
+ * Table component used for tabular data with sorting.
+ */
+
 import * as preact from 'preact';
 import { h } from 'preact';
 import { memo } from './memo';

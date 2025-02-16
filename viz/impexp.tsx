@@ -1,3 +1,7 @@
+/**
+ * Component for import/export sections.
+ */
+
 import { Fragment, h } from 'preact';
 import * as wasm from 'wasm';
 import { Column, Table } from './table';

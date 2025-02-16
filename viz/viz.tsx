@@ -1,3 +1,7 @@
+/**
+ * Main entry point.
+ */
+
 import * as preact from 'preact';
 import { Fragment, h } from 'preact';
 import * as hooks from 'preact/hooks';

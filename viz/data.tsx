@@ -1,3 +1,7 @@
+/**
+ * Component for displaying wasm data sections, including a hex viewer.
+ */
+
 import * as d3 from 'd3';
 import { h } from 'preact';
 import * as preact from 'preact';
@@ -55,6 +59,7 @@ function hex(byte: number, pad = 2): string {
   return byte.toString(16).padStart(pad, '0');
 }
 
+/** Component to display a hex dump of some data. */
 namespace HexView {
   export interface Props {
     data: DataView;
@@ -110,6 +115,7 @@ export class HexView extends preact.Component<HexView.Props, HexView.State> {
   }
 }
 
+/** Component to display a full-page view of a specific data blob in the wasm module. */
 export function DataHex(props: {
   module: ParsedModule;
   data: Indexed<wasm.DataSectionData>;
