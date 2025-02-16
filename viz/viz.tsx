@@ -7,12 +7,19 @@ import { Fragment, h } from 'preact';
 import * as hooks from 'preact/hooks';
 import * as wasm from 'wasm';
 
-import { CodeSection, FunctionView, Instructions } from './section-code';
-import { DataHex, DataSection, HexView } from './section-data';
-import { Exports, Imports } from './section-impexp';
+import { FunctionSpan, Indexed, loadModule, ParsedModule } from './module';
 import { Sections } from './sections';
-import { Column, Table } from './table';
-import { FunctionType, FunctionSpan, Indexed, loadModule, ParsedModule } from './module';
+import { CodeSection, FunctionView } from './section-code';
+import { DataHex, DataSection, HexView } from './section-data';
+import { ElementSection } from './section-element';
+import { FunctionSection } from './section-function';
+import { GlobalSection } from './section-globals';
+import { Exports, Imports } from './section-impexp';
+import { MemorySection } from './section-memory';
+import { NamesSection } from './section-names';
+import { ProducersSection } from './section-producers';
+import { TableSection } from './section-table';
+import { TypeSection } from './section-types';
 
 export type Link = [target: 'section' | 'function' | 'data', index: number];
 function urlFromLink([target, index]: Link): string {
@@ -60,85 +67,6 @@ export function Screen(props: {
   );
 }
 
-function NamesSection(props: { module: ParsedModule }) {
-  const sec = props.module.names!;
-  return (
-    <Screen title='"name" section'>
-      <p>
-        Names for objects found in the file, typically for debugging purposes.
-      </p>
-      <table>
-        <tr>
-          <th className='right'>module name</th>
-          <td>{sec.moduleName ?? <i>none</i>}</td>
-        </tr>
-        <tr>
-          <th className='right'>local names</th>
-          <td>{sec.localNames?.size ?? <i>none</i>}</td>
-        </tr>
-        <tr>
-          <th className='right'>function names</th>
-          <td>{sec.functionNames?.size ?? <i>none</i>}</td>
-        </tr>
-        <tr>
-          <th className='right'>global names</th>
-          <td>{sec.globalNames?.size ?? <i>none</i>}</td>
-        </tr>
-        <tr>
-          <th className='right'>data names</th>
-          <td>{sec.dataNames?.size ?? <i>none</i>}</td>
-        </tr>
-      </table>
-    </Screen>
-  );
-}
-
-function ProducersSection(props: { module: ParsedModule }) {
-  return (
-    <Screen title='"producers" section'>
-      <p>
-        <a href='https://github.com/WebAssembly/tool-conventions/blob/main/ProducersSection.md'>
-          Tools used
-        </a>{' '}
-        to produce the module.
-      </p>
-      <table>
-        {props.module.producers!.map((field) => (
-          <tr>
-            <td>{field.name}</td>
-            <td>
-              {field.values.map(({ name, version }) => (
-                <div>
-                  {name} {version}
-                </div>
-              ))}
-            </td>
-          </tr>
-        ))}
-      </table>
-    </Screen>
-  );
-}
-
-function TypeSection(props: { module: ParsedModule }) {
-  const columns: Column<Indexed<wasm.FuncType>>[] = [
-    { name: 'index', className: 'right', data: (row) => row.index },
-    {
-      name: 'type',
-      cellClass: 'break-all',
-      data: (type) => <FunctionType type={type} />,
-    },
-  ];
-  return (
-    <Screen title='"type" section'>
-      <p>One entry per distinct function type used in the module.</p>
-      <Table columns={columns}>
-        {props.module.types.map((t, i) => ({ ...t, index: i }))}
-      </Table>
-    </Screen>
-  );
-}
-
 export function InlineEdit(props: {
   onEdit: (newText: string) => void;
   children: string;
@@ -176,135 +104,6 @@ export function InlineEdit(props: {
       </span>
     );
   }
-}
-
-function MemorySection(props: { module: ParsedModule }) {
-  const columns: Column<Indexed<wasm.Limits>>[] = [
-    { name: 'index', className: 'right', data: (limits) => limits.index },
-    { name: 'limits', data: (limits) => wasm.limitsToString(limits) },
-  ];
-  return (
-    <Screen title='"memory" section'>
-      <p>Definition of memory. Currently limited to one entry.</p>
-      <Table columns={columns}>{props.module.memories}</Table>
-    </Screen>
-  );
-}
-
-function GlobalSection(props: { module: ParsedModule }) {
-  const [edited, setEdited] = hooks.useState(0);
-
-  return (
-    <Screen title='"globals" section'>
-      <p>Global variables, accessible to both the host environment and Wasm.</p>
-      <table>
-        <thead>
-          <tr>
-            <th className='right'>index</th>
-            <th>name</th>
-            <th>type</th>
-            <th>init</th>
-          </tr>
-        </thead>
-        <tbody>
-          {props.module.globals.map((global) => {
-            return (
-              <tr>
-                <td className='right'>{global.index}</td>
-                <td className='break-all flex-container'>
-                  <InlineEdit
-                    onEdit={(name) => {
-                      props.module.globalNames.set(global.index, name);
-                      setEdited(edited + 1);
-                    }}
-                  >
-                    {props.module.globalNames.get(global.index) ?? ''}
-                  </InlineEdit>
-                </td>
-                <td>
-                  {global.type.mut ? 'var' : 'const'} {global.type.valType}
-                </td>
-                <td>
-                  <Instructions module={props.module} instrs={global.init} />
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </Screen>
-  );
-}
-
-function FunctionSection(props: {
-  module: ParsedModule;
-  onClick: (index: number) => void;
-}) {
-  const columns: Column<Indexed<FunctionSpan>>[] = [
-    { name: 'func', className: 'right', data: (row) => row.index },
-    {
-      name: 'type',
-      data: (row) => <code>{wasm.funcTypeToString(props.module.types[row.typeidx])}</code>,
-    },
-  ];
-  return (
-    <Screen title='"function" section'>
-      <p>Associates functions with their types.</p>
-      <Table columns={columns} onClick={(row) => props.onClick(row.index)}>
-        {props.module.functions}
-      </Table>
-    </Screen>
-  );
-}
-
-function TableSection(props: { module: ParsedModule }) {
-  const columns: Column<Indexed<wasm.TableType>>[] = [
-    { name: 'index', className: 'right', data: (table) => table.index },
-    { name: 'limits', data: (table) => wasm.limitsToString(table.limits) },
-    { name: 'type', data: (table) => table.element },
-  ];
-  return (
-    <Screen title='"table" section'>
-      <p>
-        Collections of opaque references. (Wasm 1.0 only allowed a single table.)
-      </p>
-      <Table columns={columns}>{props.module.tables}</Table>
-    </Screen>
-  );
-}
-
-function ElementSection(props: { module: ParsedModule }) {
-  const columns: Column<Indexed<wasm.Element>>[] = [
-    { name: 'index', className: 'right', data: (elem) => elem.index },
-    { name: 'type', data: (elem) => elem.type },
-    {
-      name: 'init',
-      data: (elem) => `${elem.init.length} entries`,
-    },
-    {
-      name: 'mode',
-      data: (elem) => {
-        if (elem.mode === wasm.ElementMode.active) {
-          return (
-            <div>
-              active table={elem.table}
-              <br />
-              offset:
-              <Instructions module={props.module} instrs={elem.offset} />
-            </div>
-          );
-        } else {
-          return elem.mode;
-        }
-      },
-    },
-  ];
-  return (
-    <Screen title='"element" section'>
-      <p>Initializers for tables.</p>
-      <Table columns={columns}>{props.module.elements}</Table>
-    </Screen>
-  );
 }
 
 namespace Weave {
