@@ -264,6 +264,21 @@ export enum Instr {
   f32x4_splat = 'f32x4.splat',
   f64x2_splat = 'f64x2.splat',
 
+  i8x16_extract_lane_s = 'i8x16.extract_lane_s',
+  i8x16_extract_lane_u = 'i8x16.extract_lane_u',
+  i8x16_replace_lane = 'i8x16.replace_lane',
+  i16x8_extract_lane_s = 'i16x8.extract_lane_s',
+  i16x8_extract_lane_u = 'i16x8.extract_lane_u',
+  i16x8_replace_lane = 'i16x8.replace_lane',
+  i32x4_extract_lane = 'i32x4.extract_lane',
+  i32x4_replace_lane = 'i32x4.replace_lane',
+  i64x2_extract_lane = 'i64x2.extract_lane',
+  i64x2_replace_lane = 'i64x2.replace_lane',
+  f32x4_extract_lane = 'f32x4.extract_lane',
+  f32x4_replace_lane = 'f32x4.replace_lane',
+  f64x2_extract_lane = 'f64x2.extract_lane',
+  f64x2_replace_lane = 'f64x2.replace_lane',
+
   i8x16_eq = 'i8x16.eq',
   i8x16_ne = 'i8x16.ne',
   i8x16_lt_s = 'i8x16.lt_s',
@@ -454,7 +469,25 @@ interface InstrVecConst {
   op: Instr.v128_const;
   bytes: DataView;
 }
-type InstrVec = InstrVecMem | InstrVecMemLane | InstrVecConst;
+interface InstrVecLane {
+  op:
+    | Instr.i8x16_extract_lane_s
+    | Instr.i8x16_extract_lane_u
+    | Instr.i8x16_replace_lane
+    | Instr.i16x8_extract_lane_s
+    | Instr.i16x8_extract_lane_u
+    | Instr.i16x8_replace_lane
+    | Instr.i32x4_extract_lane
+    | Instr.i32x4_replace_lane
+    | Instr.i64x2_extract_lane
+    | Instr.i64x2_replace_lane
+    | Instr.f32x4_extract_lane
+    | Instr.f32x4_replace_lane
+    | Instr.f64x2_extract_lane
+    | Instr.f64x2_replace_lane;
+  lane: number;
+}
+type InstrVec = InstrVecMem | InstrVecMemLane | InstrVecConst | InstrVecLane;
 type InstructionWithFields =
   | InstrBlock
   | InstrIf
@@ -1009,6 +1042,35 @@ function readInstruction(r: Reader): Instruction {
           return { op: Instr.f32x4_splat };
         case 20:
           return { op: Instr.f64x2_splat };
+
+        case 21:
+          return { op: Instr.i8x16_extract_lane_s, lane: r.read8() };
+        case 22:
+          return { op: Instr.i8x16_extract_lane_u, lane: r.read8() };
+        case 23:
+          return { op: Instr.i8x16_replace_lane, lane: r.read8() };
+        case 24:
+          return { op: Instr.i16x8_extract_lane_s, lane: r.read8() };
+        case 25:
+          return { op: Instr.i16x8_extract_lane_u, lane: r.read8() };
+        case 26:
+          return { op: Instr.i16x8_replace_lane, lane: r.read8() };
+        case 27:
+          return { op: Instr.i32x4_extract_lane, lane: r.read8() };
+        case 28:
+          return { op: Instr.i32x4_replace_lane, lane: r.read8() };
+        case 29:
+          return { op: Instr.i64x2_extract_lane, lane: r.read8() };
+        case 30:
+          return { op: Instr.i64x2_replace_lane, lane: r.read8() };
+        case 31:
+          return { op: Instr.f32x4_extract_lane, lane: r.read8() };
+        case 32:
+          return { op: Instr.f32x4_replace_lane, lane: r.read8() };
+        case 33:
+          return { op: Instr.f64x2_extract_lane, lane: r.read8() };
+        case 34:
+          return { op: Instr.f64x2_replace_lane, lane: r.read8() };
 
         case 35:
           return { op: Instr.i8x16_eq };
