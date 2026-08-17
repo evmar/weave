@@ -967,7 +967,7 @@ function readInstruction(r: Reader): Instruction {
         case 93:
           return { op: Instr.v128_load64_zero, memarg: readMemArg(r) };
       }
-      throw new Error(`unhandled op fd ${op.toString(16)}`);
+      throw new Error(`unhandled op 0xfd ${op}`);
     }
 
     default:
