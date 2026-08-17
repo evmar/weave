@@ -254,6 +254,8 @@ export enum Instr {
   v128_store64_lane = 'v128.store64_lane',
   v128_load32_zero = 'v128.load32_zero',
   v128_load64_zero = 'v128.load64_zero',
+
+  v128_const = 'v128.const',
 }
 
 interface InstrBlock {
@@ -396,7 +398,11 @@ interface InstrVecMemLane {
   memarg: MemArg;
   lane: number;
 }
-type InstrVec = InstrVecMem | InstrVecMemLane;
+interface InstrVecConst {
+  op: Instr.v128_const;
+  bytes: DataView;
+}
+type InstrVec = InstrVecMem | InstrVecMemLane | InstrVecConst;
 type InstructionWithFields =
   | InstrBlock
   | InstrIf
@@ -935,6 +941,9 @@ function readInstruction(r: Reader): Instruction {
           return { op: Instr.v128_load64_splat, memarg: readMemArg(r) };
         case 11:
           return { op: Instr.v128_store, memarg: readMemArg(r) };
+
+        case 12:
+          return { op: Instr.v128_const, bytes: r.slice(16) };
 
         case 84:
           return { op: Instr.v128_load8_lane, memarg: readMemArg(r), lane: r.read8() };
