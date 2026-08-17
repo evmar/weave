@@ -36,7 +36,14 @@ export enum Instr {
   global_set = 'global.set',
 
   // table
-  // TODO
+  table_get = 'table.get',
+  table_set = 'table.set',
+  table_init = 'table.init',
+  elem_drop = 'elem.drop',
+  table_copy = 'table.copy',
+  table_grow = 'table.grow',
+  table_size = 'table.size',
+  table_fill = 'table.fill',
 
   // memory
   i32_load = 'i32.load',
@@ -213,6 +220,16 @@ export enum Instr {
   i64_extend8_s = 'i64.extend8_s',
   i64_extend16_s = 'i64.extend16_s',
   i64_extend32_s = 'i64.extend32_s',
+
+  // saturating truncation
+  i32_trunc_sat_s_f32 = 'i32.trunc_sat_s_f32',
+  i32_trunc_sat_u_f32 = 'i32.trunc_sat_u_f32',
+  i32_trunc_sat_s_f64 = 'i32.trunc_sat_s_f64',
+  i32_trunc_sat_u_f64 = 'i32.trunc_sat_u_f64',
+  i64_trunc_sat_s_f32 = 'i64.trunc_sat_s_f32',
+  i64_trunc_sat_u_f32 = 'i64.trunc_sat_u_f32',
+  i64_trunc_sat_s_f64 = 'i64.trunc_sat_s_f64',
+  i64_trunc_sat_u_f64 = 'i64.trunc_sat_u_f64',
 }
 
 interface InstrBlock {
@@ -302,6 +319,10 @@ interface InstrRefFunc {
   op: Instr.ref_func;
   index: number;
 }
+interface InstrTable {
+  op: Instr.table_get | Instr.table_set | Instr.table_grow | Instr.table_size | Instr.table_fill;
+  index: number;
+}
 type InstructionWithFields =
   | InstrBlock
   | InstrIf
@@ -317,7 +338,8 @@ type InstructionWithFields =
   | InstrConstInt64
   | InstrConstFloat
   | InstrRefNull
-  | InstrRefFunc;
+  | InstrRefFunc
+  | InstrTable;
 
 // All other instructions that weren't specially typed above hold just an op.
 // Use a little TypeScript magic so we get a fully discriminated union.
@@ -423,6 +445,11 @@ function readInstruction(r: Reader): Instruction {
         op: Instr.global_set,
         global: r.readUint(),
       };
+
+    case 0x25:
+      return { op: Instr.table_get, index: r.readUint() };
+    case 0x26:
+      return { op: Instr.table_set, index: r.readUint() };
 
     case 0x28:
       return readMemOp(r, Instr.i32_load);
@@ -758,6 +785,39 @@ function readInstruction(r: Reader): Instruction {
       return { op: Instr.ref_is_null };
     case 0xd2:
       return { op: Instr.ref_func, index: r.readUint() };
+
+    case 0xfc: {
+      const op = r.readUint();
+      switch (op) {
+        case 0:
+          return { op: Instr.i32_trunc_sat_s_f32 };
+        case 1:
+          return { op: Instr.i32_trunc_sat_u_f32 };
+        case 2:
+          return { op: Instr.i32_trunc_sat_s_f64 };
+        case 3:
+          return { op: Instr.i32_trunc_sat_u_f64 };
+        case 4:
+          return { op: Instr.i64_trunc_sat_s_f32 };
+        case 5:
+          return { op: Instr.i64_trunc_sat_u_f32 };
+        case 6:
+          return { op: Instr.i64_trunc_sat_s_f64 };
+        case 7:
+          return { op: Instr.i64_trunc_sat_u_f64 };
+
+        // TODO: a few others here
+        case 15:
+          return { op: Instr.table_grow, index: r.readUint() };
+        case 16:
+          return { op: Instr.table_size, index: r.readUint() };
+        case 17:
+          return { op: Instr.table_fill, index: r.readUint() };
+
+        default:
+          throw new Error(`unhandled op fc ${op.toString(16)}`);
+      }
+    }
 
     default:
       throw new Error(`unhandled op ${op.toString(16)}`);

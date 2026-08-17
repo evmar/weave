@@ -11,10 +11,12 @@ export class Reader {
   }
 
   debug(): string {
+    const ofs = this.ofs;
     let out = `${this.view.byteLength - this.ofs} remaining:`;
     for (let i = 0; i < 16; i++) {
       out += ' ' + this.read8().toString(16);
     }
+    this.ofs = ofs;
     return out;
   }
 
