@@ -263,6 +263,14 @@ export enum Instr {
   i64x2_splat = 'i64x2.splat',
   f32x4_splat = 'f32x4.splat',
   f64x2_splat = 'f64x2.splat',
+
+  v128_not = 'v128.not',
+  v128_and = 'v128.and',
+  v128_andnot = 'v128.andnot',
+  v128_or = 'v128.or',
+  v128_xor = 'v128.xor',
+  v128_bitselect = 'v128.bitselect',
+  v128_any_true = 'v128.any_true',
 }
 
 interface InstrBlock {
@@ -964,6 +972,21 @@ function readInstruction(r: Reader): Instruction {
           return { op: Instr.f32x4_splat };
         case 20:
           return { op: Instr.f64x2_splat };
+
+        case 77:
+          return { op: Instr.v128_not };
+        case 78:
+          return { op: Instr.v128_and };
+        case 79:
+          return { op: Instr.v128_andnot };
+        case 80:
+          return { op: Instr.v128_or };
+        case 81:
+          return { op: Instr.v128_xor };
+        case 82:
+          return { op: Instr.v128_bitselect };
+        case 83:
+          return { op: Instr.v128_any_true };
 
         case 84:
           return { op: Instr.v128_load8_lane, memarg: readMemArg(r), lane: r.read8() };
