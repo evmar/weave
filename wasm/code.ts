@@ -257,13 +257,6 @@ export enum Instr {
 
   v128_const = 'v128.const',
 
-  i8x16_splat = 'i8x16.splat',
-  i16x8_splat = 'i16x8.splat',
-  i32x4_splat = 'i32x4.splat',
-  i64x2_splat = 'i64x2.splat',
-  f32x4_splat = 'f32x4.splat',
-  f64x2_splat = 'f64x2.splat',
-
   i8x16_extract_lane_s = 'i8x16.extract_lane_s',
   i8x16_extract_lane_u = 'i8x16.extract_lane_u',
   i8x16_replace_lane = 'i8x16.replace_lane',
@@ -278,6 +271,13 @@ export enum Instr {
   f32x4_replace_lane = 'f32x4.replace_lane',
   f64x2_extract_lane = 'f64x2.extract_lane',
   f64x2_replace_lane = 'f64x2.replace_lane',
+
+  i8x16_splat = 'i8x16.splat',
+  i16x8_splat = 'i16x8.splat',
+  i32x4_splat = 'i32x4.splat',
+  i64x2_splat = 'i64x2.splat',
+  f32x4_splat = 'f32x4.splat',
+  f64x2_splat = 'f64x2.splat',
 
   i8x16_eq = 'i8x16.eq',
   i8x16_ne = 'i8x16.ne',
@@ -316,6 +316,19 @@ export enum Instr {
   i64x2_le_s = 'i64x2.le_s',
   i64x2_ge_s = 'i64x2.ge_s',
 
+  f32x4_eq = 'f32x4.eq',
+  f32x4_ne = 'f32x4.ne',
+  f32x4_lt = 'f32x4.lt',
+  f32x4_gt = 'f32x4.gt',
+  f32x4_le = 'f32x4.le',
+  f32x4_ge = 'f32x4.ge',
+  f64x2_eq = 'f64x2.eq',
+  f64x2_ne = 'f64x2.ne',
+  f64x2_lt = 'f64x2.lt',
+  f64x2_gt = 'f64x2.gt',
+  f64x2_le = 'f64x2.le',
+  f64x2_ge = 'f64x2.ge',
+
   v128_not = 'v128.not',
   v128_and = 'v128.and',
   v128_andnot = 'v128.andnot',
@@ -323,6 +336,168 @@ export enum Instr {
   v128_xor = 'v128.xor',
   v128_bitselect = 'v128.bitselect',
   v128_any_true = 'v128.any_true',
+
+  i8x16_abs = 'i8x16.abs',
+  i8x16_neg = 'i8x16.neg',
+  i8x16_popcnt = 'i8x16.popcnt',
+  i8x16_all_true = 'i8x16.all_true',
+  i8x16_bitmask = 'i8x16.bitmask',
+  i8x16_narrow_i16x8_s = 'i8x16.narrow_i16x8_s',
+  i8x16_narrow_i16x8_u = 'i8x16.narrow_i16x8_u',
+  i8x16_shl = 'i8x16.shl',
+  i8x16_shr_s = 'i8x16.shr_s',
+  i8x16_shr_u = 'i8x16.shr_u',
+  i8x16_add = 'i8x16.add',
+  i8x16_add_sat_s = 'i8x16.add_sat_s',
+  i8x16_add_sat_u = 'i8x16.add_sat_u',
+  i8x16_sub = 'i8x16.sub',
+  i8x16_sub_sat_s = 'i8x16.sub_sat_s',
+  i8x16_sub_sat_u = 'i8x16.sub_sat_u',
+  i8x16_min_s = 'i8x16.min_s',
+  i8x16_min_u = 'i8x16.min_u',
+  i8x16_max_s = 'i8x16.max_s',
+  i8x16_max_u = 'i8x16.max_u',
+  i8x16_avgr_u = 'i8x16.avgr_u',
+
+  i16x8_extadd_pairwise_s_i8x16 = 'i16x8.extadd_pairwise_s_i8x16',
+  i16x8_extadd_pairwise_u_i8x16 = 'i16x8.extadd_pairwise_u_i8x16',
+  i16x8_abs = 'i16x8.abs',
+  i16x8_neg = 'i16x8.neg',
+  i16x8_all_true = 'i16x8.all_true',
+  i16x8_bitmask = 'i16x8.bitmask',
+  i16x8_narrow_i32x4_s = 'i16x8.narrow_i32x4_s',
+  i16x8_narrow_i32x4_u = 'i16x8.narrow_i32x4_u',
+  i16x8_extend_low_s_i8x16 = 'i16x8.extend_low_s_i8x16',
+  i16x8_extend_high_s_i8x16 = 'i16x8.extend_high_s_i8x16',
+  i16x8_extend_low_u_i8x16 = 'i16x8.extend_low_u_i8x16',
+  i16x8_extend_high_u_i8x16 = 'i16x8.extend_high_u_i8x16',
+  i16x8_shl = 'i16x8.shl',
+  i16x8_shr_s = 'i16x8.shr_s',
+  i16x8_shr_u = 'i16x8.shr_u',
+  i16x8_q15mulr_sat_s = 'i16x8.q15mulr_sat_s',
+  i16x8_add = 'i16x8.add',
+  i16x8_add_sat_s = 'i16x8.add_sat_s',
+  i16x8_add_sat_u = 'i16x8.add_sat_u',
+  i16x8_sub = 'i16x8.sub',
+  i16x8_sub_sat_s = 'i16x8.sub_sat_s',
+  i16x8_sub_sat_u = 'i16x8.sub_sat_u',
+  i16x8_mul = 'i16x8.mul',
+  i16x8_min_s = 'i16x8.min_s',
+  i16x8_min_u = 'i16x8.min_u',
+  i16x8_max_s = 'i16x8.max_s',
+  i16x8_max_u = 'i16x8.max_u',
+  i16x8_avgr_u = 'i16x8.avgr_u',
+  i16x8_relaxed_q15mulr_s = 'i16x8.relaxed_q15mulr_s',
+  i16x8_extmul_low_s_i8x16 = 'i16x8.extmul_low_s_i8x16',
+  i16x8_extmul_high_s_i8x16 = 'i16x8.extmul_high_s_i8x16',
+  i16x8_extmul_low_u_i8x16 = 'i16x8.extmul_low_u_i8x16',
+  i16x8_extmul_high_u_i8x16 = 'i16x8.extmul_high_u_i8x16',
+  i16x8_relaxed_dot_s_i8x16 = 'i16x8.relaxed_dot_s_i8x16',
+
+  i32x4_extadd_pairwise_s_i16x8 = 'i32x4.extadd_pairwise_s_i16x8',
+  i32x4_extadd_pairwise_u_i16x8 = 'i32x4.extadd_pairwise_u_i16x8',
+  i32x4_abs = 'i32x4.abs',
+  i32x4_neg = 'i32x4.neg',
+  i32x4_all_true = 'i32x4.all_true',
+  i32x4_bitmask = 'i32x4.bitmask',
+  i32x4_extend_low_s_i16x8 = 'i32x4.extend_low_s_i16x8',
+  i32x4_extend_high_s_i16x8 = 'i32x4.extend_high_s_i16x8',
+  i32x4_extend_low_u_i16x8 = 'i32x4.extend_low_u_i16x8',
+  i32x4_extend_high_u_i16x8 = 'i32x4.extend_high_u_i16x8',
+  i32x4_shl = 'i32x4.shl',
+  i32x4_shr_s = 'i32x4.shr_s',
+  i32x4_shr_u = 'i32x4.shr_u',
+  i32x4_add = 'i32x4.add',
+  i32x4_sub = 'i32x4.sub',
+  i32x4_mul = 'i32x4.mul',
+  i32x4_min_s = 'i32x4.min_s',
+  i32x4_min_u = 'i32x4.min_u',
+  i32x4_max_s = 'i32x4.max_s',
+  i32x4_max_u = 'i32x4.max_u',
+  i32x4_dot_s_i16x8 = 'i32x4.dot_s_i16x8',
+  i32x4_extmul_low_s_i16x8 = 'i32x4.extmul_low_s_i16x8',
+  i32x4_extmul_high_s_i16x8 = 'i32x4.extmul_high_s_i16x8',
+  i32x4_extmul_low_u_i16x8 = 'i32x4.extmul_low_u_i16x8',
+  i32x4_extmul_high_u_i16x8 = 'i32x4.extmul_high_u_i16x8',
+  i32x4_relaxed_dot_add_s_i16x8 = 'i32x4.relaxed_dot_add_s_i16x8',
+
+  i64x2_abs = 'i64x2.abs',
+  i64x2_neg = 'i64x2.neg',
+  i64x2_all_true = 'i64x2.all_true',
+  i64x2_bitmask = 'i64x2.bitmask',
+  i64x2_extend_low_s_i32x4 = 'i64x2.extend_low_s_i32x4',
+  i64x2_extend_high_s_i32x4 = 'i64x2.extend_high_s_i32x4',
+  i64x2_extend_low_u_i32x4 = 'i64x2.extend_low_u_i32x4',
+  i64x2_extend_high_u_i32x4 = 'i64x2.extend_high_u_i32x4',
+  i64x2_shl = 'i64x2.shl',
+  i64x2_shr_s = 'i64x2.shr_s',
+  i64x2_shr_u = 'i64x2.shr_u',
+  i64x2_add = 'i64x2.add',
+  i64x2_sub = 'i64x2.sub',
+  i64x2_mul = 'i64x2.mul',
+  i64x2_extmul_low_s_i32x4 = 'i64x2.extmul_low_s_i32x4',
+  i64x2_extmul_high_s_i32x4 = 'i64x2.extmul_high_s_i32x4',
+  i64x2_extmul_low_u_i32x4 = 'i64x2.extmul_low_u_i32x4',
+  i64x2_extmul_high_u_i32x4 = 'i64x2.extmul_high_u_i32x4',
+
+  f32x4_ceil = 'f32x4.ceil',
+  f32x4_floor = 'f32x4.floor',
+  f32x4_trunc = 'f32x4.trunc',
+  f32x4_nearest = 'f32x4.nearest',
+  f32x4_abs = 'f32x4.abs',
+  f32x4_neg = 'f32x4.neg',
+  f32x4_sqrt = 'f32x4.sqrt',
+  f32x4_add = 'f32x4.add',
+  f32x4_sub = 'f32x4.sub',
+  f32x4_mul = 'f32x4.mul',
+  f32x4_div = 'f32x4.div',
+  f32x4_min = 'f32x4.min',
+  f32x4_max = 'f32x4.max',
+  f32x4_pmin = 'f32x4.pmin',
+  f32x4_pmax = 'f32x4.pmax',
+  f32x4_relaxed_min = 'f32x4.relaxed_min',
+  f32x4_relaxed_max = 'f32x4.relaxed_max',
+  f32x4_relaxed_madd = 'f32x4.relaxed_madd',
+  f32x4_relaxed_nmadd = 'f32x4.relaxed_nmadd',
+
+  f64x2_ceil = 'f64x2.ceil',
+  f64x2_floor = 'f64x2.floor',
+  f64x2_trunc = 'f64x2.trunc',
+  f64x2_nearest = 'f64x2.nearest',
+  f64x2_abs = 'f64x2.abs',
+  f64x2_neg = 'f64x2.neg',
+  f64x2_sqrt = 'f64x2.sqrt',
+  f64x2_add = 'f64x2.add',
+  f64x2_sub = 'f64x2.sub',
+  f64x2_mul = 'f64x2.mul',
+  f64x2_div = 'f64x2.div',
+  f64x2_min = 'f64x2.min',
+  f64x2_max = 'f64x2.max',
+  f64x2_pmin = 'f64x2.pmin',
+  f64x2_pmax = 'f64x2.pmax',
+  f64x2_relaxed_min = 'f64x2.relaxed_min',
+  f64x2_relaxed_max = 'f64x2.relaxed_max',
+  f64x2_relaxed_madd = 'f64x2.relaxed_madd',
+  f64x2_relaxed_nmadd = 'f64x2.relaxed_nmadd',
+  i8x16_relaxed_laneselect = 'i8x16.relaxed_laneselect',
+  i16x8_relaxed_laneselect = 'i16x8.relaxed_laneselect',
+  i32x4_relaxed_laneselect = 'i32x4.relaxed_laneselect',
+  i64x2_relaxed_laneselect = 'i64x2.relaxed_laneselect',
+
+  f32x4_demote_zero_f64x2 = 'f32x4.demote_zero_f64x2',
+  f64x2_promote_low_f32x4 = 'f64x2.promote_low_f32x4',
+  i32x4_trunc_sat_s_f32x4 = 'i32x4.trunc_sat_s_f32x4',
+  i32x4_trunc_sat_u_f32x4 = 'i32x4.trunc_sat_u_f32x4',
+  f32x4_convert_s_i32x4 = 'f32x4.convert_s_i32x4',
+  f32x4_convert_u_i32x4 = 'f32x4.convert_u_i32x4',
+  i32x4_trunc_sat_s_zero_f64x2 = 'i32x4.trunc_sat_s_zero_f64x2',
+  i32x4_trunc_sat_u_zero_f64x2 = 'i32x4.trunc_sat_u_zero_f64x2',
+  f64x2_convert_low_s_i32x4 = 'f64x2.convert_low_s_i32x4',
+  f64x2_convert_low_u_i32x4 = 'f64x2.convert_low_u_i32x4',
+  i32x4_relaxed_trunc_s_f32x4 = 'i32x4.relaxed_trunc_s_f32x4',
+  i32x4_relaxed_trunc_u_f32x4 = 'i32x4.relaxed_trunc_u_f32x4',
+  i32x4_relaxed_trunc_s_zero_f64x2 = 'i32x4.relaxed_trunc_s_zero_f64x2',
+  i32x4_relaxed_trunc_u_zero_f64x2 = 'i32x4.relaxed_trunc_u_zero_f64x2',
 }
 
 interface InstrBlock {
@@ -1170,6 +1345,150 @@ function readInstruction(r: Reader): Instruction {
         case 93:
           return { op: Instr.v128_load64_zero, memarg: readMemArg(r) };
 
+        case 124:
+          return { op: Instr.i16x8_extadd_pairwise_s_i8x16 };
+        case 125:
+          return { op: Instr.i16x8_extadd_pairwise_u_i8x16 };
+        case 126:
+          return { op: Instr.i32x4_extadd_pairwise_s_i16x8 };
+        case 127:
+          return { op: Instr.i32x4_extadd_pairwise_u_i16x8 };
+        case 128:
+          return { op: Instr.i16x8_abs };
+        case 129:
+          return { op: Instr.i16x8_neg };
+        case 131:
+          return { op: Instr.i16x8_all_true };
+        case 132:
+          return { op: Instr.i16x8_bitmask };
+        case 133:
+          return { op: Instr.i16x8_narrow_i32x4_s };
+        case 134:
+          return { op: Instr.i16x8_narrow_i32x4_u };
+        case 135:
+          return { op: Instr.i16x8_extend_low_s_i8x16 };
+        case 136:
+          return { op: Instr.i16x8_extend_high_s_i8x16 };
+        case 137:
+          return { op: Instr.i16x8_extend_low_u_i8x16 };
+        case 138:
+          return { op: Instr.i16x8_extend_high_u_i8x16 };
+        case 139:
+          return { op: Instr.i16x8_shl };
+        case 140:
+          return { op: Instr.i16x8_shr_s };
+        case 141:
+          return { op: Instr.i16x8_shr_u };
+        case 130:
+          return { op: Instr.i16x8_q15mulr_sat_s };
+        case 142:
+          return { op: Instr.i16x8_add };
+        case 143:
+          return { op: Instr.i16x8_add_sat_s };
+        case 144:
+          return { op: Instr.i16x8_add_sat_u };
+        case 145:
+          return { op: Instr.i16x8_sub };
+        case 146:
+          return { op: Instr.i16x8_sub_sat_s };
+        case 147:
+          return { op: Instr.i16x8_sub_sat_u };
+        case 149:
+          return { op: Instr.i16x8_mul };
+        case 150:
+          return { op: Instr.i16x8_min_s };
+        case 151:
+          return { op: Instr.i16x8_min_u };
+        case 152:
+          return { op: Instr.i16x8_max_s };
+        case 153:
+          return { op: Instr.i16x8_max_u };
+        case 155:
+          return { op: Instr.i16x8_avgr_u };
+        case 156:
+          return { op: Instr.i16x8_extmul_low_s_i8x16 };
+        case 157:
+          return { op: Instr.i16x8_extmul_high_s_i8x16 };
+        case 158:
+          return { op: Instr.i16x8_extmul_low_u_i8x16 };
+        case 159:
+          return { op: Instr.i16x8_extmul_high_u_i8x16 };
+
+        case 160:
+          return { op: Instr.i32x4_abs };
+        case 161:
+          return { op: Instr.i32x4_neg };
+        case 163:
+          return { op: Instr.i32x4_all_true };
+        case 164:
+          return { op: Instr.i32x4_bitmask };
+        case 167:
+          return { op: Instr.i32x4_extend_low_s_i16x8 };
+        case 168:
+          return { op: Instr.i32x4_extend_high_s_i16x8 };
+        case 169:
+          return { op: Instr.i32x4_extend_low_u_i16x8 };
+        case 170:
+          return { op: Instr.i32x4_extend_high_u_i16x8 };
+        case 171:
+          return { op: Instr.i32x4_shl };
+        case 172:
+          return { op: Instr.i32x4_shr_s };
+        case 173:
+          return { op: Instr.i32x4_shr_u };
+        case 174:
+          return { op: Instr.i32x4_add };
+        case 177:
+          return { op: Instr.i32x4_sub };
+        case 181:
+          return { op: Instr.i32x4_mul };
+        case 182:
+          return { op: Instr.i32x4_min_s };
+        case 183:
+          return { op: Instr.i32x4_min_u };
+        case 184:
+          return { op: Instr.i32x4_max_s };
+        case 185:
+          return { op: Instr.i32x4_max_u };
+        case 186:
+          return { op: Instr.i32x4_dot_s_i16x8 };
+        case 188:
+          return { op: Instr.i32x4_extmul_low_s_i16x8 };
+        case 189:
+          return { op: Instr.i32x4_extmul_high_s_i16x8 };
+        case 190:
+          return { op: Instr.i32x4_extmul_low_u_i16x8 };
+        case 191:
+          return { op: Instr.i32x4_extmul_high_u_i16x8 };
+
+        case 192:
+          return { op: Instr.i64x2_abs };
+        case 193:
+          return { op: Instr.i64x2_neg };
+        case 195:
+          return { op: Instr.i64x2_all_true };
+        case 196:
+          return { op: Instr.i64x2_bitmask };
+        case 199:
+          return { op: Instr.i64x2_extend_low_s_i32x4 };
+        case 200:
+          return { op: Instr.i64x2_extend_high_s_i32x4 };
+        case 201:
+          return { op: Instr.i64x2_extend_low_u_i32x4 };
+        case 202:
+          return { op: Instr.i64x2_extend_high_u_i32x4 };
+        case 203:
+          return { op: Instr.i64x2_shl };
+        case 204:
+          return { op: Instr.i64x2_shr_s };
+        case 205:
+          return { op: Instr.i64x2_shr_u };
+        case 206:
+          return { op: Instr.i64x2_add };
+        case 209:
+          return { op: Instr.i64x2_sub };
+        case 213:
+          return { op: Instr.i64x2_mul };
         case 214:
           return { op: Instr.i64x2_eq };
         case 215:
@@ -1182,6 +1501,22 @@ function readInstruction(r: Reader): Instruction {
           return { op: Instr.i64x2_le_s };
         case 219:
           return { op: Instr.i64x2_ge_s };
+
+        case 220:
+          return { op: Instr.i64x2_extmul_low_s_i32x4 };
+        case 221:
+          return { op: Instr.i64x2_extmul_high_s_i32x4 };
+        case 222:
+          return { op: Instr.i64x2_extmul_low_u_i32x4 };
+        case 223:
+          return { op: Instr.i64x2_extmul_high_u_i32x4 };
+
+        case 273:
+          return { op: Instr.i16x8_relaxed_q15mulr_s };
+        case 274:
+          return { op: Instr.i16x8_relaxed_dot_s_i8x16 };
+        case 275:
+          return { op: Instr.i32x4_relaxed_dot_add_s_i16x8 };
       }
       throw new Error(`unhandled op 0xfd ${op}`);
     }
