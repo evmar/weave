@@ -230,6 +230,30 @@ export enum Instr {
   i64_trunc_sat_u_f32 = 'i64.trunc_sat_u_f32',
   i64_trunc_sat_s_f64 = 'i64.trunc_sat_s_f64',
   i64_trunc_sat_u_f64 = 'i64.trunc_sat_u_f64',
+
+  // vector instructions
+  v128_load = 'v128.load',
+  v128_load8x8_s = 'v128.load8x8_s',
+  v128_load8x8_u = 'v128.load8x8_u',
+  v128_load16x4_s = 'v128.load16x4_s',
+  v128_load16x4_u = 'v128.load16x4_u',
+  v128_load32x2_s = 'v128.load32x2_s',
+  v128_load32x2_u = 'v128.load32x2_u',
+  v128_load8_splat = 'v128.load8_splat',
+  v128_load16_splat = 'v128.load16_splat',
+  v128_load32_splat = 'v128.load32_splat',
+  v128_load64_splat = 'v128.load64_splat',
+  v128_store = 'v128.store',
+  v128_load8_lane = 'v128.load8_lane',
+  v128_load16_lane = 'v128.load16_lane',
+  v128_load32_lane = 'v128.load32_lane',
+  v128_load64_lane = 'v128.load64_lane',
+  v128_store8_lane = 'v128.store8_lane',
+  v128_store16_lane = 'v128.store16_lane',
+  v128_store32_lane = 'v128.store32_lane',
+  v128_store64_lane = 'v128.store64_lane',
+  v128_load32_zero = 'v128.load32_zero',
+  v128_load64_zero = 'v128.load64_zero',
 }
 
 interface InstrBlock {
@@ -322,6 +346,38 @@ interface InstrTable {
   op: Instr.table_get | Instr.table_set | Instr.table_grow | Instr.table_size | Instr.table_fill;
   index: number;
 }
+interface InstrVecMem {
+  op:
+    | Instr.v128_load
+    | Instr.v128_load8x8_s
+    | Instr.v128_load8x8_u
+    | Instr.v128_load16x4_s
+    | Instr.v128_load16x4_u
+    | Instr.v128_load32x2_s
+    | Instr.v128_load32x2_u
+    | Instr.v128_load8_splat
+    | Instr.v128_load16_splat
+    | Instr.v128_load32_splat
+    | Instr.v128_load64_splat
+    | Instr.v128_store
+    | Instr.v128_load32_zero
+    | Instr.v128_load64_zero;
+  memarg: MemArg;
+}
+interface InstrVecMemLane {
+  op:
+    | Instr.v128_load8_lane
+    | Instr.v128_load16_lane
+    | Instr.v128_load32_lane
+    | Instr.v128_load64_lane
+    | Instr.v128_store8_lane
+    | Instr.v128_store16_lane
+    | Instr.v128_store32_lane
+    | Instr.v128_store64_lane;
+  memarg: MemArg;
+  lane: number;
+}
+type InstrVec = InstrVecMem | InstrVecMemLane;
 type InstructionWithFields =
   | InstrBlock
   | InstrIf
@@ -338,7 +394,8 @@ type InstructionWithFields =
   | InstrConstFloat
   | InstrRefNull
   | InstrRefFunc
-  | InstrTable;
+  | InstrTable
+  | InstrVec;
 
 // All other instructions that weren't specially typed above hold just an op.
 // Use a little TypeScript magic so we get a fully discriminated union.
@@ -831,6 +888,60 @@ function readInstruction(r: Reader): Instruction {
         default:
           throw new Error(`unhandled op fc ${op.toString(16)}`);
       }
+    }
+
+    case 0xfd: {
+      const op = r.readUint();
+      switch (op) {
+        case 0:
+          return { op: Instr.v128_load, memarg: readMemArg(r) };
+
+        case 1:
+          return { op: Instr.v128_load8x8_s, memarg: readMemArg(r) };
+        case 2:
+          return { op: Instr.v128_load8x8_u, memarg: readMemArg(r) };
+        case 3:
+          return { op: Instr.v128_load16x4_s, memarg: readMemArg(r) };
+        case 4:
+          return { op: Instr.v128_load16x4_u, memarg: readMemArg(r) };
+        case 5:
+          return { op: Instr.v128_load32x2_s, memarg: readMemArg(r) };
+        case 6:
+          return { op: Instr.v128_load32x2_u, memarg: readMemArg(r) };
+        case 7:
+          return { op: Instr.v128_load8_splat, memarg: readMemArg(r) };
+        case 8:
+          return { op: Instr.v128_load16_splat, memarg: readMemArg(r) };
+        case 9:
+          return { op: Instr.v128_load32_splat, memarg: readMemArg(r) };
+        case 10:
+          return { op: Instr.v128_load64_splat, memarg: readMemArg(r) };
+        case 11:
+          return { op: Instr.v128_store, memarg: readMemArg(r) };
+
+        case 84:
+          return { op: Instr.v128_load8_lane, memarg: readMemArg(r), lane: r.read8() };
+        case 85:
+          return { op: Instr.v128_load16_lane, memarg: readMemArg(r), lane: r.read8() };
+        case 86:
+          return { op: Instr.v128_load32_lane, memarg: readMemArg(r), lane: r.read8() };
+        case 87:
+          return { op: Instr.v128_load64_lane, memarg: readMemArg(r), lane: r.read8() };
+        case 88:
+          return { op: Instr.v128_store8_lane, memarg: readMemArg(r), lane: r.read8() };
+        case 89:
+          return { op: Instr.v128_store16_lane, memarg: readMemArg(r), lane: r.read8() };
+        case 90:
+          return { op: Instr.v128_store32_lane, memarg: readMemArg(r), lane: r.read8() };
+        case 91:
+          return { op: Instr.v128_store64_lane, memarg: readMemArg(r), lane: r.read8() };
+
+        case 92:
+          return { op: Instr.v128_load32_zero, memarg: readMemArg(r) };
+        case 93:
+          return { op: Instr.v128_load64_zero, memarg: readMemArg(r) };
+      }
+      throw new Error(`unhandled op fd ${op.toString(16)}`);
     }
 
     default:
