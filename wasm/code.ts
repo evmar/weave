@@ -1324,6 +1324,31 @@ function readInstruction(r: Reader): Instruction {
         case 64:
           return { op: Instr.i32x4_ge_u };
 
+        case 65:
+          return { op: Instr.f32x4_eq };
+        case 66:
+          return { op: Instr.f32x4_ne };
+        case 67:
+          return { op: Instr.f32x4_lt };
+        case 68:
+          return { op: Instr.f32x4_gt };
+        case 69:
+          return { op: Instr.f32x4_le };
+        case 70:
+          return { op: Instr.f32x4_ge };
+        case 71:
+          return { op: Instr.f64x2_eq };
+        case 72:
+          return { op: Instr.f64x2_ne };
+        case 73:
+          return { op: Instr.f64x2_lt };
+        case 74:
+          return { op: Instr.f64x2_gt };
+        case 75:
+          return { op: Instr.f64x2_le };
+        case 76:
+          return { op: Instr.f64x2_ge };
+
         case 77:
           return { op: Instr.v128_not };
         case 78:
@@ -1360,6 +1385,61 @@ function readInstruction(r: Reader): Instruction {
           return { op: Instr.v128_load32_zero, memarg: readMemArg(r) };
         case 93:
           return { op: Instr.v128_load64_zero, memarg: readMemArg(r) };
+
+        case 94:
+          return { op: Instr.f32x4_demote_zero_f64x2 };
+        case 95:
+          return { op: Instr.f64x2_promote_low_f32x4 };
+
+        case 96:
+          return { op: Instr.i8x16_abs };
+        case 97:
+          return { op: Instr.i8x16_neg };
+        case 98:
+          return { op: Instr.i8x16_popcnt };
+        case 99:
+          return { op: Instr.i8x16_all_true };
+        case 100:
+          return { op: Instr.i8x16_bitmask };
+        case 101:
+          return { op: Instr.i8x16_narrow_i16x8_s };
+        case 102:
+          return { op: Instr.i8x16_narrow_i16x8_u };
+        case 107:
+          return { op: Instr.i8x16_shl };
+        case 108:
+          return { op: Instr.i8x16_shr_s };
+        case 109:
+          return { op: Instr.i8x16_shr_u };
+        case 110:
+          return { op: Instr.i8x16_add };
+        case 111:
+          return { op: Instr.i8x16_add_sat_s };
+        case 112:
+          return { op: Instr.i8x16_add_sat_u };
+        case 113:
+          return { op: Instr.i8x16_sub };
+        case 114:
+          return { op: Instr.i8x16_sub_sat_s };
+        case 115:
+          return { op: Instr.i8x16_sub_sat_u };
+        case 116:
+          return { op: Instr.f64x2_ceil };
+        case 117:
+          return { op: Instr.f64x2_floor };
+
+        case 118:
+          return { op: Instr.i8x16_min_s };
+        case 119:
+          return { op: Instr.i8x16_min_u };
+        case 120:
+          return { op: Instr.i8x16_max_s };
+        case 121:
+          return { op: Instr.i8x16_max_u };
+        case 122:
+          return { op: Instr.f64x2_trunc };
+        case 123:
+          return { op: Instr.i8x16_avgr_u };
 
         case 124:
           return { op: Instr.i16x8_extadd_pairwise_s_i8x16 };
@@ -1409,6 +1489,8 @@ function readInstruction(r: Reader): Instruction {
           return { op: Instr.i16x8_sub_sat_s };
         case 147:
           return { op: Instr.i16x8_sub_sat_u };
+        case 148:
+          return { op: Instr.f64x2_nearest };
         case 149:
           return { op: Instr.i16x8_mul };
         case 150:
@@ -1526,6 +1608,71 @@ function readInstruction(r: Reader): Instruction {
           return { op: Instr.i64x2_extmul_low_u_i32x4 };
         case 223:
           return { op: Instr.i64x2_extmul_high_u_i32x4 };
+
+        case 236:
+          return { op: Instr.f64x2_abs };
+        case 237:
+          return { op: Instr.f64x2_neg };
+        case 239:
+          return { op: Instr.f64x2_sqrt };
+        case 240:
+          return { op: Instr.f64x2_add };
+        case 241:
+          return { op: Instr.f64x2_sub };
+        case 242:
+          return { op: Instr.f64x2_mul };
+        case 243:
+          return { op: Instr.f64x2_div };
+        case 244:
+          return { op: Instr.f64x2_min };
+        case 245:
+          return { op: Instr.f64x2_max };
+        case 246:
+          return { op: Instr.f64x2_pmin };
+        case 247:
+          return { op: Instr.f64x2_pmax };
+
+        case 248:
+          return { op: Instr.i32x4_trunc_sat_s_f32x4 };
+        case 249:
+          return { op: Instr.i32x4_trunc_sat_u_f32x4 };
+        case 250:
+          return { op: Instr.f32x4_convert_s_i32x4 };
+        case 251:
+          return { op: Instr.f32x4_convert_u_i32x4 };
+        case 252:
+          return { op: Instr.i32x4_trunc_sat_s_zero_f64x2 };
+        case 253:
+          return { op: Instr.i32x4_trunc_sat_u_zero_f64x2 };
+        case 254:
+          return { op: Instr.f64x2_convert_low_s_i32x4 };
+        case 255:
+          return { op: Instr.f64x2_convert_low_u_i32x4 };
+        case 257:
+          return { op: Instr.i32x4_relaxed_trunc_s_f32x4 };
+        case 258:
+          return { op: Instr.i32x4_relaxed_trunc_u_f32x4 };
+        case 259:
+          return { op: Instr.i32x4_relaxed_trunc_s_zero_f64x2 };
+        case 260:
+          return { op: Instr.i32x4_relaxed_trunc_u_zero_f64x2 };
+
+        case 271:
+          return { op: Instr.f64x2_relaxed_min };
+        case 272:
+          return { op: Instr.f64x2_relaxed_max };
+        case 263:
+          return { op: Instr.f64x2_relaxed_madd };
+        case 264:
+          return { op: Instr.f64x2_relaxed_nmadd };
+        case 265:
+          return { op: Instr.i8x16_relaxed_laneselect };
+        case 266:
+          return { op: Instr.i16x8_relaxed_laneselect };
+        case 267:
+          return { op: Instr.i32x4_relaxed_laneselect };
+        case 268:
+          return { op: Instr.i64x2_relaxed_laneselect };
 
         case 273:
           return { op: Instr.i16x8_relaxed_q15mulr_s };
