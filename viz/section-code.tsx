@@ -234,15 +234,9 @@ export class Instructions extends preact.Component<
         break;
 
       default:
-        const toPrint = [instr.op.toString()];
-        for (const [key, val] of Object.entries(instr)) {
-          if (key === 'op') continue;
-          if (val instanceof Array) continue;
-          toPrint.push(` ${key}=${val}`);
-        }
         yield (
           <div style={`padding-left: ${indent * 2}ch`}>
-            {toPrint.join('')}
+            {wasmCode.instrToString(instr)}
             {'\n'}
           </div>
         );

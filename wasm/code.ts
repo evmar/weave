@@ -296,8 +296,7 @@ interface InstrMem {
     | Instr.i64_store8
     | Instr.i64_store16
     | Instr.i64_store32;
-  align: number;
-  offset: number;
+  memarg: MemArg;
 }
 interface InstrConstInt32 {
   op: Instr.i32_const;
@@ -368,8 +367,23 @@ function readBlockType(r: Reader) {
   // todo https://webassembly.github.io/spec/core/binary/instructions.html#binary-blocktype
 }
 
-function readMemOp(r: Reader, op: InstrMem['op']): InstrMem {
-  return { op, align: r.readUint(), offset: r.readUint() };
+interface MemArg {
+  align: number;
+  index: number;
+  offset: number;
+}
+function readMemArg(r: Reader): MemArg {
+  let align = r.readUint();
+  let index = 0;
+  if (align & 0b0100_0000) {
+    index = r.readUint();
+    align = align & ~0b0100_0000;
+  }
+  if (align & 0b1000_0000) {
+    throw new Error(`bad memarg align ${align.toString(16)}`);
+  }
+  const offset = r.readUint();
+  return { align, index, offset };
 }
 
 function readInstruction(r: Reader): Instruction {
@@ -452,51 +466,51 @@ function readInstruction(r: Reader): Instruction {
       return { op: Instr.table_set, index: r.readUint() };
 
     case 0x28:
-      return readMemOp(r, Instr.i32_load);
+      return { op: Instr.i32_load, memarg: readMemArg(r) };
     case 0x29:
-      return readMemOp(r, Instr.i64_load);
+      return { op: Instr.i64_load, memarg: readMemArg(r) };
     case 0x2a:
-      return readMemOp(r, Instr.f32_load);
+      return { op: Instr.f32_load, memarg: readMemArg(r) };
     case 0x2b:
-      return readMemOp(r, Instr.f64_load);
+      return { op: Instr.f64_load, memarg: readMemArg(r) };
     case 0x2c:
-      return readMemOp(r, Instr.i32_load8_s);
+      return { op: Instr.i32_load8_s, memarg: readMemArg(r) };
     case 0x2d:
-      return readMemOp(r, Instr.i32_load8_u);
+      return { op: Instr.i32_load8_u, memarg: readMemArg(r) };
     case 0x2e:
-      return readMemOp(r, Instr.i32_load16_s);
+      return { op: Instr.i32_load16_s, memarg: readMemArg(r) };
     case 0x2f:
-      return readMemOp(r, Instr.i32_load16_u);
+      return { op: Instr.i32_load16_u, memarg: readMemArg(r) };
     case 0x30:
-      return readMemOp(r, Instr.i64_load8_s);
+      return { op: Instr.i64_load8_s, memarg: readMemArg(r) };
     case 0x31:
-      return readMemOp(r, Instr.i64_load8_u);
+      return { op: Instr.i64_load8_u, memarg: readMemArg(r) };
     case 0x32:
-      return readMemOp(r, Instr.i64_load16_s);
+      return { op: Instr.i64_load16_s, memarg: readMemArg(r) };
     case 0x33:
-      return readMemOp(r, Instr.i64_load16_u);
+      return { op: Instr.i64_load16_u, memarg: readMemArg(r) };
     case 0x34:
-      return readMemOp(r, Instr.i64_load32_s);
+      return { op: Instr.i64_load32_s, memarg: readMemArg(r) };
     case 0x35:
-      return readMemOp(r, Instr.i64_load32_u);
+      return { op: Instr.i64_load32_u, memarg: readMemArg(r) };
     case 0x36:
-      return readMemOp(r, Instr.i32_store);
+      return { op: Instr.i32_store, memarg: readMemArg(r) };
     case 0x37:
-      return readMemOp(r, Instr.i64_store);
+      return { op: Instr.i64_store, memarg: readMemArg(r) };
     case 0x38:
-      return readMemOp(r, Instr.f32_store);
+      return { op: Instr.f32_store, memarg: readMemArg(r) };
     case 0x39:
-      return readMemOp(r, Instr.f64_store);
+      return { op: Instr.f64_store, memarg: readMemArg(r) };
     case 0x3a:
-      return readMemOp(r, Instr.i32_store8);
+      return { op: Instr.i32_store8, memarg: readMemArg(r) };
     case 0x3b:
-      return readMemOp(r, Instr.i32_store16);
+      return { op: Instr.i32_store16, memarg: readMemArg(r) };
     case 0x3c:
-      return readMemOp(r, Instr.i64_store8);
+      return { op: Instr.i64_store8, memarg: readMemArg(r) };
     case 0x3d:
-      return readMemOp(r, Instr.i64_store16);
+      return { op: Instr.i64_store16, memarg: readMemArg(r) };
     case 0x3e:
-      return readMemOp(r, Instr.i64_store32);
+      return { op: Instr.i64_store32, memarg: readMemArg(r) };
 
     case 0x3f: {
       const b = r.read8();
@@ -863,15 +877,28 @@ export function read(r: Reader): FunctionHeader[] {
   return funcs;
 }
 
+export function instrToString(instr: Instruction): string {
+  const toPrint = [instr.op.toString()];
+  for (const [key, val] of Object.entries(instr)) {
+    if (key === 'op') continue;
+    if (val instanceof Array) continue;
+    if (key === 'memarg') {
+      const arg = val as MemArg;
+      if (arg.index !== 0) {
+        toPrint.push(`index=${arg.index}`);
+      }
+      toPrint.push(`align=${arg.align}`);
+      toPrint.push(`offset=${arg.offset}`);
+    } else {
+      toPrint.push(`${key}=${val}`);
+    }
+  }
+  return toPrint.join(' ');
+}
+
 export function print(instrs: Instruction[], indent = 0) {
   for (const instr of instrs) {
-    const toPrint = ['  '.repeat(indent), instr.op];
-    for (const [key, val] of Object.entries(instr)) {
-      if (key === 'op') continue;
-      if (val instanceof Array) continue;
-      toPrint.push(` ${key}=${val}`);
-    }
-    console.log(toPrint.join(''));
+    console.log('  '.repeat(indent), instrToString(instr));
     if (
       instr.op === Instr.if
       || instr.op === Instr.block
