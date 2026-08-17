@@ -257,6 +257,10 @@ export enum Instr {
 
   v128_const = 'v128.const',
 
+  i8x16_shuffle = 'i8x16.shuffle',
+  i8x16_swizzle = 'i8x16.swizzle',
+  i8x16_relaxed_swizzle = 'i8x16.relaxed_swizzle',
+
   i8x16_extract_lane_s = 'i8x16.extract_lane_s',
   i8x16_extract_lane_u = 'i8x16.extract_lane_u',
   i8x16_replace_lane = 'i8x16.replace_lane',
@@ -644,6 +648,10 @@ interface InstrVecConst {
   op: Instr.v128_const;
   bytes: DataView;
 }
+interface InstrVecShuffle {
+  op: Instr.i8x16_shuffle;
+  lanes: number[];
+}
 interface InstrVecLane {
   op:
     | Instr.i8x16_extract_lane_s
@@ -662,7 +670,7 @@ interface InstrVecLane {
     | Instr.f64x2_replace_lane;
   lane: number;
 }
-type InstrVec = InstrVecMem | InstrVecMemLane | InstrVecConst | InstrVecLane;
+type InstrVec = InstrVecMem | InstrVecMemLane | InstrVecConst | InstrVecShuffle | InstrVecLane;
 type InstructionWithFields =
   | InstrBlock
   | InstrIf
@@ -1204,6 +1212,14 @@ function readInstruction(r: Reader): Instruction {
 
         case 12:
           return { op: Instr.v128_const, bytes: r.slice(16) };
+
+        case 13: {
+          const lanes = new Array(16);
+          for (let i = 0; i < 16; i++) {
+            lanes[i] = r.readUint();
+          }
+          return { op: Instr.i8x16_shuffle, lanes };
+        }
 
         case 15:
           return { op: Instr.i8x16_splat };
