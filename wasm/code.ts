@@ -295,7 +295,7 @@ interface InstrGlobal {
   op: Instr.global_get | Instr.global_set;
   global: number;
 }
-interface InstrMem {
+interface InstrMemArg {
   op:
     | Instr.i32_load
     | Instr.i64_load
@@ -322,6 +322,25 @@ interface InstrMem {
     | Instr.i64_store32;
   memarg: MemArg;
 }
+interface InstrMemIdx {
+  op: Instr.memory_size | Instr.memory_grow | Instr.memory_fill;
+  mem: number;
+}
+interface InstrMemInit {
+  op: Instr.memory_init;
+  data: number;
+  mem: number;
+}
+interface InstrDataDrop {
+  op: Instr.data_drop;
+  data: number;
+}
+interface InstrMemCopy {
+  op: Instr.memory_copy;
+  srcMem: number;
+  dstMem: number;
+}
+type InstrMem = InstrMemArg | InstrMemIdx | InstrMemInit | InstrDataDrop | InstrMemCopy;
 interface InstrConstInt32 {
   op: Instr.i32_const;
   n: number;
@@ -569,20 +588,10 @@ function readInstruction(r: Reader): Instruction {
     case 0x3e:
       return { op: Instr.i64_store32, memarg: readMemArg(r) };
 
-    case 0x3f: {
-      const b = r.read8();
-      if (b !== 0) {
-        throw new Error(`bad instruction sequence 0x3f ${b.toString(16)}`);
-      }
-      return { op: Instr.memory_size };
-    }
-    case 0x40: {
-      const b = r.read8();
-      if (b !== 0) {
-        throw new Error(`bad instruction sequence 0x40 ${b.toString(16)}`);
-      }
-      return { op: Instr.memory_grow };
-    }
+    case 0x3f:
+      return { op: Instr.memory_size, mem: r.readUint() };
+    case 0x40:
+      return { op: Instr.memory_grow, mem: r.readUint() };
 
     case 0x41:
       return { op: Instr.i32_const, n: r.readSint() };
@@ -877,7 +886,15 @@ function readInstruction(r: Reader): Instruction {
         case 7:
           return { op: Instr.i64_trunc_sat_u_f64 };
 
-        // TODO: a few others here
+        case 8:
+          return { op: Instr.memory_init, data: r.readUint(), mem: r.readUint() };
+        case 9:
+          return { op: Instr.data_drop, data: r.readUint() };
+        case 10:
+          return { op: Instr.memory_copy, dstMem: r.readUint(), srcMem: r.readUint() };
+        case 11:
+          return { op: Instr.memory_fill, mem: r.readUint() };
+
         case 15:
           return { op: Instr.table_grow, index: r.readUint() };
         case 16:
