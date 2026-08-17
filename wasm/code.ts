@@ -264,6 +264,43 @@ export enum Instr {
   f32x4_splat = 'f32x4.splat',
   f64x2_splat = 'f64x2.splat',
 
+  i8x16_eq = 'i8x16.eq',
+  i8x16_ne = 'i8x16.ne',
+  i8x16_lt_s = 'i8x16.lt_s',
+  i8x16_lt_u = 'i8x16.lt_u',
+  i8x16_gt_s = 'i8x16.gt_s',
+  i8x16_gt_u = 'i8x16.gt_u',
+  i8x16_le_s = 'i8x16.le_s',
+  i8x16_le_u = 'i8x16.le_u',
+  i8x16_ge_s = 'i8x16.ge_s',
+  i8x16_ge_u = 'i8x16.ge_u',
+  i16x8_eq = 'i16x8.eq',
+  i16x8_ne = 'i16x8.ne',
+  i16x8_lt_s = 'i16x8.lt_s',
+  i16x8_lt_u = 'i16x8.lt_u',
+  i16x8_gt_s = 'i16x8.gt_s',
+  i16x8_gt_u = 'i16x8.gt_u',
+  i16x8_le_s = 'i16x8.le_s',
+  i16x8_le_u = 'i16x8.le_u',
+  i16x8_ge_s = 'i16x8.ge_s',
+  i16x8_ge_u = 'i16x8.ge_u',
+  i32x4_eq = 'i32x4.eq',
+  i32x4_ne = 'i32x4.ne',
+  i32x4_lt_s = 'i32x4.lt_s',
+  i32x4_lt_u = 'i32x4.lt_u',
+  i32x4_gt_s = 'i32x4.gt_s',
+  i32x4_gt_u = 'i32x4.gt_u',
+  i32x4_le_s = 'i32x4.le_s',
+  i32x4_le_u = 'i32x4.le_u',
+  i32x4_ge_s = 'i32x4.ge_s',
+  i32x4_ge_u = 'i32x4.ge_u',
+  i64x2_eq = 'i64x2.eq',
+  i64x2_ne = 'i64x2.ne',
+  i64x2_lt_s = 'i64x2.lt_s',
+  i64x2_gt_s = 'i64x2.gt_s',
+  i64x2_le_s = 'i64x2.le_s',
+  i64x2_ge_s = 'i64x2.ge_s',
+
   v128_not = 'v128.not',
   v128_and = 'v128.and',
   v128_andnot = 'v128.andnot',
@@ -973,6 +1010,67 @@ function readInstruction(r: Reader): Instruction {
         case 20:
           return { op: Instr.f64x2_splat };
 
+        case 35:
+          return { op: Instr.i8x16_eq };
+        case 36:
+          return { op: Instr.i8x16_ne };
+        case 37:
+          return { op: Instr.i8x16_lt_s };
+        case 38:
+          return { op: Instr.i8x16_lt_u };
+        case 39:
+          return { op: Instr.i8x16_gt_s };
+        case 40:
+          return { op: Instr.i8x16_gt_u };
+        case 41:
+          return { op: Instr.i8x16_le_s };
+        case 42:
+          return { op: Instr.i8x16_le_u };
+        case 43:
+          return { op: Instr.i8x16_ge_s };
+        case 44:
+          return { op: Instr.i8x16_ge_u };
+        case 45:
+          return { op: Instr.i16x8_eq };
+        case 46:
+          return { op: Instr.i16x8_ne };
+        case 47:
+          return { op: Instr.i16x8_lt_s };
+        case 48:
+          return { op: Instr.i16x8_lt_u };
+        case 49:
+          return { op: Instr.i16x8_gt_s };
+        case 50:
+          return { op: Instr.i16x8_gt_u };
+        case 51:
+          return { op: Instr.i16x8_le_s };
+        case 52:
+          return { op: Instr.i16x8_le_u };
+        case 53:
+          return { op: Instr.i16x8_ge_s };
+        case 54:
+          return { op: Instr.i16x8_ge_u };
+        case 55:
+          return { op: Instr.i32x4_eq };
+        case 56:
+          return { op: Instr.i32x4_ne };
+        case 57:
+          return { op: Instr.i32x4_lt_s };
+        case 58:
+          return { op: Instr.i32x4_lt_u };
+        case 59:
+          return { op: Instr.i32x4_gt_s };
+        case 60:
+          return { op: Instr.i32x4_gt_u };
+        case 61:
+          return { op: Instr.i32x4_le_s };
+        case 62:
+          return { op: Instr.i32x4_le_u };
+        case 63:
+          return { op: Instr.i32x4_ge_s };
+        case 64:
+          return { op: Instr.i32x4_ge_u };
+
         case 77:
           return { op: Instr.v128_not };
         case 78:
@@ -1009,6 +1107,19 @@ function readInstruction(r: Reader): Instruction {
           return { op: Instr.v128_load32_zero, memarg: readMemArg(r) };
         case 93:
           return { op: Instr.v128_load64_zero, memarg: readMemArg(r) };
+
+        case 214:
+          return { op: Instr.i64x2_eq };
+        case 215:
+          return { op: Instr.i64x2_ne };
+        case 216:
+          return { op: Instr.i64x2_lt_s };
+        case 217:
+          return { op: Instr.i64x2_gt_s };
+        case 218:
+          return { op: Instr.i64x2_le_s };
+        case 219:
+          return { op: Instr.i64x2_ge_s };
       }
       throw new Error(`unhandled op 0xfd ${op}`);
     }
