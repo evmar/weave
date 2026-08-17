@@ -1,13 +1,13 @@
-import * as fs from 'fs';
+import * as fs from 'node:fs';
 import * as wasm from 'wasm';
 import * as code from 'wasm/code';
 
 function main(args: string[]) {
-  const file = fs.readFileSync(args[0]);
+  const file = fs.readFileSync(args[0]!);
   const buf = file.buffer.slice(
     file.byteOffset,
     file.byteOffset + file.byteLength,
-  );
+  ) as ArrayBuffer;
 
   const module = wasm.read(buf);
   let funcIndex = 0;
@@ -17,7 +17,7 @@ function main(args: string[]) {
       case wasm.SectionKind.type: {
         const types = wasm.readTypeSection(wasm.getSectionReader(buf, sec));
         for (let i = 0; i < types.length; i++) {
-          console.log(`  ${i}: ${wasm.funcTypeToString(types[i])}`);
+          console.log(`  ${i}: ${wasm.funcTypeToString(types[i]!)}`);
         }
         break;
       }

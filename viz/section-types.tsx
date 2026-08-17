@@ -2,11 +2,11 @@
  * The contents of the wasm "types" section.
  */
 
-import { FunctionType, Indexed, ParsedModule } from './module';
-import { Screen } from './viz';
-import { Column, Table } from './table';
-import * as wasm from 'wasm';
 import * as preact from 'preact';
+import * as wasm from 'wasm';
+import { FunctionType, Indexed, ParsedModule } from './module';
+import { Column, Table } from './table';
+import { Screen } from './viz';
 
 export function TypeSection(props: { module: ParsedModule }) {
   const columns: Column<Indexed<wasm.FuncType>>[] = [

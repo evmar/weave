@@ -30,7 +30,7 @@ export enum SectionKind {
   code = 'code',
   data = 'data',
   data_count = 'data count',
-  tag = 'tag'
+  tag = 'tag',
 }
 
 export interface CustomSection {
@@ -105,7 +105,7 @@ export function readNameSection(r: Reader): NameSection {
 // https://github.com/WebAssembly/tool-conventions/blob/main/ProducersSection.md
 export interface ProducersField {
   name: string;
-  values: Array<{ name: string, version: string }>;
+  values: Array<{ name: string; version: string }>;
 }
 export function readProducersSection(r: Reader): ProducersField[] {
   return r.vec(() => {
@@ -182,11 +182,11 @@ export function readGlobalSection(r: Reader): Global[] {
 export interface Export {
   name: string;
   desc:
-  | DescIndex<DescKind.funcidx>
-  | DescIndex<DescKind.tableidx>
-  | DescIndex<DescKind.memidx>
-  | DescIndex<DescKind.globalidx>
-  | DescIndex<DescKind.tagidx>;
+    | DescIndex<DescKind.funcidx>
+    | DescIndex<DescKind.tableidx>
+    | DescIndex<DescKind.memidx>
+    | DescIndex<DescKind.globalidx>
+    | DescIndex<DescKind.tagidx>;
 }
 export function exportToString(exp: Export): string {
   return `${exp.name} (${descToString(exp.desc)})`;

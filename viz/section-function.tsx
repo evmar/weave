@@ -2,11 +2,11 @@
  * The contents of the wasm "funcs" section.
  */
 
-import { FunctionSpan, FunctionType, Indexed, ParsedModule } from './module';
-import { Screen } from './viz';
-import { Column, Table } from './table';
-import * as wasm from 'wasm';
 import * as preact from 'preact';
+import * as wasm from 'wasm';
+import { FunctionSpan, FunctionType, Indexed, ParsedModule } from './module';
+import { Column, Table } from './table';
+import { Screen } from './viz';
 
 export function FunctionSection(props: {
   module: ParsedModule;
@@ -16,7 +16,7 @@ export function FunctionSection(props: {
     { name: 'func', className: 'right', data: (row) => row.index },
     {
       name: 'type',
-      data: (row) => <code>{wasm.funcTypeToString(props.module.types[row.typeidx])}</code>,
+      data: (row) => <code>{wasm.funcTypeToString(props.module.types[row.typeidx]!)}</code>,
     },
   ];
   return (

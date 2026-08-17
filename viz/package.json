@@ -7,13 +7,11 @@
   },
   "dependencies": {
     "d3": "^7.4.3",
-    "preact": "^10.7.1",
+    "preact": "^10.29.8",
     "webtreemap": "^2.0.1"
   },
   "devDependencies": {
     "@types/d3": "^7.1.0",
-    "@types/node": "^20.11.24",
-    "esbuild": "^0.14.34",
-    "tsx": "^4.7.1"
+    "esbuild": "^0.28.2"
   }
 }

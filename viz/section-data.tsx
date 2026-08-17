@@ -6,11 +6,11 @@ import * as d3 from 'd3';
 import { h } from 'preact';
 import * as preact from 'preact';
 import * as wasm from 'wasm';
+import { classNames } from './css';
+import { Indexed, ParsedModule } from './module';
 import { Instructions } from './section-code';
 import { Column, Table } from './table';
 import { Screen } from './viz';
-import { Indexed, ParsedModule } from './module';
-import { classNames } from './css';
 
 export function DataSection(props: {
   module: ParsedModule;
@@ -125,11 +125,13 @@ export function DataHex(props: {
   return (
     <Screen title={`data[${props.data.index}]`}>
       <table>
-        {name ?
-          <tr>
-            <th>name</th>
-            <td>{name}</td>
-          </tr>
+        {name
+          ? (
+            <tr>
+              <th>name</th>
+              <td>{name}</td>
+            </tr>
+          )
           : null}
         <tr>
           <th className='right'>size</th>

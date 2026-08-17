@@ -2,11 +2,11 @@
  * The contents of the wasm "tables" section.
  */
 
-import { Indexed, ParsedModule } from './module';
-import { Screen } from './viz';
-import { Column, Table } from './table';
-import * as wasm from 'wasm';
 import * as preact from 'preact';
+import * as wasm from 'wasm';
+import { Indexed, ParsedModule } from './module';
+import { Column, Table } from './table';
+import { Screen } from './viz';
 
 export function TableSection(props: { module: ParsedModule }) {
   const columns: Column<Indexed<wasm.TableType>>[] = [

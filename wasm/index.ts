@@ -49,7 +49,7 @@ function readSectionHeader(r: Reader, index: number): SectionHeader {
     SectionKind.code,
     SectionKind.data,
     SectionKind.data_count,
-  ][id];
+  ][id]!;
   return { index, kind, ofs, len };
 }
 

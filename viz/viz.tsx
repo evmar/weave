@@ -5,19 +5,19 @@
 import * as preact from 'preact';
 import * as wasm from 'wasm';
 
-import { FunctionSpan, Indexed, loadModule, ParsedModule } from './module';
-import { Sections } from './sections';
-import { CodeSection, FunctionView } from './section-code';
-import { DataHex, DataSection, HexView } from './section-data';
-import { ElementSection } from './section-element';
-import { FunctionSection } from './section-function';
-import { GlobalSection } from './section-globals';
-import { Exports, Imports } from './section-impexp';
-import { MemorySection } from './section-memory';
-import { NamesSection } from './section-names';
-import { ProducersSection } from './section-producers';
-import { TableSection } from './section-table';
-import { TypeSection } from './section-types';
+import { FunctionSpan, Indexed, loadModule, ParsedModule } from './module.js';
+import { CodeSection, FunctionView } from './section-code.js';
+import { DataHex, DataSection, HexView } from './section-data.js';
+import { ElementSection } from './section-element.js';
+import { FunctionSection } from './section-function.js';
+import { GlobalSection } from './section-globals.js';
+import { Exports, Imports } from './section-impexp.js';
+import { MemorySection } from './section-memory.js';
+import { NamesSection } from './section-names.js';
+import { ProducersSection } from './section-producers.js';
+import { TableSection } from './section-table.js';
+import { TypeSection } from './section-types.js';
+import { Sections } from './sections.js';
 
 export type Link = [target: 'section' | 'function' | 'data', index: number];
 function urlFromLink([target, index]: Link): string {
@@ -32,7 +32,7 @@ function linkFromHash(hash: string): Link | null {
   if (target !== 'section' && target !== 'function' && target !== 'data') {
     return null;
   }
-  return [target, parseInt(parts[1])];
+  return [target, parseInt(parts[1]!)];
 }
 function go(link: Link) {
   window.location.hash = urlFromLink(link);
@@ -262,7 +262,7 @@ class App extends preact.Component<{}, App.State> {
     window.ondrop = async (ev) => {
       document.body.style.opacity = '';
       if (ev.dataTransfer?.items.length !== 1) return;
-      const file = ev.dataTransfer.items[0].getAsFile();
+      const file = ev.dataTransfer.items[0]!.getAsFile();
       if (!file) return;
       ev.preventDefault();
       this.load(await file.arrayBuffer());

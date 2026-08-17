@@ -38,7 +38,7 @@ describe('parseRust', () => {
   test('call_once', () => {
     assert.deepStrictEqual(
       symbol.parseRust(
-        'std::sync::once::Once::call_once::{{closure}}::h3895ccd6940cf396'
+        'std::sync::once::Once::call_once::{{closure}}::h3895ccd6940cf396',
       ),
       ['std', 'sync', 'once', 'Once', 'call_once', '{{closure}}'],
     );
@@ -51,12 +51,12 @@ describe('parseRust', () => {
       ),
       ['hashbrown', 'raw', 'RawTable', '<T,A>', 'reserve_rehash'],
     );
-  })
+  });
 
   test('<a as b>::foo', () => {
     assert.deepStrictEqual(
       symbol.parseRust(
-        '<iced_x86::formatter::intel::info::SimpleInstrInfo_Reg32 as iced_x86::formatter::intel::info::InstrInfo>::op_info::h324368603d2df9ba'
+        '<iced_x86::formatter::intel::info::SimpleInstrInfo_Reg32 as iced_x86::formatter::intel::info::InstrInfo>::op_info::h324368603d2df9ba',
       ),
       ['iced_x86', 'formatter', 'intel', 'info', 'SimpleInstrInfo_Reg32', 'op_info'],
     );

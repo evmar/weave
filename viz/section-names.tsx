@@ -2,9 +2,9 @@
  * The contents of the wasm "names" section.
  */
 
+import * as preact from 'preact';
 import { ParsedModule } from './module';
 import { Screen } from './viz';
-import * as preact from 'preact';
 
 export function NamesSection(props: { module: ParsedModule }) {
   const sec = props.module.names!;

@@ -2,12 +2,12 @@
  * The contents of the wasm "globals" section.
  */
 
+import * as preact from 'preact';
+import * as hooks from 'preact/hooks';
+import { InlineEdit } from './inline-edit';
 import { ParsedModule } from './module';
 import { Instructions } from './section-code';
-import { InlineEdit } from './inline-edit';
 import { Screen } from './viz';
-import * as hooks from 'preact/hooks';
-import * as preact from 'preact';
 
 export function GlobalSection(props: { module: ParsedModule }) {
   const [edited, setEdited] = hooks.useState(0);

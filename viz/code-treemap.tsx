@@ -4,8 +4,8 @@ import * as preact from 'preact';
 import * as preactCompat from 'preact/compat';
 import * as wasmCode from 'wasm/code';
 import * as webtreemap from 'webtreemap/build/webtreemap';
-import * as symbol from './symbol';
 import { Indexed, Toolchain } from './module';
+import * as symbol from './symbol';
 
 export function showCodeTreemap(
   toolchain: Toolchain,
@@ -118,7 +118,8 @@ class FunctionNode implements webtreemap.Node {
 
   addFunction(func: wasmCode.FunctionHeader, path: string[], originalName: string) {
     this.size += func.len;
-    const [head, ...tail] = path;
+    const [h, ...tail] = path;
+    const head = h!;
     if (tail.length === 0) {
       const child = new FunctionNode(head, originalName, func.len);
       this.children.push(child);

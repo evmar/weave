@@ -60,7 +60,7 @@ export function parseCPP(name: string): string[] {
     fn = fn.slice(0, -2);
   } else {
     // Fallback when we didn't find a function.
-    fn = parts[parts.length - 1];
+    fn = parts[parts.length - 1]!;
   }
   return fn.split('::');
 }
@@ -103,7 +103,7 @@ export function parseRust(name: string): string[] {
   let parts = parse();
   if (typeof parts[0] !== 'string') {
     // <foo as bar>::baz => foo::baz
-    parts = parts[0].concat(parts.slice(1));
+    parts = parts[0]!.concat(parts.slice(1));
   }
 
   function flatten(part: Part): string {
@@ -111,7 +111,7 @@ export function parseRust(name: string): string[] {
     return '<' + part.map((p) => flatten(p)).join('::') + '>';
   }
   let flat = parts.map(flatten);
-  const last = flat[flat.length - 1];
+  const last = flat[flat.length - 1]!;
   if (/h[0-9a-f]{16}/.test(last)) {
     flat.pop();
   }

@@ -3,10 +3,10 @@
  * and helper components that work with the module.
  */
 
-import * as wasm from 'wasm';
-import { Link } from './viz';
-import * as wasmCode from 'wasm/code';
 import * as preact from 'preact';
+import * as wasm from 'wasm';
+import * as wasmCode from 'wasm/code';
+import { Link } from './viz';
 
 export type Indexed<T> = T & { index: number };
 export interface FunctionSpan {
@@ -38,7 +38,6 @@ export interface ParsedModule {
   dataNames: Map<number, string>;
 }
 
-
 export function FunctionRef(props: { module: ParsedModule; index: number }) {
   return (
     <Link title={`function ${props.index}`} target={['function', props.index]}>
@@ -58,7 +57,6 @@ export function GlobalRef(props: { module: ParsedModule; index: number }) {
     </Link>
   );
 }
-
 
 export function FunctionType(props: { type: wasm.FuncType }) {
   return <code>{wasm.funcTypeToString(props.type)}</code>;
@@ -118,7 +116,7 @@ export function loadModule(wasmBytes: ArrayBuffer) {
             const producers = wasm.readProducersSection(reader);
             const lang = producers.find((p) => p.name == 'language');
             if (lang) {
-              switch (lang.values[0].name) {
+              switch (lang.values[0]!.name) {
                 case 'Go':
                   module.toolchain = 'Go';
                   break;
@@ -211,8 +209,8 @@ export function loadModule(wasmBytes: ArrayBuffer) {
         wasmCode
           .read(wasm.getSectionReader(wasmBytes, section))
           .forEach((func, i) => {
-            module.functions[i].ofs = func.ofs;
-            module.functions[i].len = func.len;
+            module.functions[i]!.ofs = func.ofs;
+            module.functions[i]!.len = func.len;
           });
         break;
       case wasm.SectionKind.data:

@@ -2,9 +2,9 @@
  * The contents of the wasm "producers" section.
  */
 
+import * as preact from 'preact';
 import { ParsedModule } from './module';
 import { Screen } from './viz';
-import * as preact from 'preact';
 
 export function ProducersSection(props: { module: ParsedModule }) {
   return (

@@ -9,9 +9,9 @@ import * as hooks from 'preact/hooks';
 import * as wasmCode from 'wasm/code';
 import { Reader } from 'wasm/reader';
 import { showCodeTreemap } from './code-treemap';
-import { Column, Table } from './table';
-import { FunctionRef, FunctionSpan, GlobalRef, Indexed, ParsedModule } from './module';
 import { InlineEdit } from './inline-edit';
+import { FunctionRef, FunctionSpan, GlobalRef, Indexed, ParsedModule } from './module';
+import { Column, Table } from './table';
 import { Screen } from './viz';
 
 function XRef(props: {
@@ -96,8 +96,8 @@ export class Instructions extends preact.Component<
 
   /** Returns a reference to a label, as found in a `br` etc. instruction. */
   private labelRef(stackIndex: number): preact.ComponentChild {
-    const label = this.labelStack[this.labelStack.length - stackIndex - 1];
-    this.labelRefCounts[label]++;
+    const label = this.labelStack[this.labelStack.length - stackIndex - 1]!;
+    this.labelRefCounts[label]!++;
     return (
       <XRef
         id={`label${label}`}
@@ -276,7 +276,7 @@ export function FunctionView(props: {
   const funcBody = wasmCode.readFunction(
     new Reader(new DataView(props.module.bytes, props.func.ofs, props.func.len)),
   );
-  const funcType = props.module.types[props.func.typeidx];
+  const funcType = props.module.types[props.func.typeidx]!;
   const [localNames, setLocalNames] = hooks.useState<Map<string, string>>(
     () => {
       const localNames = new Map<string, string>();
@@ -366,7 +366,7 @@ export function FunctionView(props: {
 
 /** <input type=search incremental>, but with hacks because incremental isn't in typings. */
 function IncrementalInput(
-  args: preact.JSX.HTMLAttributes<HTMLInputElement>,
+  args: preact.InputHTMLAttributes<HTMLInputElement>,
 ): preact.JSX.Element {
   const incrementalArgs = { type: 'search', incremental: true, ...args };
   return <input {...incrementalArgs} />;

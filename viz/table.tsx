@@ -4,8 +4,8 @@
 
 import * as preact from 'preact';
 import { h } from 'preact';
-import { memo } from './memo';
 import { classNames } from './css';
+import { memo } from './memo';
 
 export interface Column<T> {
   name: string;
@@ -36,7 +36,7 @@ export class Table<T> extends preact.Component<Props<T>, State<T>> {
     return this.props !== nextProps || this.state !== nextState;
   }
 
-  rows = memo(function (
+  rows = memo(function(
     sortBy: Column<T> | undefined,
     limit: number,
     rows: T[],

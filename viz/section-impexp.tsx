@@ -2,11 +2,11 @@
  * The contents of the wasm "imports" and "exports" sections.
  */
 
+import * as preact from 'preact';
 import * as wasm from 'wasm';
+import { FunctionRef, FunctionType, Indexed, ParsedModule } from './module';
 import { Column, Table } from './table';
 import { Link, Screen } from './viz';
-import { FunctionRef, FunctionType, Indexed, ParsedModule } from './module';
-import * as preact from 'preact';
 
 function ImpExpDesc(props: {
   module: ParsedModule;
@@ -17,7 +17,7 @@ function ImpExpDesc(props: {
     case wasm.DescKind.typeidx:
       return (
         <div>
-          function {props.index}: <FunctionType type={props.module.types[props.desc.index]} />
+          function {props.index}: <FunctionType type={props.module.types[props.desc.index]!} />
         </div>
       );
     case wasm.DescKind.funcidx:

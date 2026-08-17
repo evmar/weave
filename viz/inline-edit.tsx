@@ -1,5 +1,5 @@
-import * as hooks from 'preact/hooks';
 import * as preact from 'preact';
+import * as hooks from 'preact/hooks';
 
 export function InlineEdit(props: {
   onEdit: (newText: string) => void;
@@ -26,7 +26,7 @@ export function InlineEdit(props: {
           size={1}
           type='text'
           className='inline-edit'
-          onfocusout={commit}
+          onFocusOut={commit}
           value={props.children}
         />
       </form>

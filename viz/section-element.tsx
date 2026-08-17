@@ -2,12 +2,12 @@
  * The contents of the wasm "elems" section.
  */
 
-import { Indexed, ParsedModule } from './module';
-import { Screen } from './viz';
-import { Column, Table } from './table';
-import * as wasm from 'wasm';
-import { Instructions } from './section-code';
 import * as preact from 'preact';
+import * as wasm from 'wasm';
+import { Indexed, ParsedModule } from './module';
+import { Instructions } from './section-code';
+import { Column, Table } from './table';
+import { Screen } from './viz';
 
 export function ElementSection(props: { module: ParsedModule }) {
   const columns: Column<Indexed<wasm.Element>>[] = [

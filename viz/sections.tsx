@@ -6,9 +6,9 @@ import * as d3 from 'd3';
 import { h } from 'preact';
 import * as preact from 'preact';
 import * as wasm from 'wasm';
-import { Screen } from './viz';
-import { ParsedModule } from './module';
 import { classNames } from './css';
+import { ParsedModule } from './module';
+import { Screen } from './viz';
 
 interface SectionsPartProps {
   sections: (wasm.SectionHeader & { name?: string })[];
@@ -40,7 +40,7 @@ function Pie(props: SectionsPartProps) {
       <g
         strokeLinejoin='round'
         strokeWidth='2'
-        ref={(g) =>
+        ref={(g) => {
           d3
             .select(g)
             .selectAll('path')
@@ -51,7 +51,8 @@ function Pie(props: SectionsPartProps) {
             .attr('d', arc)
             .on('mouseover', (ev, d) => props.onHover(d.data))
             .on('mouseout', (ev, d) => props.onHover(undefined))
-            .on('click', (e, d) => props.onClick(d.data))}
+            .on('click', (e, d) => props.onClick(d.data));
+        }}
       >
       </g>
     </svg>
