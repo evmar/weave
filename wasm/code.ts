@@ -5,10 +5,17 @@
 import { Reader } from './reader';
 import { readValType, Type } from './type';
 
+// https://webassembly.github.io/spec/core/binary/instructions.html
+// note: order of these matches the Binary section of spec,
+// which is a different order from the Structure section.
 export enum Instr {
-  // control
+  // parametric
   unreachable = 'unreachable',
   nop = 'nop',
+  drop = 'drop',
+  select = 'select',
+
+  // control
   block = 'block',
   loop = 'loop',
   if = 'if',
@@ -21,16 +28,15 @@ export enum Instr {
   call = 'call',
   call_indirect = 'call_indirect',
 
-  // parametric
-  drop = 'drop',
-  select = 'select',
-
   // variable
   local_get = 'local.get',
   local_set = 'local.set',
   local_tee = 'local.tee',
   global_get = 'global.get',
   global_set = 'global.set',
+
+  // table
+  // TODO
 
   // memory
   i32_load = 'i32.load',
@@ -59,10 +65,18 @@ export enum Instr {
 
   memory_size = 'memory.size',
   memory_grow = 'memory.grow',
+  memory_fill = 'memory.fill',
+  memory_copy = 'memory.copy',
   memory_init = 'memory.init',
   data_drop = 'data.drop',
-  memory_copy = 'memory.copy',
-  memory_fill = 'memory.fill',
+
+  // reference
+  ref_null = 'ref.null',
+  ref_is_null = 'ref.is_null',
+  ref_func = 'ref.func',
+
+  // aggregate
+  // TODO
 
   // numeric
   // const
@@ -199,11 +213,6 @@ export enum Instr {
   i64_extend8_s = 'i64.extend8_s',
   i64_extend16_s = 'i64.extend16_s',
   i64_extend32_s = 'i64.extend32_s',
-
-  // reference
-  ref_null = 'ref.null',
-  ref_is_null = 'ref.is_null',
-  ref_func = 'ref.func',
 }
 
 interface InstrBlock {
