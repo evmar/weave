@@ -11,5 +11,5 @@ if [[ -z "$destdir" ]]; then
 fi
 
 (cd viz && npm run bundle)
-cp viz/{Inter-Bold.ttf,Inter-Regular.ttf,bundle.js,bundle.js.map} "$destdir"
+cp viz/{Inter-Bold.ttf,Inter-Regular.ttf,bundle.js,bundle.js.map,style.css} "$destdir"
 cp viz/viz.html "$destdir/index.html"
