@@ -1,16 +1,5 @@
-@font-face {
-    font-family: 'Inter';
-    src: url('Inter-Regular.ttf');
-}
-
-@font-face {
-    font-family: 'Inter';
-    src: url('Inter-Bold.ttf');
-    font-weight: 700;
-}
-
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: system-ui, sans-serif;
     font-variant-numeric: tabular-nums;
     max-width: 100ex;
     margin: 4ex auto;
@@ -48,7 +37,7 @@ h1 a {
 
 pre,
 code {
-    font-family: WebKitWorkaround, monospace;
+    font-family: ui-monospace, monospace;
 }
 
 pre.hex {
