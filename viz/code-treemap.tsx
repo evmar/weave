@@ -36,7 +36,7 @@ export function showCodeTreemap(
     const name = nameMap.get(header.index);
     if (!name) {
       root.addFunction(header, ['no name', `${header.index}`], `noname ${header.index}`);
-      return;
+      continue;
     }
     let path;
     try {
