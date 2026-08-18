@@ -27,7 +27,7 @@ You can add `?foo.wasm` to the URL to load a wasm file from the `viz` subdir whi
 Setup:
 
 ```
-$ git worktree demo
+$ jj workspace add demo
 ```
 
 Deploy:
@@ -35,6 +35,9 @@ Deploy:
 ```
 $ ./deploy.sh demo
 $ cd demo
-$ git commit -a --amend
-$ git push -f
+$ jj squash
+$ jj git push
 ```
+
+The Figma wasm was pulled directly from the site.
+The ghostty wasm is from https://github.com/ghostty-org/ghostty/releases/tag/tip .
