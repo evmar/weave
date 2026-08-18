@@ -14,7 +14,8 @@ export interface FunctionSpan {
   ofs: number;
   len: number;
 }
-export type Toolchain = 'Go' | 'Rust' | 'Unknown';
+// Zig reports itself as C99, possibly because it exports a C API to the wasm host(?)
+export type Toolchain = 'Go' | 'Rust' | 'C99' | 'Unknown';
 export interface ParsedModule {
   bytes: ArrayBuffer;
   sections: (wasm.SectionHeader & { name?: string })[];
@@ -122,6 +123,9 @@ export function loadModule(wasmBytes: ArrayBuffer) {
                   break;
                 case 'Rust':
                   module.toolchain = 'Rust';
+                  break;
+                case 'C99':
+                  module.toolchain = 'C99';
                   break;
               }
             }

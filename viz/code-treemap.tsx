@@ -22,6 +22,8 @@ export function showCodeTreemap(
     case 'Rust':
       nameToPath = symbol.parseRust;
       break;
+    case 'C99':
+      nameToPath = (name: string) => name.split(/_/);
     default:
       for (const name of nameMap.values()) {
         if (name.startsWith('std::')) {
